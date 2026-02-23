@@ -22,6 +22,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || new Date().toISOString().split('T')[0]]);
   const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || '09:00']);
   const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
+  const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>({});
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId);
@@ -65,20 +66,43 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const toggleServiceInSession = (sessionIdx: number, serviceName: string) => {
     const nextSessionServices = [...sessionServices];
     const currentServices = nextSessionServices[sessionIdx] || [];
+    let nextPrices = { ...sessionServicePrices };
     
     if (currentServices.includes(serviceName)) {
       nextSessionServices[sessionIdx] = currentServices.filter(s => s !== serviceName);
+      // Remove price override if it was the last instance of this service across all sessions
+      const isUsedElsewhere = nextSessionServices.some((services, idx) => idx !== sessionIdx && services.includes(serviceName));
+      if (!isUsedElsewhere) {
+        delete nextPrices[serviceName];
+      }
     } else {
       nextSessionServices[sessionIdx] = [...currentServices, serviceName];
+      // Set default price if not already set
+      if (!(serviceName in nextPrices)) {
+        nextPrices[serviceName] = data.services.find(sv => sv.name === serviceName)?.price || 0;
+      }
     }
     
     setSessionServices(nextSessionServices);
+    setSessionServicePrices(nextPrices);
     
     // Recalculate price if not a fixed package price (simplified: always recalculate if custom)
     // If it was a package, the user might have changed it, so we should probably recalculate based on all services across all sessions
     const totalSum = nextSessionServices.reduce((acc, services) => {
       return acc + services.reduce((sAcc, sName) => {
-        return sAcc + (data.services.find(sv => sv.name === sName)?.price || 0);
+        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+      }, 0);
+    }, 0);
+    setPrice(totalSum);
+  };
+
+  const handleServicePriceChange = (serviceName: string, newPrice: number) => {
+    const nextPrices = { ...sessionServicePrices, [serviceName]: newPrice };
+    setSessionServicePrices(nextPrices);
+    
+    const totalSum = sessionServices.reduce((acc, services) => {
+      return acc + services.reduce((sAcc, sName) => {
+        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
       }, 0);
     }, 0);
     setPrice(totalSum);
@@ -459,23 +483,37 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
                         {data.services.map(s => {
                           const isSelected = sessionServices[idx]?.includes(s.name);
+                          const currentPrice = sessionServicePrices[s.name] !== undefined ? sessionServicePrices[s.name] : s.price;
                           return (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() => toggleServiceInSession(idx, s.name)}
-                              className={cn(
-                                "px-3 py-1 rounded-full text-[10px] font-bold border-2 transition-all flex items-center gap-1",
-                                isSelected 
-                                  ? "bg-indigo-600 border-indigo-600 text-white" 
-                                  : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200"
+                            <div key={s.id} className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleServiceInSession(idx, s.name)}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all flex-1 text-left",
+                                  isSelected 
+                                    ? "bg-indigo-600 border-indigo-600 text-white" 
+                                    : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200"
+                                )}
+                              >
+                                {s.name}
+                              </button>
+                              {isSelected && (
+                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1">
+                                  <span className="text-xs font-bold text-slate-400">R$</span>
+                                  <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={currentPrice}
+                                    onChange={(e) => handleServicePriceChange(s.name, Number(e.target.value))}
+                                    className="w-16 bg-transparent text-xs font-bold text-slate-700 outline-none"
+                                  />
+                                </div>
                               )}
-                            >
-                              {s.name} <span className="opacity-70 font-normal">(R$ {s.price.toFixed(2)})</span>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
