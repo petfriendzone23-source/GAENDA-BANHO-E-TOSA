@@ -15,7 +15,7 @@ interface AppointmentListProps {
 export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
-  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
 
   const filteredAppointments = data.appointments
     .filter(app => {
@@ -91,7 +91,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                       <td className="px-6 py-4">
                         <div 
                           className="flex items-center gap-3 cursor-pointer group"
-                          onClick={() => client && setSelectedClient(client)}
+                          onClick={() => setSelectedAppointment(app)}
                         >
                           <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-all">
                             {pet?.name[0]}
@@ -171,11 +171,13 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
         </div>
       </div>
 
-      {selectedClient && (
+      {selectedAppointment && (
         <ClientDetails 
-          client={selectedClient} 
+          client={data.clients.find(c => c.id === selectedAppointment.clientId)!} 
+          appointment={selectedAppointment}
           data={data} 
-          onClose={() => setSelectedClient(null)} 
+          showHistory={false}
+          onClose={() => setSelectedAppointment(null)} 
         />
       )}
     </div>

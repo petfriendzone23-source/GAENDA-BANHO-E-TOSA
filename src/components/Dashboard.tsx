@@ -14,7 +14,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, onEditAppointment }) => {
-  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
   const todayAppointments = data.appointments.filter(a => isToday(parseISO(a.date)));
   const completedToday = todayAppointments.filter(a => a.status === 'Concluído').length;
   const pendingToday = todayAppointments.filter(a => a.status === 'Agendado').length;
@@ -87,7 +87,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
                         </div>
                         <div 
                           className="flex-1 cursor-pointer group"
-                          onClick={() => client && setSelectedClient(client)}
+                          onClick={() => setSelectedAppointment(app)}
                         >
                           <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
                           <p className="text-sm text-slate-500">{client?.name} • {(app.services || []).join(', ')}</p>
@@ -144,11 +144,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
         </div>
       </div>
 
-      {selectedClient && (
+      {selectedAppointment && (
         <ClientDetails 
-          client={selectedClient} 
+          client={data.clients.find(c => c.id === selectedAppointment.clientId)!} 
+          appointment={selectedAppointment}
           data={data} 
-          onClose={() => setSelectedClient(null)} 
+          showHistory={false}
+          onClose={() => setSelectedAppointment(null)} 
         />
       )}
     </div>

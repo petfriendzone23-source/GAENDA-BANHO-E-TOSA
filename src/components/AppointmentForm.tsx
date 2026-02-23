@@ -18,52 +18,67 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   // Form State
   const [clientId, setClientId] = React.useState(appointment?.clientId || '');
   const [petId, setPetId] = React.useState(appointment?.petId || '');
-  const [selectedServices, setSelectedServices] = React.useState<string[]>(appointment?.services || []);
   const [sessions, setSessions] = React.useState(1);
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || new Date().toISOString().split('T')[0]]);
   const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || '09:00']);
+  const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
 
   const togglePackage = (pkg: Package) => {
     const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
     
-    // Check if all services of the package are already selected
-    const allSelected = pkgServiceNames.every(name => selectedServices.includes(name));
+    // Check if all services of the package are already selected in the first session (simplified check)
+    const allSelected = pkgServiceNames.every(name => sessionServices[0]?.includes(name));
     
-    let nextServices: string[];
     if (allSelected) {
-      // Remove all services of the package
-      nextServices = selectedServices.filter(name => !pkgServiceNames.includes(name));
       setSessions(1);
       setSessionDates([sessionDates[0]]);
       setSessionTimes([sessionTimes[0]]);
+      setSessionServices([[]]);
     } else {
-      // Add missing services
-      nextServices = Array.from(new Set([...selectedServices, ...pkgServiceNames]));
       setSessions(pkg.sessions);
       
       const newDates = [...sessionDates];
       const newTimes = [...sessionTimes];
+      const newServices = [...sessionServices];
+      
       while (newDates.length < pkg.sessions) {
         newDates.push(new Date().toISOString().split('T')[0]);
         newTimes.push('09:00');
+        newServices.push([]);
       }
+      
+      // Initialize all sessions with the package services (user can then prune them)
+      const initializedServices = newServices.slice(0, pkg.sessions).map(() => [...pkgServiceNames]);
+      
       setSessionDates(newDates.slice(0, pkg.sessions));
       setSessionTimes(newTimes.slice(0, pkg.sessions));
-    }
-    
-    setSelectedServices(nextServices);
-    
-    // Recalculate price
-    if (!allSelected) {
+      setSessionServices(initializedServices);
       setPrice(pkg.price);
-    } else {
-      const newPrice = nextServices.reduce((acc, curr) => {
-        return acc + (data.services.find(sv => sv.name === curr)?.price || 0);
-      }, 0);
-      setPrice(newPrice);
     }
+  };
+
+  const toggleServiceInSession = (sessionIdx: number, serviceName: string) => {
+    const nextSessionServices = [...sessionServices];
+    const currentServices = nextSessionServices[sessionIdx] || [];
+    
+    if (currentServices.includes(serviceName)) {
+      nextSessionServices[sessionIdx] = currentServices.filter(s => s !== serviceName);
+    } else {
+      nextSessionServices[sessionIdx] = [...currentServices, serviceName];
+    }
+    
+    setSessionServices(nextSessionServices);
+    
+    // Recalculate price if not a fixed package price (simplified: always recalculate if custom)
+    // If it was a package, the user might have changed it, so we should probably recalculate based on all services across all sessions
+    const totalSum = nextSessionServices.reduce((acc, services) => {
+      return acc + services.reduce((sAcc, sName) => {
+        return sAcc + (data.services.find(sv => sv.name === sName)?.price || 0);
+      }, 0);
+    }, 0);
+    setPrice(totalSum);
   };
 
   // New Client State
@@ -104,13 +119,11 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       id: idx === 0 && appointment ? appointment.id : Math.random().toString(36).substr(2, 9),
       clientId: finalClientId,
       petId: finalPetId,
-      services: selectedServices,
+      services: sessionServices[idx] || [],
       date: d,
       time: sessionTimes[idx],
       status: appointment?.status || 'Agendado',
-      price: idx === 0 ? price : 0, // Only charge on the first session if it's a package, or split? 
-      // User probably wants the total price on the first one or just the total.
-      // Let's put the full price on the first one for now.
+      price: idx === 0 ? price : 0, 
       notes,
     }));
 
@@ -372,7 +385,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               <div className="flex flex-wrap gap-2">
                 {data.packages.map(pkg => {
                   const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
-                  const isSelected = pkgServiceNames.every(name => selectedServices.includes(name));
+                  const isSelected = pkgServiceNames.every(name => sessionServices[0]?.includes(name));
                   return (
                     <button
                       key={pkg.id}
@@ -393,47 +406,9 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-slate-700">Serviços Individuais</label>
-              <div className="flex flex-wrap gap-2">
-                {data.services.map(s => {
-                  const isSelected = selectedServices.includes(s.name);
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => {
-                        let next;
-                        if (isSelected) {
-                          next = selectedServices.filter(item => item !== s.name);
-                        } else {
-                          next = [...selectedServices, s.name];
-                        }
-                        setSelectedServices(next);
-                        
-                        // Recalculate total price
-                        const newPrice = next.reduce((acc, curr) => {
-                          return acc + (data.services.find(sv => sv.name === curr)?.price || 0);
-                        }, 0);
-                        setPrice(newPrice);
-                      }}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border-2 transition-all",
-                        isSelected 
-                          ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100" 
-                          : "bg-white border-slate-100 text-slate-500 hover:border-indigo-200"
-                      )}
-                    >
-                      {s.name} (R$ {s.price})
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700">Datas e Horários ({sessions} sessões)</label>
+                <label className="text-sm font-semibold text-slate-700">Sessões e Serviços ({sessions} sessões)</label>
                 {sessions > 1 && (
                   <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
                     Pacote Multi-sessão
@@ -441,13 +416,17 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                 )}
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {sessionDates.map((d, idx) => (
-                  <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Data da Sessão {idx + 1}</label>
-                      <div className="relative">
-                        <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
+                    <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
+                      <Calendar size={16} />
+                      Sessão {idx + 1}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Data</label>
                         <input 
                           type="date" 
                           value={d} 
@@ -456,14 +435,11 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                             next[idx] = e.target.value;
                             setSessionDates(next);
                           }} 
-                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
                         />
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Horário</label>
-                      <div className="relative">
-                        <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Horário</label>
                         <input 
                           type="time" 
                           value={sessionTimes[idx]} 
@@ -472,8 +448,32 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                             next[idx] = e.target.value;
                             setSessionTimes(next);
                           }} 
-                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
                         />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
+                      <div className="flex flex-wrap gap-2">
+                        {data.services.map(s => {
+                          const isSelected = sessionServices[idx]?.includes(s.name);
+                          return (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => toggleServiceInSession(idx, s.name)}
+                              className={cn(
+                                "px-3 py-1 rounded-full text-[10px] font-bold border-2 transition-all",
+                                isSelected 
+                                  ? "bg-indigo-600 border-indigo-600 text-white" 
+                                  : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200"
+                              )}
+                            >
+                              {s.name}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -481,10 +481,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-slate-700">Preço Total (R$)</label>
+                <label className="text-sm font-semibold text-slate-700">Preço Total do Pacote (R$)</label>
                 <div className="relative">
                   <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600" />
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -10,9 +10,11 @@ interface ClientDetailsProps {
   client: Client;
   data: AppData;
   onClose: () => void;
+  appointment?: Appointment;
+  showHistory?: boolean;
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true }) => {
   const clientPets = data.pets[client.id] || [];
   const clientAppointments = data.appointments
     .filter(a => a.clientId === client.id)
@@ -102,64 +104,112 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
             </section>
           </div>
 
-          {/* Main Content: History */}
+          {/* Main Content: History or Appointment Details */}
           <div className="md:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">Histórico de Serviços</h3>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{clientAppointments.length} Registros</span>
-            </div>
-
-            <div className="space-y-4">
-              {clientAppointments.length > 0 ? (
-                clientAppointments.map(app => (
-                  <div key={app.id} className="p-5 rounded-2xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "p-2 rounded-xl",
-                          app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
-                          app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
-                          "bg-rose-100 text-rose-600"
-                        )}>
-                          {app.status === 'Concluído' ? <CheckCircle2 size={18} /> : 
-                           app.status === 'Agendado' ? <Clock size={18} /> : 
-                           <AlertCircle size={18} />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{(app.services || []).join(', ')}</p>
-                          <p className="text-xs text-slate-500">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
-                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{app.status}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-6 pt-4 border-t border-slate-50">
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <Calendar size={14} />
-                        <span className="text-xs font-medium">{format(parseISO(app.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <Clock size={14} />
-                        <span className="text-xs font-medium">{app.time}</span>
-                      </div>
-                    </div>
-
-                    {app.notes && (
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl text-xs text-slate-500 italic">
-                        "{app.notes}"
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                  <p className="text-slate-400 font-medium">Nenhum serviço registrado ainda.</p>
+            {appointment && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-slate-900">Serviço Agendado</h3>
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Hoje</span>
                 </div>
-              )}
-            </div>
+                <div className="p-6 rounded-3xl border-2 border-indigo-500 bg-indigo-50/30 shadow-xl shadow-indigo-50">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-2xl bg-indigo-600 text-white">
+                        <Scissors size={24} />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-slate-900">{(appointment.services || []).join(', ')}</p>
+                        <p className="text-slate-500 font-medium">{data.pets[appointment.clientId]?.find(p => p.id === appointment.petId)?.name}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-indigo-600">R$ {appointment.price.toFixed(2)}</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{appointment.status}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-indigo-100">
+                    <div className="flex items-center gap-3 text-slate-700">
+                      <Calendar size={18} className="text-indigo-600" />
+                      <span className="font-bold">{format(parseISO(appointment.date), "dd 'de' MMMM", { locale: ptBR })}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-700">
+                      <Clock size={18} className="text-indigo-600" />
+                      <span className="font-bold">{appointment.time}</span>
+                    </div>
+                  </div>
+
+                  {appointment.notes && (
+                    <div className="mt-6 p-4 bg-white rounded-2xl border border-indigo-100 text-sm text-slate-600 italic">
+                      <p className="font-bold text-[10px] uppercase text-indigo-400 mb-1 not-italic tracking-wider">Observações</p>
+                      "{appointment.notes}"
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {showHistory && (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-slate-900">Histórico de Serviços</h3>
+                  <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{clientAppointments.length} Registros</span>
+                </div>
+
+                <div className="space-y-4">
+                  {clientAppointments.length > 0 ? (
+                    clientAppointments.map(app => (
+                      <div key={app.id} className="p-5 rounded-2xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "p-2 rounded-xl",
+                              app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
+                              app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
+                              "bg-rose-100 text-rose-600"
+                            )}>
+                              {app.status === 'Concluído' ? <CheckCircle2 size={18} /> : 
+                               app.status === 'Agendado' ? <Clock size={18} /> : 
+                               <AlertCircle size={18} />}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900">{(app.services || []).join(', ')}</p>
+                              <p className="text-xs text-slate-500">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
+                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{app.status}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-6 pt-4 border-t border-slate-50">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Calendar size={14} />
+                            <span className="text-xs font-medium">{format(parseISO(app.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Clock size={14} />
+                            <span className="text-xs font-medium">{app.time}</span>
+                          </div>
+                        </div>
+
+                        {app.notes && (
+                          <div className="mt-4 p-3 bg-slate-50 rounded-xl text-xs text-slate-500 italic">
+                            "{app.notes}"
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                      <p className="text-slate-400 font-medium">Nenhum serviço registrado ainda.</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
