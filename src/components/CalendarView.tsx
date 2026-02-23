@@ -152,7 +152,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data }) => {
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-slate-900 text-sm">{pet?.name}</p>
-                        <p className="text-xs text-slate-500">{app.services.join(', ')}</p>
+                        <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
                       </div>
                     </div>

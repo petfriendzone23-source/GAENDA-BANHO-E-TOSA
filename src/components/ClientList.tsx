@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus, Phone, Mail, Dog, MoreHorizontal } from 'lucide-react';
+import { Search, Plus, Phone, Mail, Dog, MoreHorizontal, MapPin } from 'lucide-react';
 import { AppData } from '../types';
 
 interface ClientListProps {
@@ -11,7 +11,7 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
 
   const filteredClients = data.clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phone.includes(searchTerm)
+    c.phones.some(p => p.includes(searchTerm))
   );
 
   return (
@@ -51,9 +51,19 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900 text-lg">{client.name}</h4>
-                      <div className="flex items-center gap-2 text-slate-500 text-sm mt-1">
-                        <Phone size={14} />
-                        <span>{client.phone}</span>
+                      <div className="space-y-1 mt-1">
+                        {client.phones.map((phone, i) => (
+                          <div key={i} className="flex items-center gap-2 text-slate-500 text-xs">
+                            <Phone size={12} />
+                            <span>{phone}</span>
+                          </div>
+                        ))}
+                        {client.addresses.map((address, i) => (
+                          <div key={i} className="flex items-center gap-2 text-slate-500 text-xs">
+                            <MapPin size={12} />
+                            <span>{address}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>

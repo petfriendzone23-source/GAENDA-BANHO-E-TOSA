@@ -10,7 +10,8 @@ export interface Pet {
 export interface Client {
   id: string;
   name: string;
-  phone: string;
+  phones: string[];
+  addresses: string[];
   email?: string;
 }
 

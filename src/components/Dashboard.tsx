@@ -84,7 +84,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
-                          <p className="text-sm text-slate-500">{client?.name} • {app.services.join(', ')}</p>
+                          <p className="text-sm text-slate-500">{client?.name} • {(app.services || []).join(', ')}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -121,7 +121,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
                   <span className="text-slate-700 font-medium">{service}</span>
                 </div>
                 <span className="text-slate-400 text-sm">
-                  {data.appointments.filter(a => a.services.includes(service as any)).length} agend.
+                  {data.appointments.filter(a => (a.services || []).includes(service as any)).length} agend.
                 </span>
               </div>
             ))}

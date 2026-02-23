@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, ServiceType } from '../types';
 import { cn } from '../utils/cn';
@@ -25,7 +25,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
   // New Client State
   const [clientName, setClientName] = React.useState('');
-  const [clientPhone, setClientPhone] = React.useState('');
+  const [clientPhones, setClientPhones] = React.useState<string[]>(['']);
+  const [clientAddresses, setClientAddresses] = React.useState<string[]>(['']);
   const [petName, setPetName] = React.useState('');
   const [petBreed, setPetBreed] = React.useState('');
   const [petSize, setPetSize] = React.useState<Pet['size']>('Médio');
@@ -49,7 +50,12 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     if (isNewClient) {
       finalClientId = Math.random().toString(36).substr(2, 9);
       finalPetId = Math.random().toString(36).substr(2, 9);
-      newClient = { id: finalClientId, name: clientName, phone: clientPhone };
+      newClient = { 
+        id: finalClientId, 
+        name: clientName, 
+        phones: clientPhones.filter(p => p.trim() !== ''), 
+        addresses: clientAddresses.filter(a => a.trim() !== '') 
+      };
       newPet = { id: finalPetId, name: petName, breed: petBreed, size: petSize };
     }
 
@@ -112,14 +118,85 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
             {isNewClient ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-700">Nome do Dono</label>
                   <input required value={clientName} onChange={e => setClientName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: João Silva" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-slate-700">Telefone</label>
-                  <input required value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="(11) 99999-9999" />
+                
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">Telefones</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setClientPhones([...clientPhones, ''])}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                    >
+                      <Plus size={14} /> Adicionar Telefone
+                    </button>
+                  </div>
+                  {clientPhones.map((phone, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input 
+                        required={idx === 0}
+                        value={phone} 
+                        onChange={e => {
+                          const next = [...clientPhones];
+                          next[idx] = e.target.value;
+                          setClientPhones(next);
+                        }} 
+                        className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                        placeholder="(11) 99999-9999" 
+                      />
+                      {clientPhones.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => setClientPhones(clientPhones.filter((_, i) => i !== idx))}
+                          className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">Endereços</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setClientAddresses([...clientAddresses, ''])}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                    >
+                      <Plus size={14} /> Adicionar Endereço
+                    </button>
+                  </div>
+                  {clientAddresses.map((address, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input 
+                        required={idx === 0}
+                        value={address} 
+                        onChange={e => {
+                          const next = [...clientAddresses];
+                          next[idx] = e.target.value;
+                          setClientAddresses(next);
+                        }} 
+                        className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                        placeholder="Rua, Número, Bairro, Cidade" 
+                      />
+                      {clientAddresses.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => setClientAddresses(clientAddresses.filter((_, i) => i !== idx))}
+                          className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Nome do Pet</label>
                   <input required value={petName} onChange={e => setPetName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: Rex" />

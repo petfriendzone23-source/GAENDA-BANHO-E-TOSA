@@ -21,7 +21,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
       const matchesSearch = 
         client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
+        (app.services || []).some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesStatus = statusFilter === 'Todos' || app.status === statusFilter;
       
@@ -97,7 +97,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-700">{app.services.join(', ')}</span>
+                        <span className="text-sm font-medium text-slate-700">{(app.services || []).join(', ')}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">

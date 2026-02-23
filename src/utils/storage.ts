@@ -17,7 +17,7 @@ const initialData: AppData = {
     }
   ],
   clients: [
-    { id: 'c1', name: 'Ana Oliveira', phone: '(11) 98765-4321' }
+    { id: 'c1', name: 'Ana Oliveira', phones: ['(11) 98765-4321'], addresses: ['Rua das Flores, 123'] }
   ],
   pets: {
     'c1': [{ id: 'p1', name: 'Bolinha', breed: 'Poodle', size: 'Pequeno' }]
@@ -28,7 +28,26 @@ export const loadData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return initialData;
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored) as any;
+    
+    // Migrate appointments
+    if (parsed.appointments) {
+      parsed.appointments = parsed.appointments.map((app: any) => ({
+        ...app,
+        services: app.services || (app.service ? [app.service] : []),
+      }));
+    }
+
+    // Migrate clients
+    if (parsed.clients) {
+      parsed.clients = parsed.clients.map((client: any) => ({
+        ...client,
+        phones: client.phones || (client.phone ? [client.phone] : []),
+        addresses: client.addresses || [],
+      }));
+    }
+
+    return parsed as AppData;
   } catch (e) {
     console.error('Failed to parse stored data', e);
     return initialData;
