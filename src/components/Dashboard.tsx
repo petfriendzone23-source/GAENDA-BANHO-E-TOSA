@@ -3,8 +3,9 @@ import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppData, Appointment } from '../types';
+import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
+import { ClientDetails } from './ClientDetails';
 
 interface DashboardProps {
   data: AppData;
@@ -12,6 +13,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) => {
+  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
   const todayAppointments = data.appointments.filter(a => isToday(parseISO(a.date)));
   const completedToday = todayAppointments.filter(a => a.status === 'Concluído').length;
   const pendingToday = todayAppointments.filter(a => a.status === 'Agendado').length;
@@ -82,8 +84,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
                         <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
                           {pet?.name[0]}
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
+                        <div 
+                          className="flex-1 cursor-pointer group"
+                          onClick={() => client && setSelectedClient(client)}
+                        >
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
                           <p className="text-sm text-slate-500">{client?.name} • {(app.services || []).join(', ')}</p>
                         </div>
                       </div>
@@ -128,6 +133,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
           </div>
         </div>
       </div>
+
+      {selectedClient && (
+        <ClientDetails 
+          client={selectedClient} 
+          data={data} 
+          onClose={() => setSelectedClient(null)} 
+        />
+      )}
     </div>
   );
 };

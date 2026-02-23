@@ -2,8 +2,9 @@ import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Search, Filter, MoreVertical, Check, X, Clock } from 'lucide-react';
-import { AppData, Appointment } from '../types';
+import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
+import { ClientDetails } from './ClientDetails';
 
 interface AppointmentListProps {
   data: AppData;
@@ -13,6 +14,7 @@ interface AppointmentListProps {
 export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
+  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
 
   const filteredAppointments = data.appointments
     .filter(app => {
@@ -86,12 +88,15 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                   return (
                     <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                        <div 
+                          className="flex items-center gap-3 cursor-pointer group"
+                          onClick={() => client && setSelectedClient(client)}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-all">
                             {pet?.name[0]}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{pet?.name}</p>
+                            <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name}</p>
                             <p className="text-xs text-slate-500">{client?.name}</p>
                           </div>
                         </div>
@@ -157,6 +162,14 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
           </table>
         </div>
       </div>
+
+      {selectedClient && (
+        <ClientDetails 
+          client={selectedClient} 
+          data={data} 
+          onClose={() => setSelectedClient(null)} 
+        />
+      )}
     </div>
   );
 };

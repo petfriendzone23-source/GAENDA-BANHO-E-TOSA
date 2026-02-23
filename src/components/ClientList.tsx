@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Plus, Phone, Mail, Dog, MoreHorizontal, MapPin } from 'lucide-react';
-import { AppData } from '../types';
+import { AppData, Client } from '../types';
+import { ClientDetails } from './ClientDetails';
 
 interface ClientListProps {
   data: AppData;
@@ -8,6 +9,7 @@ interface ClientListProps {
 
 export const ClientList: React.FC<ClientListProps> = ({ data }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
 
   const filteredClients = data.clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,7 +45,11 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
           filteredClients.map((client) => {
             const clientPets = data.pets[client.id] || [];
             return (
-              <div key={client.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={client.id} 
+                onClick={() => setSelectedClient(client)}
+                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+              >
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
@@ -98,6 +104,14 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
           </div>
         )}
       </div>
+
+      {selectedClient && (
+        <ClientDetails 
+          client={selectedClient} 
+          data={data} 
+          onClose={() => setSelectedClient(null)} 
+        />
+      )}
     </div>
   );
 };
