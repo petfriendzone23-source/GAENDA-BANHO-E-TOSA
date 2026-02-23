@@ -14,6 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'agenda', label: 'Agenda', icon: Calendar },
     { id: 'appointments', label: 'Agendamentos', icon: Calendar },
     { id: 'clients', label: 'Clientes', icon: Users },
     { id: 'settings', label: 'Configurações', icon: Settings },

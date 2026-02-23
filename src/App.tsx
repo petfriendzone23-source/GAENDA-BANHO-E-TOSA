@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { AppointmentList } from './components/AppointmentList';
 import { ClientList } from './components/ClientList';
+import { CalendarView } from './components/CalendarView';
 import { AppointmentForm } from './components/AppointmentForm';
 import { AppData, Appointment, Client, Pet } from './types';
 import { loadData, saveData } from './utils/storage';
@@ -46,6 +47,8 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard data={data} onNewAppointment={() => setIsFormOpen(true)} />;
+      case 'agenda':
+        return <CalendarView data={data} />;
       case 'appointments':
         return <AppointmentList data={data} onUpdateStatus={handleUpdateStatus} />;
       case 'clients':
