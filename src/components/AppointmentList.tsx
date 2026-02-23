@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2 } from 'lucide-react';
 import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
@@ -9,9 +9,10 @@ import { ClientDetails } from './ClientDetails';
 interface AppointmentListProps {
   data: AppData;
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
+  onEditAppointment: (appointment: Appointment) => void;
 }
 
-export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus }) => {
+export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
@@ -125,6 +126,13 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => onEditAppointment(app)}
+                            className="p-2 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                            title="Editar"
+                          >
+                            <Edit2 size={18} />
+                          </button>
                           {app.status === 'Agendado' && (
                             <>
                               <button 

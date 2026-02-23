@@ -13,6 +13,7 @@ export default function App() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [data, setData] = React.useState<AppData>(loadData());
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
 
   // Sync state with storage
   React.useEffect(() => {
@@ -27,11 +28,17 @@ export default function App() {
       newData.pets[client.id] = pets;
     }
     
-    newData.appointments.push(appointment);
+    const index = newData.appointments.findIndex(a => a.id === appointment.id);
+    if (index !== -1) {
+      newData.appointments[index] = appointment;
+    } else {
+      newData.appointments.push(appointment);
+    }
     
     setData(newData);
     saveData(newData);
     setIsFormOpen(false);
+    setEditingAppointment(undefined);
   };
 
   const handleUpdateStatus = (id: string, status: Appointment['status']) => {
@@ -85,11 +92,37 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard data={data} onNewAppointment={() => setIsFormOpen(true)} />;
+        return (
+          <Dashboard 
+            data={data} 
+            onNewAppointment={() => setIsFormOpen(true)} 
+            onEditAppointment={(app) => {
+              setEditingAppointment(app);
+              setIsFormOpen(true);
+            }}
+          />
+        );
       case 'agenda':
-        return <CalendarView data={data} />;
+        return (
+          <CalendarView 
+            data={data} 
+            onEditAppointment={(app) => {
+              setEditingAppointment(app);
+              setIsFormOpen(true);
+            }}
+          />
+        );
       case 'appointments':
-        return <AppointmentList data={data} onUpdateStatus={handleUpdateStatus} />;
+        return (
+          <AppointmentList 
+            data={data} 
+            onUpdateStatus={handleUpdateStatus} 
+            onEditAppointment={(app) => {
+              setEditingAppointment(app);
+              setIsFormOpen(true);
+            }}
+          />
+        );
       case 'clients':
         return <ClientList data={data} />;
       case 'services':
@@ -122,7 +155,11 @@ export default function App() {
         <AppointmentForm 
           data={data} 
           onSave={handleSaveAppointment} 
-          onClose={() => setIsFormOpen(false)} 
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingAppointment(undefined);
+          }} 
+          appointment={editingAppointment}
         />
       )}
     </Layout>

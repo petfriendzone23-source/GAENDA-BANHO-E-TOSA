@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, TrendingUp, CheckCircle2, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
@@ -10,9 +10,10 @@ import { ClientDetails } from './ClientDetails';
 interface DashboardProps {
   data: AppData;
   onNewAppointment: () => void;
+  onEditAppointment: (appointment: Appointment) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, onEditAppointment }) => {
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
   const todayAppointments = data.appointments.filter(a => isToday(parseISO(a.date)));
   const completedToday = todayAppointments.filter(a => a.status === 'Concluído').length;
@@ -91,6 +92,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
                           <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
                           <p className="text-sm text-slate-500">{client?.name} • {(app.services || []).join(', ')}</p>
                         </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditAppointment(app);
+                          }}
+                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                        >
+                          <Edit2 size={18} />
+                        </button>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-slate-900">{app.time}</p>

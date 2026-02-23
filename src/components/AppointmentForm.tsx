@@ -8,20 +8,21 @@ interface AppointmentFormProps {
   data: AppData;
   onSave: (appointment: Appointment, client?: Client, pets?: Pet[]) => void;
   onClose: () => void;
+  appointment?: Appointment;
 }
 
-export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose }) => {
+export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose, appointment }) => {
   const [step, setStep] = React.useState(1);
   const [isNewClient, setIsNewClient] = React.useState(false);
   
   // Form State
-  const [clientId, setClientId] = React.useState('');
-  const [petId, setPetId] = React.useState('');
-  const [selectedServices, setSelectedServices] = React.useState<string[]>([]);
-  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = React.useState('09:00');
-  const [price, setPrice] = React.useState(40);
-  const [notes, setNotes] = React.useState('');
+  const [clientId, setClientId] = React.useState(appointment?.clientId || '');
+  const [petId, setPetId] = React.useState(appointment?.petId || '');
+  const [selectedServices, setSelectedServices] = React.useState<string[]>(appointment?.services || []);
+  const [date, setDate] = React.useState(appointment?.date || new Date().toISOString().split('T')[0]);
+  const [time, setTime] = React.useState(appointment?.time || '09:00');
+  const [price, setPrice] = React.useState(appointment?.price || 40);
+  const [notes, setNotes] = React.useState(appointment?.notes || '');
 
   const togglePackage = (pkg: Package) => {
     const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
@@ -85,19 +86,19 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       };
     }
 
-    const appointment: Appointment = {
-      id: Math.random().toString(36).substr(2, 9),
+    const updatedAppointment: Appointment = {
+      id: appointment?.id || Math.random().toString(36).substr(2, 9),
       clientId: finalClientId,
       petId: finalPetId,
       services: selectedServices,
       date,
       time,
-      status: 'Agendado',
+      status: appointment?.status || 'Agendado',
       price,
       notes,
     };
 
-    onSave(appointment, newClient, createdPets);
+    onSave(updatedAppointment, newClient, createdPets);
   };
 
   return (
@@ -109,8 +110,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       >
         <header className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-600 text-white">
           <div>
-            <h2 className="text-xl font-bold">Novo Agendamento</h2>
-            <p className="text-indigo-100 text-sm">Preencha os dados para reservar o horário.</p>
+            <h2 className="text-xl font-bold">{appointment ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
+            <p className="text-indigo-100 text-sm">{appointment ? 'Atualize os dados do agendamento.' : 'Preencha os dados para reservar o horário.'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={24} />

@@ -14,15 +14,16 @@ import {
   parseISO
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2 } from 'lucide-react';
 import { AppData, Appointment } from '../types';
 import { cn } from '../utils/cn';
 
 interface CalendarViewProps {
   data: AppData;
+  onEditAppointment: (appointment: Appointment) => void;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ data }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointment }) => {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
 
@@ -145,7 +146,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data }) => {
                   const client = data.clients.find(c => c.id === app.clientId);
                   const pet = data.pets[app.clientId]?.find(p => p.id === app.petId);
                   return (
-                    <div key={app.id} className="flex gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div key={app.id} className="flex gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 group/item relative">
                       <div className="flex flex-col items-center justify-center min-w-[60px] border-r border-slate-200 pr-4">
                         <span className="text-sm font-bold text-slate-900">{app.time}</span>
                         <Clock size={14} className="text-slate-400 mt-1" />
@@ -155,6 +156,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data }) => {
                         <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
                       </div>
+                      <button 
+                        onClick={() => onEditAppointment(app)}
+                        className="absolute top-2 right-2 p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 opacity-0 group-hover/item:opacity-100 transition-all"
+                      >
+                        <Edit2 size={14} />
+                      </button>
                     </div>
                   );
                 })}
