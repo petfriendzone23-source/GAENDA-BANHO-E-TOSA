@@ -4,8 +4,9 @@ import { Dashboard } from './components/Dashboard';
 import { AppointmentList } from './components/AppointmentList';
 import { ClientList } from './components/ClientList';
 import { CalendarView } from './components/CalendarView';
+import { ServiceList } from './components/ServiceList';
 import { AppointmentForm } from './components/AppointmentForm';
-import { AppData, Appointment, Client, Pet } from './types';
+import { AppData, Appointment, Client, Pet, Service, Package } from './types';
 import { loadData, saveData } from './utils/storage';
 
 export default function App() {
@@ -18,12 +19,12 @@ export default function App() {
     setData(loadData());
   }, []);
 
-  const handleSaveAppointment = (appointment: Appointment, client?: Client, pet?: Pet) => {
+  const handleSaveAppointment = (appointment: Appointment, client?: Client, pets?: Pet[]) => {
     const newData = { ...data };
     
-    if (client && pet) {
+    if (client && pets && pets.length > 0) {
       newData.clients.push(client);
-      newData.pets[client.id] = [pet];
+      newData.pets[client.id] = pets;
     }
     
     newData.appointments.push(appointment);
@@ -43,6 +44,44 @@ export default function App() {
     }
   };
 
+  const handleSaveService = (service: Service) => {
+    const newData = { ...data };
+    const index = newData.services.findIndex(s => s.id === service.id);
+    if (index !== -1) {
+      newData.services[index] = service;
+    } else {
+      newData.services.push(service);
+    }
+    saveData(newData);
+    setData(newData);
+  };
+
+  const handleDeleteService = (id: string) => {
+    const newData = { ...data };
+    newData.services = newData.services.filter(s => s.id !== id);
+    saveData(newData);
+    setData(newData);
+  };
+
+  const handleSavePackage = (pkg: Package) => {
+    const newData = { ...data };
+    const index = newData.packages.findIndex(p => p.id === pkg.id);
+    if (index !== -1) {
+      newData.packages[index] = pkg;
+    } else {
+      newData.packages.push(pkg);
+    }
+    saveData(newData);
+    setData(newData);
+  };
+
+  const handleDeletePackage = (id: string) => {
+    const newData = { ...data };
+    newData.packages = newData.packages.filter(p => p.id !== id);
+    saveData(newData);
+    setData(newData);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -53,6 +92,16 @@ export default function App() {
         return <AppointmentList data={data} onUpdateStatus={handleUpdateStatus} />;
       case 'clients':
         return <ClientList data={data} />;
+      case 'services':
+        return (
+          <ServiceList 
+            data={data} 
+            onSaveService={handleSaveService} 
+            onDeleteService={handleDeleteService}
+            onSavePackage={handleSavePackage}
+            onDeletePackage={handleDeletePackage}
+          />
+        );
       case 'settings':
         return (
           <div className="py-20 text-center">

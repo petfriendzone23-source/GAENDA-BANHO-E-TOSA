@@ -22,6 +22,16 @@ const initialData: AppData = {
   pets: {
     'c1': [{ id: 'p1', name: 'Bolinha', breed: 'Poodle', size: 'Pequeno' }]
   },
+  services: [
+    { id: '1', name: 'Banho', price: 40 },
+    { id: '2', name: 'Tosa', price: 50 },
+    { id: '3', name: 'Banho e Tosa', price: 80 },
+    { id: '4', name: 'Hidratação', price: 30 },
+    { id: '5', name: 'Corte de Unha', price: 15 },
+  ],
+  packages: [
+    { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80 }
+  ],
 };
 
 export const loadData = (): AppData => {
@@ -45,6 +55,16 @@ export const loadData = (): AppData => {
         phones: client.phones || (client.phone ? [client.phone] : []),
         addresses: client.addresses || [],
       }));
+    }
+
+    // Migrate services
+    if (!parsed.services) {
+      parsed.services = initialData.services;
+    }
+
+    // Migrate packages
+    if (!parsed.packages) {
+      parsed.packages = initialData.packages || [];
     }
 
     return parsed as AppData;

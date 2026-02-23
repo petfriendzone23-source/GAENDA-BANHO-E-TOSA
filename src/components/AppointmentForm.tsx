@@ -1,12 +1,12 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppData, Appointment, Client, Pet, ServiceType } from '../types';
+import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
 
 interface AppointmentFormProps {
   data: AppData;
-  onSave: (appointment: Appointment, client?: Client, pet?: Pet) => void;
+  onSave: (appointment: Appointment, client?: Client, pets?: Pet[]) => void;
   onClose: () => void;
 }
 
@@ -17,27 +17,46 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   // Form State
   const [clientId, setClientId] = React.useState('');
   const [petId, setPetId] = React.useState('');
-  const [selectedServices, setSelectedServices] = React.useState<ServiceType[]>(['Banho']);
+  const [selectedServices, setSelectedServices] = React.useState<string[]>([]);
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = React.useState('09:00');
   const [price, setPrice] = React.useState(40);
   const [notes, setNotes] = React.useState('');
 
+  const togglePackage = (pkg: Package) => {
+    const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
+    
+    // Check if all services of the package are already selected
+    const allSelected = pkgServiceNames.every(name => selectedServices.includes(name));
+    
+    let nextServices: string[];
+    if (allSelected) {
+      // Remove all services of the package
+      nextServices = selectedServices.filter(name => !pkgServiceNames.includes(name));
+    } else {
+      // Add missing services
+      nextServices = Array.from(new Set([...selectedServices, ...pkgServiceNames]));
+    }
+    
+    setSelectedServices(nextServices);
+    
+    // Recalculate price
+    if (!allSelected) {
+      setPrice(pkg.price);
+    } else {
+      const newPrice = nextServices.reduce((acc, curr) => {
+        return acc + (data.services.find(sv => sv.name === curr)?.price || 0);
+      }, 0);
+      setPrice(newPrice);
+    }
+  };
+
   // New Client State
   const [clientName, setClientName] = React.useState('');
   const [clientPhones, setClientPhones] = React.useState<string[]>(['']);
   const [clientAddresses, setClientAddresses] = React.useState<string[]>(['']);
-  const [petName, setPetName] = React.useState('');
-  const [petBreed, setPetBreed] = React.useState('');
-  const [petSize, setPetSize] = React.useState<Pet['size']>('Médio');
-
-  const services: { name: ServiceType; price: number }[] = [
-    { name: 'Banho', price: 40 },
-    { name: 'Tosa', price: 50 },
-    { name: 'Banho e Tosa', price: 80 },
-    { name: 'Hidratação', price: 30 },
-    { name: 'Corte de Unha', price: 15 },
-  ];
+  const [newClientPets, setNewClientPets] = React.useState<{ name: string, breed: string, size: Pet['size'] }[]>([{ name: '', breed: '', size: 'Médio' }]);
+  const [selectedPetIndex, setSelectedPetIndex] = React.useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,18 +64,25 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     let finalClientId = clientId;
     let finalPetId = petId;
     let newClient: Client | undefined;
-    let newPet: Pet | undefined;
+    let createdPets: Pet[] | undefined;
 
     if (isNewClient) {
       finalClientId = Math.random().toString(36).substr(2, 9);
-      finalPetId = Math.random().toString(36).substr(2, 9);
+      createdPets = newClientPets.map(p => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: p.name,
+        breed: p.breed,
+        size: p.size
+      }));
+      
+      finalPetId = createdPets[selectedPetIndex].id;
+      
       newClient = { 
         id: finalClientId, 
         name: clientName, 
         phones: clientPhones.filter(p => p.trim() !== ''), 
         addresses: clientAddresses.filter(a => a.trim() !== '') 
       };
-      newPet = { id: finalPetId, name: petName, breed: petBreed, size: petSize };
     }
 
     const appointment: Appointment = {
@@ -71,7 +97,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       notes,
     };
 
-    onSave(appointment, newClient, newPet);
+    onSave(appointment, newClient, createdPets);
   };
 
   return (
@@ -197,21 +223,104 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                   ))}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-slate-700">Nome do Pet</label>
-                  <input required value={petName} onChange={e => setPetName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: Rex" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-slate-700">Raça</label>
-                  <input required value={petBreed} onChange={e => setPetBreed(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: Golden Retriever" />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <label className="text-sm font-semibold text-slate-700">Porte</label>
-                  <select value={petSize} onChange={e => setPetSize(e.target.value as any)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option>Pequeno</option>
-                    <option>Médio</option>
-                    <option>Grande</option>
-                  </select>
+                <div className="space-y-4 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">Pets do Cliente</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setNewClientPets([...newClientPets, { name: '', breed: '', size: 'Médio' }])}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                    >
+                      <Plus size={14} /> Adicionar Pet
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {newClientPets.map((pet, idx) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 relative space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                              <Dog size={16} />
+                            </div>
+                            <span className="font-bold text-slate-900 text-sm">Pet #{idx + 1}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input 
+                                type="radio" 
+                                name="selectedPet" 
+                                checked={selectedPetIndex === idx} 
+                                onChange={() => setSelectedPetIndex(idx)}
+                                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-xs font-medium text-slate-500">Agendar para este pet</span>
+                            </label>
+                            {newClientPets.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setNewClientPets(newClientPets.filter((_, i) => i !== idx));
+                                  if (selectedPetIndex === idx) setSelectedPetIndex(0);
+                                  else if (selectedPetIndex > idx) setSelectedPetIndex(selectedPetIndex - 1);
+                                }}
+                                className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Nome</label>
+                            <input 
+                              required 
+                              value={pet.name} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].name = e.target.value;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                              placeholder="Ex: Rex" 
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Raça</label>
+                            <input 
+                              required 
+                              value={pet.breed} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].breed = e.target.value;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                              placeholder="Ex: Poodle" 
+                            />
+                          </div>
+                          <div className="space-y-1 md:col-span-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Porte</label>
+                            <select 
+                              value={pet.size} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].size = e.target.value as any;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                            >
+                              <option>Pequeno</option>
+                              <option>Médio</option>
+                              <option>Grande</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -242,13 +351,39 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-semibold text-slate-700">Serviços Selecionados</label>
+              <label className="text-sm font-semibold text-slate-700">Pacotes Disponíveis</label>
               <div className="flex flex-wrap gap-2">
-                {services.map(s => {
+                {data.packages.map(pkg => {
+                  const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
+                  const isSelected = pkgServiceNames.every(name => selectedServices.includes(name));
+                  return (
+                    <button
+                      key={pkg.id}
+                      type="button"
+                      onClick={() => togglePackage(pkg)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all flex items-center gap-2",
+                        isSelected 
+                          ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-100" 
+                          : "bg-white border-slate-100 text-slate-500 hover:border-amber-200"
+                      )}
+                    >
+                      <Box size={16} />
+                      {pkg.name} (R$ {pkg.price})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-slate-700">Serviços Individuais</label>
+              <div className="flex flex-wrap gap-2">
+                {data.services.map(s => {
                   const isSelected = selectedServices.includes(s.name);
                   return (
                     <button
-                      key={s.name}
+                      key={s.id}
                       type="button"
                       onClick={() => {
                         let next;
@@ -261,7 +396,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                         
                         // Recalculate total price
                         const newPrice = next.reduce((acc, curr) => {
-                          return acc + (services.find(sv => sv.name === curr)?.price || 0);
+                          return acc + (data.services.find(sv => sv.name === curr)?.price || 0);
                         }, 0);
                         setPrice(newPrice);
                       }}

@@ -119,14 +119,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment }) 
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900">Serviços Populares</h3>
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-            {['Banho', 'Tosa', 'Banho e Tosa'].map((service) => (
-              <div key={service} className="flex items-center justify-between">
+            {data.services.slice(0, 5).map((service) => (
+              <div key={service.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-slate-700 font-medium">{service}</span>
+                  <span className="text-slate-700 font-medium">{service.name}</span>
                 </div>
                 <span className="text-slate-400 text-sm">
-                  {data.appointments.filter(a => (a.services || []).includes(service as any)).length} agend.
+                  {data.appointments.filter(a => (a.services || []).includes(service.name)).length} agend.
                 </span>
               </div>
             ))}

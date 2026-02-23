@@ -1,5 +1,3 @@
-export type ServiceType = 'Banho' | 'Tosa' | 'Banho e Tosa' | 'Hidratação' | 'Corte de Unha';
-
 export interface Pet {
   id: string;
   name: string;
@@ -19,7 +17,7 @@ export interface Appointment {
   id: string;
   clientId: string;
   petId: string;
-  services: ServiceType[];
+  services: string[];
   date: string; // ISO string
   time: string; // HH:mm
   status: 'Agendado' | 'Concluído' | 'Cancelado';
@@ -27,8 +25,23 @@ export interface Appointment {
   notes?: string;
 }
 
+export interface Service {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+  serviceIds: string[];
+  price: number;
+}
+
 export interface AppData {
   appointments: Appointment[];
   clients: Client[];
   pets: Record<string, Pet[]>; // clientId -> Pet[]
+  services: Service[];
+  packages: Package[];
 }
