@@ -24,6 +24,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId);
 
   const togglePackage = (pkg: Package) => {
     const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
@@ -36,6 +37,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       setSessionDates([sessionDates[0]]);
       setSessionTimes([sessionTimes[0]]);
       setSessionServices([[]]);
+      setSelectedPackageId(undefined);
     } else {
       setSessions(pkg.sessions);
       
@@ -56,6 +58,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       setSessionTimes(newTimes.slice(0, pkg.sessions));
       setSessionServices(initializedServices);
       setPrice(pkg.price);
+      setSelectedPackageId(pkg.id);
     }
   };
 
@@ -125,6 +128,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       status: appointment?.status || 'Agendado',
       price: idx === 0 ? price : 0, 
       notes,
+      packageId: selectedPackageId,
     }));
 
     onSave(appointments, newClient, createdPets);

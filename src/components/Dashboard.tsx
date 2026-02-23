@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, TrendingUp, CheckCircle2, AlertCircle, Edit2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, TrendingUp, CheckCircle2, AlertCircle, Edit2, Scissors, Box } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
@@ -19,6 +19,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
   const completedToday = todayAppointments.filter(a => a.status === 'Concluído').length;
   const pendingToday = todayAppointments.filter(a => a.status === 'Agendado').length;
   
+  const todayPackages = todayAppointments.filter(a => !!a.packageId).length;
+  const todayServices = todayAppointments.filter(a => !a.packageId).length;
+
   const totalRevenue = data.appointments
     .filter(a => a.status === 'Concluído')
     .reduce((acc, curr) => acc + curr.price, 0);
@@ -69,60 +72,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-900">Próximos Agendamentos</h3>
-            <button className="text-indigo-600 text-sm font-semibold hover:underline">Ver todos</button>
+            <h3 className="text-xl font-bold text-slate-900">Resumo do Dia</h3>
           </div>
           
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            {todayAppointments.length > 0 ? (
-              <div className="divide-y divide-slate-50">
-                {todayAppointments.slice(0, 5).map((app) => {
-                  const client = data.clients.find(c => c.id === app.clientId);
-                  const pet = data.pets[app.clientId]?.find(p => p.id === app.petId);
-                  return (
-                    <div key={app.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                          {pet?.name[0]}
-                        </div>
-                        <div 
-                          className="flex-1 cursor-pointer group"
-                          onClick={() => setSelectedAppointment(app)}
-                        >
-                          <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name} <span className="text-slate-400 font-normal">({pet?.breed})</span></p>
-                          <p className="text-sm text-slate-500">{client?.name} • {(app.services || []).join(', ')}</p>
-                        </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditAppointment(app);
-                          }}
-                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-slate-900">{app.time}</p>
-                        <span className={cn(
-                          "text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full",
-                          app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                        )}>
-                          {app.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:border-indigo-200 transition-all">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                <Scissors size={32} />
               </div>
-            ) : (
-              <div className="p-10 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
-                  <AlertCircle size={32} />
+              <p className="text-slate-500 font-medium">Serviços Avulsos</p>
+              <p className="text-4xl font-black text-slate-900 mt-2">{todayServices}</p>
+              <p className="text-xs text-slate-400 mt-2">Agendados para hoje</p>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:border-amber-200 transition-all">
+              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                <Box size={32} />
+              </div>
+              <p className="text-slate-500 font-medium">Sessões de Pacotes</p>
+              <p className="text-4xl font-black text-slate-900 mt-2">{todayPackages}</p>
+              <p className="text-xs text-slate-400 mt-2">Agendados para hoje</p>
+            </div>
+          </div>
+
+          <div className="bg-indigo-600 p-8 rounded-3xl text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+            <div className="relative z-10">
+              <h4 className="text-2xl font-bold mb-2">Total de Atendimentos</h4>
+              <p className="text-indigo-100 mb-6">Você tem um total de {todayAppointments.length} compromissos hoje.</p>
+              <div className="flex gap-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-200 mb-1">Concluídos</p>
+                  <p className="text-2xl font-bold">{completedToday}</p>
                 </div>
-                <p className="text-slate-500 font-medium">Nenhum agendamento para hoje.</p>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-200 mb-1">Pendentes</p>
+                  <p className="text-2xl font-bold">{pendingToday}</p>
+                </div>
               </div>
-            )}
+            </div>
+            <div className="absolute -right-10 -bottom-10 opacity-10 rotate-12">
+              <CalendarIcon size={200} />
+            </div>
           </div>
         </div>
 

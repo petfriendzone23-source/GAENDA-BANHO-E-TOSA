@@ -1,7 +1,8 @@
 import React from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday, isAfter, startOfDay, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2 } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AppData, Appointment, Client } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
@@ -15,6 +16,9 @@ interface AppointmentListProps {
 export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
+  const [dateFilter, setDateFilter] = React.useState<'Hoje' | 'Próximos' | 'Data Específica' | 'Todos'>('Hoje');
+  const [viewType, setViewType] = React.useState<'Lista' | 'Grade'>('Grade');
+  const [customDate, setCustomDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
 
   const filteredAppointments = data.appointments
@@ -28,9 +32,31 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
       
       const matchesStatus = statusFilter === 'Todos' || app.status === statusFilter;
       
-      return matchesSearch && matchesStatus;
+      const appDate = parseISO(app.date);
+      const today = startOfDay(new Date());
+      
+      let matchesDate = true;
+      if (dateFilter === 'Hoje') {
+        matchesDate = isToday(appDate);
+      } else if (dateFilter === 'Próximos') {
+        matchesDate = isAfter(appDate, today) && !isToday(appDate);
+      } else if (dateFilter === 'Data Específica') {
+        matchesDate = isSameDay(appDate, parseISO(customDate));
+      }
+      
+      return matchesSearch && matchesStatus && matchesDate;
     })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort((a, b) => {
+      const timeA = a.time.split(':').map(Number);
+      const timeB = b.time.split(':').map(Number);
+      if (timeA[0] !== timeB[0]) return timeA[0] - timeB[0];
+      return timeA[1] - timeB[1];
+    });
+
+  const hours = Array.from({ length: 14 }, (_, i) => {
+    const h = i + 7; // 07:00 to 20:00
+    return `${h.toString().padStart(2, '0')}:00`;
+  });
 
   return (
     <div className="space-y-6">
@@ -41,8 +67,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
         </div>
       </header>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input 
             type="text" 
@@ -52,22 +78,188 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
             className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter size={18} className="text-slate-400 ml-2" />
-          <select 
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as any)}
-            className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium"
-          >
-            <option value="Todos">Todos os Status</option>
-            <option value="Agendado">Agendado</option>
-            <option value="Concluído">Concluído</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setViewType('Grade')}
+              className={cn(
+                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                viewType === 'Grade' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Grade
+            </button>
+            <button 
+              onClick={() => setViewType('Lista')}
+              className={cn(
+                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                viewType === 'Lista' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Lista
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar size={18} className="text-slate-400" />
+            <div className="flex gap-2">
+              <select 
+                value={dateFilter}
+                onChange={e => setDateFilter(e.target.value as any)}
+                className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
+              >
+                <option value="Hoje">Hoje</option>
+                <option value="Próximos">Próximos Dias</option>
+                <option value="Data Específica">Data Específica</option>
+                <option value="Todos">Todos os Dias</option>
+              </select>
+              {dateFilter === 'Data Específica' && (
+                <input 
+                  type="date"
+                  value={customDate}
+                  onChange={e => setCustomDate(e.target.value)}
+                  className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
+                />
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter size={18} className="text-slate-400" />
+            <select 
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value as any)}
+              className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
+            >
+              <option value="Todos">Status</option>
+              <option value="Agendado">Agendado</option>
+              <option value="Concluído">Concluído</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      {viewType === 'Grade' ? (
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 divide-y divide-slate-100">
+            {hours.map(hour => {
+              const hourAppointments = filteredAppointments.filter(app => app.time.startsWith(hour.split(':')[0]));
+              return (
+                <div key={hour} className="flex min-h-[100px] group hover:bg-slate-50/30 transition-colors">
+                  <div className="w-24 flex flex-col items-center justify-start pt-4 border-r border-slate-100 bg-slate-50/50">
+                    <span className="text-sm font-black text-slate-900">{hour}</span>
+                    <Clock size={14} className="text-slate-300 mt-1" />
+                  </div>
+                  <div className="flex-1 p-4 flex flex-wrap gap-4">
+                    {hourAppointments.length > 0 ? (
+                      hourAppointments.map(app => {
+                        const client = data.clients.find(c => c.id === app.clientId);
+                        const pet = data.pets[app.clientId]?.find(p => p.id === app.petId);
+                        return (
+                          <motion.div
+                            layoutId={app.id}
+                            key={app.id}
+                            onClick={() => setSelectedAppointment(app)}
+                            className={cn(
+                              "flex-1 min-w-[250px] max-w-[400px] p-4 rounded-2xl border-2 cursor-pointer transition-all relative group/card",
+                              app.status === 'Concluído' ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" :
+                              app.status === 'Cancelado' ? "bg-rose-50 border-rose-100 hover:border-rose-300" :
+                              "bg-indigo-50 border-indigo-100 hover:border-indigo-300 shadow-sm hover:shadow-md"
+                            )}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm",
+                                    app.status === 'Concluído' ? "bg-emerald-500" :
+                                    app.status === 'Cancelado' ? "bg-rose-500" :
+                                    "bg-indigo-600"
+                                  )}>
+                                    {pet?.name[0]}
+                                  </div>
+                                  <div className={cn(
+                                    "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
+                                    app.status === 'Concluído' ? "bg-emerald-500" :
+                                    app.status === 'Cancelado' ? "bg-rose-500" :
+                                    "bg-amber-500"
+                                  )} />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-900 leading-tight">{pet?.name}</p>
+                                  <p className="text-[10px] text-slate-500 font-medium">{client?.name}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs font-black text-slate-900">{app.time}</p>
+                                <span className={cn(
+                                  "text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-md",
+                                  app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : 
+                                  app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 
+                                  "bg-rose-100 text-rose-700"
+                                )}>
+                                  {app.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {(app.services || []).map(s => (
+                                <span key={s} className="text-[9px] bg-white/60 text-slate-600 px-2 py-0.5 rounded-md border border-slate-100 font-bold">
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
+                              {app.status === 'Agendado' && (
+                                <>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onUpdateStatus(app.id, 'Concluído');
+                                    }}
+                                    className="p-1.5 bg-white rounded-lg shadow-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                    title="Concluir"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onUpdateStatus(app.id, 'Cancelado');
+                                    }}
+                                    className="p-1.5 bg-white rounded-lg shadow-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                                    title="Cancelar"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </>
+                              )}
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditAppointment(app);
+                                }}
+                                className="p-1.5 bg-white rounded-lg shadow-sm text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="Editar"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl opacity-20">
+                        <span className="text-xs font-medium text-slate-400 italic">Disponível</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -170,6 +362,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
           </table>
         </div>
       </div>
+
+      )}
 
       {selectedAppointment && (
         <ClientDetails 

@@ -23,6 +23,7 @@ export interface Appointment {
   status: 'Agendado' | 'Concluído' | 'Cancelado';
   price: number;
   notes?: string;
+  packageId?: string;
 }
 
 export interface Service {
