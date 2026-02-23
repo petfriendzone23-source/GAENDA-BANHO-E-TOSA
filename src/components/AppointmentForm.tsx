@@ -6,7 +6,7 @@ import { cn } from '../utils/cn';
 
 interface AppointmentFormProps {
   data: AppData;
-  onSave: (appointment: Appointment, client?: Client, pets?: Pet[]) => void;
+  onSave: (appointments: Appointment[], client?: Client, pets?: Pet[]) => void;
   onClose: () => void;
   appointment?: Appointment;
 }
@@ -19,8 +19,9 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [clientId, setClientId] = React.useState(appointment?.clientId || '');
   const [petId, setPetId] = React.useState(appointment?.petId || '');
   const [selectedServices, setSelectedServices] = React.useState<string[]>(appointment?.services || []);
-  const [date, setDate] = React.useState(appointment?.date || new Date().toISOString().split('T')[0]);
-  const [time, setTime] = React.useState(appointment?.time || '09:00');
+  const [sessions, setSessions] = React.useState(1);
+  const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || new Date().toISOString().split('T')[0]]);
+  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || '09:00']);
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
 
@@ -34,9 +35,22 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     if (allSelected) {
       // Remove all services of the package
       nextServices = selectedServices.filter(name => !pkgServiceNames.includes(name));
+      setSessions(1);
+      setSessionDates([sessionDates[0]]);
+      setSessionTimes([sessionTimes[0]]);
     } else {
       // Add missing services
       nextServices = Array.from(new Set([...selectedServices, ...pkgServiceNames]));
+      setSessions(pkg.sessions);
+      
+      const newDates = [...sessionDates];
+      const newTimes = [...sessionTimes];
+      while (newDates.length < pkg.sessions) {
+        newDates.push(new Date().toISOString().split('T')[0]);
+        newTimes.push('09:00');
+      }
+      setSessionDates(newDates.slice(0, pkg.sessions));
+      setSessionTimes(newTimes.slice(0, pkg.sessions));
     }
     
     setSelectedServices(nextServices);
@@ -86,19 +100,21 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       };
     }
 
-    const updatedAppointment: Appointment = {
-      id: appointment?.id || Math.random().toString(36).substr(2, 9),
+    const appointments: Appointment[] = sessionDates.map((d, idx) => ({
+      id: idx === 0 && appointment ? appointment.id : Math.random().toString(36).substr(2, 9),
       clientId: finalClientId,
       petId: finalPetId,
       services: selectedServices,
-      date,
-      time,
+      date: d,
+      time: sessionTimes[idx],
       status: appointment?.status || 'Agendado',
-      price,
+      price: idx === 0 ? price : 0, // Only charge on the first session if it's a package, or split? 
+      // User probably wants the total price on the first one or just the total.
+      // Let's put the full price on the first one for now.
       notes,
-    };
+    }));
 
-    onSave(updatedAppointment, newClient, createdPets);
+    onSave(appointments, newClient, createdPets);
   };
 
   return (
@@ -415,26 +431,60 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-slate-700">Datas e Horários ({sessions} sessões)</label>
+                {sessions > 1 && (
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+                    Pacote Multi-sessão
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                {sessionDates.map((d, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Data da Sessão {idx + 1}</label>
+                      <div className="relative">
+                        <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                          type="date" 
+                          value={d} 
+                          onChange={e => {
+                            const next = [...sessionDates];
+                            next[idx] = e.target.value;
+                            setSessionDates(next);
+                          }} 
+                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Horário</label>
+                      <div className="relative">
+                        <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                          type="time" 
+                          value={sessionTimes[idx]} 
+                          onChange={e => {
+                            const next = [...sessionTimes];
+                            next[idx] = e.target.value;
+                            setSessionTimes(next);
+                          }} 
+                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-slate-700">Preço Total (R$)</label>
                 <div className="relative">
                   <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-slate-700">Data</label>
-                <div className="relative">
-                  <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-slate-700">Horário</label>
-                <div className="relative">
-                  <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               </div>
             </div>

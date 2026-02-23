@@ -18,12 +18,16 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
   const [name, setName] = React.useState('');
   const [price, setPrice] = React.useState<number>(0);
   const [selectedServiceIds, setSelectedServiceIds] = React.useState<string[]>([]);
+  const [type, setType] = React.useState<Package['type']>('custom');
+  const [sessions, setSessions] = React.useState<number>(1);
 
   const handleEdit = (pkg: Package) => {
     setEditingId(pkg.id);
     setName(pkg.name);
     setPrice(pkg.price);
     setSelectedServiceIds(pkg.serviceIds);
+    setType(pkg.type || 'custom');
+    setSessions(pkg.sessions || 1);
     setIsAdding(false);
   };
 
@@ -33,6 +37,8 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
     setName('');
     setPrice(0);
     setSelectedServiceIds([]);
+    setType('custom');
+    setSessions(1);
   };
 
   const handleSave = () => {
@@ -42,7 +48,9 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
       id: editingId || Math.random().toString(36).substr(2, 9),
       name: name.trim(),
       price: price,
-      serviceIds: selectedServiceIds
+      serviceIds: selectedServiceIds,
+      type,
+      sessions
     });
     
     handleCancel();
@@ -105,6 +113,47 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                     placeholder="Ex: Combo Mensal"
                   />
                 </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Tipo de Pacote</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'custom', label: 'Avulso', sessions: 1 },
+                      { id: 'weekly', label: 'Semanal', sessions: 2 },
+                      { id: 'monthly', label: 'Mensal', sessions: 4 }
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setType(t.id as any);
+                          setSessions(t.sessions);
+                        }}
+                        className={cn(
+                          "py-2 rounded-xl text-xs font-bold border-2 transition-all",
+                          type === t.id 
+                            ? "bg-indigo-600 border-indigo-600 text-white" 
+                            : "bg-slate-50 border-slate-100 text-slate-500 hover:border-indigo-100"
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {type === 'custom' && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-400 uppercase">Número de Sessões</label>
+                    <input 
+                      type="number"
+                      value={sessions}
+                      onChange={e => setSessions(Number(e.target.value))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                      min="1"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase">Serviços Inclusos</label>
@@ -191,7 +240,18 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-lg">{pkg.name}</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-slate-900 text-lg">{pkg.name}</h4>
+                    <span className={cn(
+                      "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider",
+                      pkg.type === 'monthly' ? "bg-purple-100 text-purple-600" :
+                      pkg.type === 'weekly' ? "bg-blue-100 text-blue-600" :
+                      "bg-slate-100 text-slate-600"
+                    )}>
+                      {pkg.type === 'monthly' ? 'Mensal' : pkg.type === 'weekly' ? 'Semanal' : 'Personalizado'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium mt-1">{pkg.sessions} sessões inclusas</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {pkg.serviceIds.map(sid => {
                       const s = data.services.find(sv => sv.id === sid);

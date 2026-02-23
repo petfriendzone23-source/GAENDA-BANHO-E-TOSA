@@ -30,7 +30,7 @@ const initialData: AppData = {
     { id: '5', name: 'Corte de Unha', price: 15 },
   ],
   packages: [
-    { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80 }
+    { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80, type: 'custom', sessions: 1 }
   ],
 };
 
@@ -65,6 +65,12 @@ export const loadData = (): AppData => {
     // Migrate packages
     if (!parsed.packages) {
       parsed.packages = initialData.packages || [];
+    } else {
+      parsed.packages = parsed.packages.map((pkg: any) => ({
+        ...pkg,
+        type: pkg.type || 'custom',
+        sessions: pkg.sessions || 1
+      }));
     }
 
     return parsed as AppData;

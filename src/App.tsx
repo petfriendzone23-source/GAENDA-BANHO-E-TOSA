@@ -20,7 +20,7 @@ export default function App() {
     setData(loadData());
   }, []);
 
-  const handleSaveAppointment = (appointment: Appointment, client?: Client, pets?: Pet[]) => {
+  const handleSaveAppointments = (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
     const newData = { ...data };
     
     if (client && pets && pets.length > 0) {
@@ -28,12 +28,14 @@ export default function App() {
       newData.pets[client.id] = pets;
     }
     
-    const index = newData.appointments.findIndex(a => a.id === appointment.id);
-    if (index !== -1) {
-      newData.appointments[index] = appointment;
-    } else {
-      newData.appointments.push(appointment);
-    }
+    appointments.forEach(appointment => {
+      const index = newData.appointments.findIndex(a => a.id === appointment.id);
+      if (index !== -1) {
+        newData.appointments[index] = appointment;
+      } else {
+        newData.appointments.push(appointment);
+      }
+    });
     
     setData(newData);
     saveData(newData);
@@ -154,7 +156,7 @@ export default function App() {
       {isFormOpen && (
         <AppointmentForm 
           data={data} 
-          onSave={handleSaveAppointment} 
+          onSave={handleSaveAppointments} 
           onClose={() => {
             setIsFormOpen(false);
             setEditingAppointment(undefined);

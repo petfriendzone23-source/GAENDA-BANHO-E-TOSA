@@ -36,6 +36,8 @@ export interface Package {
   name: string;
   serviceIds: string[];
   price: number;
+  type: 'custom' | 'weekly' | 'monthly';
+  sessions: number;
 }
 
 export interface AppData {
