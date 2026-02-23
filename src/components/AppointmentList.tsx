@@ -209,30 +209,48 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                               ))}
                             </div>
                             <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
-                              {app.status === 'Agendado' && (
-                                <>
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onUpdateStatus(app.id, 'Concluído');
-                                    }}
-                                    className="p-1.5 bg-white rounded-lg shadow-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                    title="Concluir"
-                                  >
-                                    <Check size={14} />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onUpdateStatus(app.id, 'Cancelado');
-                                    }}
-                                    className="p-1.5 bg-white rounded-lg shadow-sm text-rose-600 hover:bg-rose-50 transition-colors"
-                                    title="Cancelar"
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </>
-                              )}
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onUpdateStatus(app.id, 'Concluído');
+                                }}
+                                className={cn(
+                                  "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
+                                  app.status === 'Concluído' ? "text-emerald-300 cursor-not-allowed" : "text-emerald-600 hover:bg-emerald-50"
+                                )}
+                                disabled={app.status === 'Concluído'}
+                                title="Concluir"
+                              >
+                                <Check size={14} />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onUpdateStatus(app.id, 'Agendado');
+                                }}
+                                className={cn(
+                                  "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
+                                  app.status === 'Agendado' ? "text-amber-300 cursor-not-allowed" : "text-amber-600 hover:bg-amber-50"
+                                )}
+                                disabled={app.status === 'Agendado'}
+                                title="Re-agendar"
+                              >
+                                <Clock size={14} />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onUpdateStatus(app.id, 'Cancelado');
+                                }}
+                                className={cn(
+                                  "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
+                                  app.status === 'Cancelado' ? "text-rose-300 cursor-not-allowed" : "text-rose-600 hover:bg-rose-50"
+                                )}
+                                disabled={app.status === 'Cancelado'}
+                                title="Cancelar"
+                              >
+                                <X size={14} />
+                              </button>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -325,24 +343,39 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                           >
                             <Edit2 size={18} />
                           </button>
-                          {app.status === 'Agendado' && (
-                            <>
-                              <button 
-                                onClick={() => onUpdateStatus(app.id, 'Concluído')}
-                                title="Concluir"
-                                className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-lg transition-colors"
-                              >
-                                <Check size={18} />
-                              </button>
-                              <button 
-                                onClick={() => onUpdateStatus(app.id, 'Cancelado')}
-                                title="Cancelar"
-                                className="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
-                              >
-                                <X size={18} />
-                              </button>
-                            </>
-                          )}
+                          <button 
+                            onClick={() => onUpdateStatus(app.id, 'Concluído')}
+                            title="Concluir"
+                            disabled={app.status === 'Concluído'}
+                            className={cn(
+                              "p-2 rounded-lg transition-colors",
+                              app.status === 'Concluído' ? "text-emerald-200 cursor-not-allowed" : "hover:bg-emerald-50 text-emerald-600"
+                            )}
+                          >
+                            <Check size={18} />
+                          </button>
+                          <button 
+                            onClick={() => onUpdateStatus(app.id, 'Agendado')}
+                            title="Re-agendar"
+                            disabled={app.status === 'Agendado'}
+                            className={cn(
+                              "p-2 rounded-lg transition-colors",
+                              app.status === 'Agendado' ? "text-amber-200 cursor-not-allowed" : "hover:bg-amber-50 text-amber-600"
+                            )}
+                          >
+                            <Clock size={18} />
+                          </button>
+                          <button 
+                            onClick={() => onUpdateStatus(app.id, 'Cancelado')}
+                            title="Cancelar"
+                            disabled={app.status === 'Cancelado'}
+                            className={cn(
+                              "p-2 rounded-lg transition-colors",
+                              app.status === 'Cancelado' ? "text-rose-200 cursor-not-allowed" : "hover:bg-rose-50 text-rose-600"
+                            )}
+                          >
+                            <X size={18} />
+                          </button>
                           <button className="p-2 hover:bg-slate-100 text-slate-400 rounded-lg transition-colors">
                             <MoreVertical size={18} />
                           </button>

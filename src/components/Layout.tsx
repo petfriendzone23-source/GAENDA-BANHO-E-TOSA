@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../utils/cn';
 
@@ -17,6 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'agenda', label: 'Agenda', icon: Calendar },
     { id: 'appointments', label: 'Agendamentos', icon: Calendar },
     { id: 'clients', label: 'Clientes', icon: Users },
+    { id: 'best-clients', label: 'Melhores Clientes', icon: Trophy },
     { id: 'services', label: 'Serviços', icon: Scissors },
     { id: 'settings', label: 'Configurações', icon: Settings },
   ];
