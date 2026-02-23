@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { AppointmentList } from './components/AppointmentList';
 import { ClientList } from './components/ClientList';
+import { BestClients } from './components/BestClients';
 import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
 import { AppointmentForm } from './components/AppointmentForm';
@@ -127,6 +128,8 @@ export default function App() {
         );
       case 'clients':
         return <ClientList data={data} />;
+      case 'best-clients':
+        return <BestClients data={data} />;
       case 'services':
         return (
           <ServiceList 

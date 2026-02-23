@@ -468,13 +468,13 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                               type="button"
                               onClick={() => toggleServiceInSession(idx, s.name)}
                               className={cn(
-                                "px-3 py-1 rounded-full text-[10px] font-bold border-2 transition-all",
+                                "px-3 py-1 rounded-full text-[10px] font-bold border-2 transition-all flex items-center gap-1",
                                 isSelected 
                                   ? "bg-indigo-600 border-indigo-600 text-white" 
                                   : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200"
                               )}
                             >
-                              {s.name}
+                              {s.name} <span className="opacity-70 font-normal">(R$ {s.price.toFixed(2)})</span>
                             </button>
                           );
                         })}
@@ -485,10 +485,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-slate-700">Preço Total do Pacote (R$)</label>
+                <label className="text-sm font-semibold text-slate-700">Preço Total (R$)</label>
                 <div className="relative">
                   <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600" />
+                  <input type="number" step="0.01" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600" />
                 </div>
               </div>
             </div>
