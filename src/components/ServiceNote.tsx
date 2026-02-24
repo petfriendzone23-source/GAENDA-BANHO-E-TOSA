@@ -16,19 +16,28 @@ interface ServiceNoteProps {
 
 export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, pets, allServices, onClose }) => {
   const serviceNoteRef = React.useRef<HTMLDivElement>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const relevantPet = pets.find(p => p.id === appointment.petId); // Find the specific pet for the appointment
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (serviceNoteRef.current) {
-      const opt = {
-        margin: 1,
-        filename: `nota_servico_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().from(serviceNoteRef.current).set(opt).save();
+      setIsGeneratingPdf(true);
+      try {
+        const opt = {
+          margin: 1,
+          filename: `nota_servico_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        await html2pdf().from(serviceNoteRef.current).set(opt).save();
+      } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        // Optionally, show a user-friendly error message
+      } finally {
+        setIsGeneratingPdf(false);
+      }
     }
   };
 
@@ -125,9 +134,13 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
           <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all">
             Fechar
           </button>
-          <button onClick={handleDownloadPdf} className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
-            <Download size={20} />
-            Baixar PDF
+          <button 
+            onClick={handleDownloadPdf} 
+            className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? 'Gerando PDF...' : 'Baixar PDF'}
+            {!isGeneratingPdf && <Download size={20} />}
           </button>
         </footer>
       </motion.div>
