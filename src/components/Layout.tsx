@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors, Trophy } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors, Trophy, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../utils/cn';
 
@@ -7,9 +7,10 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  syncStatus: 'synced' | 'syncing' | 'error' | 'offline';
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, syncStatus }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const menuItems = [
@@ -55,6 +56,26 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </nav>
 
         <div className="mt-auto pt-6 border-t border-slate-100">
+          <div className="mb-4 px-2">
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider",
+              syncStatus === 'synced' ? "bg-emerald-50 text-emerald-600" :
+              syncStatus === 'syncing' ? "bg-amber-50 text-amber-600" :
+              syncStatus === 'error' ? "bg-rose-50 text-rose-600" :
+              "bg-slate-100 text-slate-500"
+            )}>
+              {syncStatus === 'synced' && <Cloud size={14} />}
+              {syncStatus === 'syncing' && <RefreshCw size={14} className="animate-spin" />}
+              {syncStatus === 'error' && <CloudOff size={14} />}
+              {syncStatus === 'offline' && <CloudOff size={14} />}
+              <span>
+                {syncStatus === 'synced' ? 'Nuvem Sincronizada' :
+                 syncStatus === 'syncing' ? 'Sincronizando...' :
+                 syncStatus === 'error' ? 'Erro na Nuvem' :
+                 'Modo Offline'}
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
               <img src="https://picsum.photos/seed/user/100/100" alt="User" referrerPolicy="no-referrer" />

@@ -9,9 +9,18 @@ interface SettingsProps {
   setZoomLevel: (level: number) => void;
   data: AppData;
   onSaveData: (data: AppData) => void;
+  onSaveTemplate: (template: WhatsAppTemplate) => void;
+  onDeleteTemplate: (id: string) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, data, onSaveData }) => {
+export const Settings: React.FC<SettingsProps> = ({ 
+  zoomLevel, 
+  setZoomLevel, 
+  data, 
+  onSaveData,
+  onSaveTemplate,
+  onDeleteTemplate
+}) => {
   const [editingTemplate, setEditingTemplate] = React.useState<WhatsAppTemplate | null>(null);
   const [isAddingNew, setIsAddingNew] = React.useState(false);
   const [newTemplate, setNewTemplate] = React.useState<Partial<WhatsAppTemplate>>({ title: '', message: '' });
@@ -29,22 +38,13 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
   const handleSaveTemplate = () => {
     if (!newTemplate.title || !newTemplate.message) return;
 
-    const newData = { ...data };
-    if (editingTemplate) {
-      const index = newData.whatsappTemplates.findIndex(t => t.id === editingTemplate.id);
-      if (index !== -1) {
-        newData.whatsappTemplates[index] = { ...editingTemplate, ...newTemplate } as WhatsAppTemplate;
-      }
-    } else {
-      const template: WhatsAppTemplate = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: newTemplate.title,
-        message: newTemplate.message
-      };
-      newData.whatsappTemplates.push(template);
-    }
+    const template: WhatsAppTemplate = {
+      id: editingTemplate?.id || `temp_${Math.random().toString(36).substr(2, 9)}`,
+      title: newTemplate.title as string,
+      message: newTemplate.message as string
+    };
 
-    onSaveData(newData);
+    onSaveTemplate(template);
     setEditingTemplate(null);
     setIsAddingNew(false);
     setNewTemplate({ title: '', message: '' });
@@ -58,9 +58,7 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
 
   const handleDeleteTemplate = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
-      const newData = { ...data };
-      newData.whatsappTemplates = newData.whatsappTemplates.filter(t => t.id !== id);
-      onSaveData(newData);
+      onDeleteTemplate(id);
     }
   };
 

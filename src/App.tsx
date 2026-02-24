@@ -8,11 +8,21 @@ import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
 import { Settings } from './components/Settings';
 import { AppointmentForm } from './components/AppointmentForm';
-import { AppData, Appointment, Client, Pet, Service, Package } from './types';
+import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate } from './types';
 import { loadData, saveData } from './utils/storage';
 import { auth, db } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  collection, 
+  onSnapshot, 
+  query, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc 
+} from 'firebase/firestore';
 import { Login } from './components/Login';
 
 export default function App() {
@@ -20,6 +30,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [data, setData] = React.useState<AppData>(loadData());
+  const [syncStatus, setSyncStatus] = React.useState<'synced' | 'syncing' | 'error' | 'offline'>('offline');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
   const [zoomLevel, setZoomLevel] = React.useState(() => {
@@ -35,124 +46,237 @@ export default function App() {
     localStorage.setItem('zoomLevel', zoomLevel.toString());
   }, [zoomLevel]);
 
-  // Firebase Auth Listener
+  // Firebase Auth Listener & Firestore Real-time Sync
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Load data from Firestore
-        try {
-          const docRef = doc(db, 'users', currentUser.uid);
-          const docSnap = await getDoc(docRef);
+        setSyncStatus('syncing');
+        
+        const unsubscribers: (() => void)[] = [];
+
+        // Helper for simple collections
+        const setupListener = (collName: string, key: keyof AppData) => {
+          const q = query(collection(db, `users/${currentUser.uid}/${collName}`));
+          const unsub = onSnapshot(q, (snapshot) => {
+            const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            setData(prev => ({ ...prev, [key]: docs }));
+            setSyncStatus('synced');
+          }, (err) => {
+            console.error(`Error syncing ${collName}:`, err);
+            setSyncStatus('error');
+          });
+          unsubscribers.push(unsub);
+        };
+
+        setupListener('appointments', 'appointments');
+        setupListener('clients', 'clients');
+        setupListener('services', 'services');
+        setupListener('packages', 'packages');
+        setupListener('whatsappTemplates', 'whatsappTemplates');
+
+        // Special listener for Pets (Record structure)
+        const qPets = query(collection(db, `users/${currentUser.uid}/pets`));
+        const unsubPets = onSnapshot(qPets, (snapshot) => {
+          const petsRecord: Record<string, Pet[]> = {};
+          snapshot.docs.forEach(d => {
+            const p = d.data() as any;
+            if (!petsRecord[p.clientId]) petsRecord[p.clientId] = [];
+            petsRecord[p.clientId].push({ id: d.id, ...p });
+          });
+          setData(prev => ({ ...prev, pets: petsRecord }));
+        }, (err) => {
+          console.error('Error syncing pets:', err);
+          setSyncStatus('error');
+        });
+        unsubscribers.push(unsubPets);
+
+        // Listener for Company Info
+        const unsubCompany = onSnapshot(doc(db, `users/${currentUser.uid}/settings`, 'companyInfo'), (docSnap) => {
           if (docSnap.exists()) {
-            const firestoreData = docSnap.data() as AppData;
-            setData(firestoreData);
-            saveData(firestoreData);
+            setData(prev => ({ ...prev, companyInfo: docSnap.data() as CompanyInfo }));
           }
-        } catch (err) {
-          console.error('Erro ao carregar dados do Firestore:', err);
-        }
+        });
+        unsubscribers.push(unsubCompany);
+
+        return () => unsubscribers.forEach(unsub => unsub());
+      } else {
+        setSyncStatus('offline');
+        setData(loadData());
       }
       setAuthLoading(false);
     });
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
-  // Sync state with storage and Firestore
-  React.useEffect(() => {
-    if (user) {
-      const syncFirestore = async () => {
-        try {
-          await setDoc(doc(db, 'users', user.uid), data);
-        } catch (err) {
-          console.error('Erro ao salvar dados no Firestore:', err);
+  const handleSaveAppointments = async (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
+    if (!user) return;
+    
+    try {
+      setSyncStatus('syncing');
+
+      // 1. Save Client if new
+      if (client) {
+        const { id: cid, ...clientData } = client;
+        await setDoc(doc(db, `users/${user.uid}/clients`, cid), clientData);
+
+        // 2. Save Pets for this new client
+        if (pets) {
+          for (const pet of pets) {
+            const { id: pid, ...petData } = pet;
+            await setDoc(doc(db, `users/${user.uid}/pets`, pid), { ...petData, clientId: cid });
+          }
         }
-      };
-      syncFirestore();
-    }
-  }, [data, user]);
+      }
 
-  const handleSaveAppointments = (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
-    const newData = { ...data };
-    
-    if (client && pets && pets.length > 0) {
-      newData.clients.push(client);
-      newData.pets[client.id] = pets;
+      // 3. Save Appointments
+      for (const app of appointments) {
+        const { id, ...appData } = app;
+        const dataToSave = { ...appData, userId: user.uid };
+        
+        if (editingAppointment && app.id === editingAppointment.id) {
+          // Update existing
+          await setDoc(doc(db, `users/${user.uid}/appointments`, app.id), dataToSave);
+        } else {
+          // Add new - Using addDoc as requested
+          await addDoc(collection(db, `users/${user.uid}/appointments`), dataToSave);
+        }
+      }
+
+      setIsFormOpen(false);
+      setEditingAppointment(undefined);
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving appointments:', err);
+      setSyncStatus('error');
     }
-    
-    appointments.forEach(appointment => {
-      const index = newData.appointments.findIndex(a => a.id === appointment.id);
-      if (index !== -1) {
-        newData.appointments[index] = appointment;
+  };
+
+  const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await updateDoc(doc(db, `users/${user.uid}/appointments`, id), { status });
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error updating status:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleSaveService = async (service: Service) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      const { id, ...serviceData } = service;
+      if (id && !id.startsWith('temp_')) { // Assuming temp_ for new ones or just check if exists
+        await setDoc(doc(db, `users/${user.uid}/services`, id), serviceData);
       } else {
-        newData.appointments.push(appointment);
+        await addDoc(collection(db, `users/${user.uid}/services`), serviceData);
       }
-    });
-    
-    setData(newData);
-    saveData(newData);
-    setIsFormOpen(false);
-    setEditingAppointment(undefined);
-  };
-
-  const handleUpdateStatus = (id: string, status: Appointment['status']) => {
-    const newData = { ...data };
-    const index = newData.appointments.findIndex(a => a.id === id);
-    if (index !== -1) {
-      newData.appointments[index].status = status;
-      setData(newData);
-      saveData(newData);
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving service:', err);
+      setSyncStatus('error');
     }
   };
 
-  const handleSaveService = (service: Service) => {
-    const newData = { ...data };
-    const index = newData.services.findIndex(s => s.id === service.id);
-    if (index !== -1) {
-      newData.services[index] = service;
-    } else {
-      newData.services.push(service);
+  const handleDeleteService = async (id: string) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await deleteDoc(doc(db, `users/${user.uid}/services`, id));
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      setSyncStatus('error');
     }
-    saveData(newData);
-    setData(newData);
   };
 
-  const handleDeleteService = (id: string) => {
-    const newData = { ...data };
-    newData.services = newData.services.filter(s => s.id !== id);
-    saveData(newData);
-    setData(newData);
-  };
-
-  const handleSavePackage = (pkg: Package) => {
-    const newData = { ...data };
-    const index = newData.packages.findIndex(p => p.id === pkg.id);
-    if (index !== -1) {
-      newData.packages[index] = pkg;
-    } else {
-      newData.packages.push(pkg);
-    }
-    saveData(newData);
-    setData(newData);
-  };
-
-  const handleDeletePackage = (id: string) => {
-    const newData = { ...data };
-    newData.packages = newData.packages.filter(p => p.id !== id);
-    saveData(newData);
-    setData(newData);
-  };
-
-  const handleUpdatePet = (clientId: string, petId: string, updatedPet: Partial<Pet>) => {
-    const newData = { ...data };
-    const pets = newData.pets[clientId];
-    if (pets) {
-      const index = pets.findIndex(p => p.id === petId);
-      if (index !== -1) {
-        pets[index] = { ...pets[index], ...updatedPet };
-        setData(newData);
-        saveData(newData);
+  const handleSavePackage = async (pkg: Package) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      const { id, ...packageData } = pkg;
+      if (id && !id.startsWith('temp_')) {
+        await setDoc(doc(db, `users/${user.uid}/packages`, id), packageData);
+      } else {
+        await addDoc(collection(db, `users/${user.uid}/packages`), packageData);
       }
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving package:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleDeletePackage = async (id: string) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await deleteDoc(doc(db, `users/${user.uid}/packages`, id));
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting package:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleUpdatePet = async (clientId: string, petId: string, updatedPet: Partial<Pet>) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await updateDoc(doc(db, `users/${user.uid}/pets`, petId), updatedPet);
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error updating pet:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleSaveData = async (newData: AppData) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      // For companyInfo specifically as it's the main thing edited via onSaveData in Settings
+      await setDoc(doc(db, `users/${user.uid}/settings`, 'companyInfo'), newData.companyInfo);
+      
+      // Also handle templates if they were changed
+      // (This is a bit broad, but Settings uses onSaveData for templates too)
+      // Ideally we'd have specific handlers for templates
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving data:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleSaveTemplate = async (template: WhatsAppTemplate) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      const { id, ...templateData } = template;
+      if (id && !id.startsWith('temp_')) {
+        await setDoc(doc(db, `users/${user.uid}/whatsappTemplates`, id), templateData);
+      } else {
+        await addDoc(collection(db, `users/${user.uid}/whatsappTemplates`), templateData);
+      }
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving template:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await deleteDoc(doc(db, `users/${user.uid}/whatsappTemplates`, id));
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting template:', err);
+      setSyncStatus('error');
     }
   };
 
@@ -215,10 +339,9 @@ export default function App() {
             zoomLevel={zoomLevel} 
             setZoomLevel={setZoomLevel} 
             data={data}
-            onSaveData={(newData) => {
-              setData(newData);
-              saveData(newData);
-            }}
+            onSaveData={handleSaveData}
+            onSaveTemplate={handleSaveTemplate}
+            onDeleteTemplate={handleDeleteTemplate}
           />
         );
       default:
@@ -239,7 +362,7 @@ export default function App() {
   }
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} syncStatus={syncStatus}>
       {renderContent()}
       
       {isFormOpen && (
