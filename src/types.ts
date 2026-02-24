@@ -42,10 +42,17 @@ export interface Package {
   sessions: number;
 }
 
+export interface WhatsAppTemplate {
+  id: string;
+  title: string;
+  message: string;
+}
+
 export interface AppData {
   appointments: Appointment[];
   clients: Client[];
   pets: Record<string, Pet[]>; // clientId -> Pet[]
   services: Service[];
   packages: Package[];
+  whatsappTemplates: WhatsAppTemplate[];
 }

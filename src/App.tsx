@@ -172,7 +172,17 @@ export default function App() {
           />
         );
       case 'settings':
-        return <Settings zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />;
+        return (
+          <Settings 
+            zoomLevel={zoomLevel} 
+            setZoomLevel={setZoomLevel} 
+            data={data}
+            onSaveData={(newData) => {
+              setData(newData);
+              saveData(newData);
+            }}
+          />
+        );
       default:
         return <Dashboard data={data} onNewAppointment={() => setIsFormOpen(true)} />;
     }

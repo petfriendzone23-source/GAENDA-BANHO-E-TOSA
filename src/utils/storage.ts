@@ -32,6 +32,7 @@ const initialData: AppData = {
   packages: [
     { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80, type: 'custom', sessions: 1 }
   ],
+  whatsappTemplates: [],
 };
 
 export const loadData = (): AppData => {
@@ -71,6 +72,11 @@ export const loadData = (): AppData => {
         type: pkg.type || 'custom',
         sessions: pkg.sessions || 1
       }));
+    }
+
+    // Migrate whatsappTemplates
+    if (!parsed.whatsappTemplates) {
+      parsed.whatsappTemplates = [];
     }
 
     return parsed as AppData;

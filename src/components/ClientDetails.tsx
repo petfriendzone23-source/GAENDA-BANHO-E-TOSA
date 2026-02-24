@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -18,6 +18,8 @@ interface ClientDetailsProps {
 export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedPetId, setSelectedPetId] = React.useState<string | null>(null);
+  const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
+  const [targetPhone, setTargetPhone] = React.useState<string>('');
 
   const handlePhotoClick = (petId: string) => {
     setSelectedPetId(petId);
@@ -39,6 +41,24 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
     }
     setSelectedPetId(null);
   };
+
+  const handleWhatsAppClick = (e: React.MouseEvent, phone: string) => {
+    e.preventDefault();
+    setTargetPhone(phone);
+    if (data.whatsappTemplates && data.whatsappTemplates.length > 0) {
+      setShowWhatsAppTemplates(true);
+    } else {
+      openWhatsApp(phone);
+    }
+  };
+
+  const openWhatsApp = (phone: string, message: string = '') => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const url = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    setShowWhatsAppTemplates(false);
+  };
+
   const clientPets = data.pets[client.id] || [];
   const clientAppointments = data.appointments
     .filter(a => a.clientId === client.id)
@@ -48,6 +68,44 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+      {showWhatsAppTemplates && (
+        <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/20 backdrop-blur-[1px] p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-100"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <MessageSquare size={20} className="text-emerald-600" />
+                Escolha uma mensagem
+              </h3>
+              <button onClick={() => setShowWhatsAppTemplates(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              <button 
+                onClick={() => openWhatsApp(targetPhone)}
+                className="w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all text-slate-600 font-medium text-sm"
+              >
+                Iniciar conversa sem mensagem
+              </button>
+              {data.whatsappTemplates?.map(template => (
+                <button 
+                  key={template.id}
+                  onClick={() => openWhatsApp(targetPhone, template.message)}
+                  className="w-full text-left p-3 rounded-xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100 hover:border-emerald-200 transition-all group"
+                >
+                  <p className="font-bold text-emerald-900 text-sm mb-1">{template.title}</p>
+                  <p className="text-xs text-emerald-700/80 line-clamp-2">{template.message}</p>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -133,15 +191,18 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
 
                {/* Client Quick Info */}
                <div className="flex flex-col gap-2">
-                  <a href={`tel:${client.phones[0]}`} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3 hover:bg-slate-100 transition-colors">
-                     <div className="p-1.5 bg-white rounded-full text-slate-900 shadow-sm shrink-0">
-                        <Phone size={14} />
+                  <button 
+                    onClick={(e) => handleWhatsAppClick(e, client.phones[0])}
+                    className="p-3 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3 hover:bg-emerald-100 transition-colors w-full text-left group"
+                  >
+                     <div className="p-1.5 bg-white rounded-full text-emerald-600 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+                        <MessageSquare size={14} />
                      </div>
-                     <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Telefone</p>
-                        <p className="font-bold text-slate-900 text-sm">{client.phones[0]}</p>
+                     <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold text-emerald-600/70 uppercase">WhatsApp</p>
+                        <p className="font-bold text-emerald-900 text-sm">{client.phones[0]}</p>
                      </div>
-                  </a>
+                  </button>
                   
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3">
                      <div className="p-1.5 bg-white rounded-full text-slate-900 shadow-sm shrink-0 mt-0.5">
