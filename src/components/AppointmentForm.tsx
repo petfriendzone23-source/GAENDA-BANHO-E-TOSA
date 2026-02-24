@@ -87,26 +87,29 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     setSessionServices(nextSessionServices);
     setSessionServicePrices(nextPrices);
     
-    // Recalculate price if not a fixed package price (simplified: always recalculate if custom)
-    // If it was a package, the user might have changed it, so we should probably recalculate based on all services across all sessions
-    const totalSum = nextSessionServices.reduce((acc, services) => {
-      return acc + services.reduce((sAcc, sName) => {
-        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+    // Recalculate price if not a fixed package price
+    if (!selectedPackageId) {
+      const totalSum = nextSessionServices.reduce((acc, services) => {
+        return acc + services.reduce((sAcc, sName) => {
+          return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+        }, 0);
       }, 0);
-    }, 0);
-    setPrice(totalSum);
+      setPrice(totalSum);
+    }
   };
 
   const handleServicePriceChange = (serviceName: string, newPrice: number) => {
     const nextPrices = { ...sessionServicePrices, [serviceName]: newPrice };
     setSessionServicePrices(nextPrices);
     
-    const totalSum = sessionServices.reduce((acc, services) => {
-      return acc + services.reduce((sAcc, sName) => {
-        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+    if (!selectedPackageId) {
+      const totalSum = sessionServices.reduce((acc, services) => {
+        return acc + services.reduce((sAcc, sName) => {
+          return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+        }, 0);
       }, 0);
-    }, 0);
-    setPrice(totalSum);
+      setPrice(totalSum);
+    }
   };
 
   // New Client State

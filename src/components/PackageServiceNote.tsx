@@ -83,7 +83,8 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
   });
 
   const totalFullPrice = packageDays.reduce((sum, day) => sum + day.dayTotal, 0);
-  const packagePrice = packageInstanceAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
+  // Use the package's defined price as the final price, falling back to the saved price if not found
+  const packagePrice = relevantPackage ? relevantPackage.price : packageInstanceAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
   const discountAmount = Math.max(0, totalFullPrice - packagePrice);
 
   const handleGenerateImage = async (share = false) => {
@@ -240,11 +241,11 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
               <p className="text-base font-bold text-slate-500">R$ {totalFullPrice.toFixed(2)}</p>
             </div>
             <div className="flex justify-between items-center mt-2">
-              <p className="text-sm font-bold text-emerald-600">Desconto do Pacote</p>
+              <p className="text-sm font-bold text-emerald-600">Desconto do Plano</p>
               <p className="text-base font-bold text-emerald-600">- R$ {discountAmount.toFixed(2)}</p>
             </div>
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200">
-              <p className="text-xl font-bold text-slate-900">Valor Final do Pacote</p>
+              <p className="text-xl font-bold text-slate-900">Valor Final do Plano</p>
               <p className="text-2xl font-bold text-indigo-600">R$ {packagePrice.toFixed(2)}</p>
             </div>
 
