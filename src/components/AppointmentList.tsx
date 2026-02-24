@@ -223,7 +223,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                                 </span>
                               ))}
                             </div>
-                            <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
+                            <div className="absolute top-2 right-2 flex gap-1">
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
