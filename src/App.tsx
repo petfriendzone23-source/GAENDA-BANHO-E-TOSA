@@ -8,6 +8,7 @@ import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
 import { Settings } from './components/Settings';
 import { AppointmentForm } from './components/AppointmentForm';
+import { ClientForm } from './components/ClientForm';
 import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate } from './types';
 import { loadData, saveData } from './utils/storage';
 import { auth, db } from './lib/firebase';
@@ -32,6 +33,7 @@ export default function App() {
   const [data, setData] = React.useState<AppData>(loadData());
   const [syncStatus, setSyncStatus] = React.useState<'synced' | 'syncing' | 'error' | 'offline'>('offline');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isClientFormOpen, setIsClientFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
   const [zoomLevel, setZoomLevel] = React.useState(() => {
     const saved = localStorage.getItem('zoomLevel');
@@ -127,6 +129,26 @@ export default function App() {
     });
     return () => unsubscribeAuth();
   }, []);
+
+  const handleSaveClient = async (client: Client, pets: Pet[]) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      const { id: cid, ...clientData } = client;
+      await setDoc(doc(db, `users/${user.uid}/clients`, cid), clientData);
+
+      for (const pet of pets) {
+        const { id: pid, ...petData } = pet;
+        await setDoc(doc(db, `users/${user.uid}/pets`, pid), { ...petData, clientId: cid });
+      }
+
+      setIsClientFormOpen(false);
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving client:', err);
+      setSyncStatus('error');
+    }
+  };
 
   const handleSaveAppointments = async (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
     if (!user) return;
@@ -339,7 +361,7 @@ export default function App() {
           />
         );
       case 'clients':
-        return <ClientList data={data} onUpdatePet={handleUpdatePet} onAddClient={() => setIsFormOpen(true)} />;
+        return <ClientList data={data} onUpdatePet={handleUpdatePet} onAddClient={() => setIsClientFormOpen(true)} />;
       case 'best-clients':
         return <BestClients data={data} />;
       case 'services':
@@ -395,6 +417,13 @@ export default function App() {
           }} 
           appointment={editingAppointment}
           initialData={initialAppointmentData}
+        />
+      )}
+
+      {isClientFormOpen && (
+        <ClientForm 
+          onSave={handleSaveClient}
+          onClose={() => setIsClientFormOpen(false)}
         />
       )}
     </Layout>
