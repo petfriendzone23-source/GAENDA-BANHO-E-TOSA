@@ -226,7 +226,7 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                   <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
                     <Box size={18} />
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1">
                     <button 
                       onClick={() => handleEdit(pkg)}
                       className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-md transition-all"

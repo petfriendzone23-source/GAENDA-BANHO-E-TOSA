@@ -160,43 +160,48 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                 <div className="space-y-4">
                   {clientAppointments.length > 0 ? (
                     clientAppointments.map(app => (
-                      <div key={app.id} className="p-5 rounded-2xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
+                      <div key={app.id} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors flex flex-col gap-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2.5">
                             <div className={cn(
-                              "p-2 rounded-xl",
+                              "p-1.5 rounded-lg shrink-0",
                               app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
                               app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
                               "bg-rose-100 text-rose-600"
                             )}>
-                              {app.status === 'Concluído' ? <CheckCircle2 size={18} /> : 
-                               app.status === 'Agendado' ? <Clock size={18} /> : 
-                               <AlertCircle size={18} />}
+                              {app.status === 'Concluído' ? <CheckCircle2 size={14} /> : 
+                               app.status === 'Agendado' ? <Clock size={14} /> : 
+                               <AlertCircle size={14} />}
                             </div>
-                            <div>
-                              <p className="font-bold text-slate-900">{(app.services || []).join(', ')}</p>
-                              <p className="text-xs text-slate-500">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 text-sm truncate">{(app.services || []).join(', ')}</p>
+                              <p className="text-[10px] text-slate-500 truncate">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right shrink-0 ml-2">
                             <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
-                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{app.status}</p>
+                            <p className={cn(
+                              "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
+                              app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :
+                              app.status === 'Agendado' ? "bg-amber-50 text-amber-600" :
+                              "bg-rose-50 text-rose-600"
+                            )}>{app.status}</p>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-6 pt-4 border-t border-slate-50">
-                          <div className="flex items-center gap-2 text-slate-500">
-                            <Calendar size={14} />
-                            <span className="text-xs font-medium">{format(parseISO(app.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
+                        <div className="flex items-center gap-4 pt-2 border-t border-slate-50 text-slate-500">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={12} />
+                            <span className="text-[11px] font-medium">{format(parseISO(app.date), "dd/MM/yyyy")}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-slate-500">
-                            <Clock size={14} />
-                            <span className="text-xs font-medium">{app.time}</span>
+                          <div className="flex items-center gap-1.5">
+                            <Clock size={12} />
+                            <span className="text-[11px] font-medium">{app.time}</span>
                           </div>
                         </div>
 
                         {app.notes && (
-                          <div className="mt-4 p-3 bg-slate-50 rounded-xl text-xs text-slate-500 italic">
+                          <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-500 italic">
                             "{app.notes}"
                           </div>
                         )}

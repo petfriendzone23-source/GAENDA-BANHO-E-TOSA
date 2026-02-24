@@ -282,7 +282,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                       })
                     ) : (
                       <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl opacity-20 hover:opacity-50 transition-opacity">
-                        <span className="text-xs font-medium text-slate-400 italic">Clique para agendar às {hour}</span>
                       </div>
                     )}
                   </div>

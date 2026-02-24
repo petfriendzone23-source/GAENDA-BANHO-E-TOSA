@@ -176,7 +176,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                       <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
                         <Scissors size={18} />
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1">
                         <button 
                           onClick={() => handleEdit(service)}
                           className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-md transition-all"
