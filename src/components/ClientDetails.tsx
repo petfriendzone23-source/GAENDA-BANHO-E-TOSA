@@ -1,10 +1,11 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
 
 interface ClientDetailsProps {
   client: Client;
@@ -20,6 +21,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
   const [selectedPetId, setSelectedPetId] = React.useState<string | null>(null);
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
   const [targetPhone, setTargetPhone] = React.useState<string>('');
+  const [showServiceNote, setShowServiceNote] = React.useState(false);
+
 
   const handlePhotoClick = (petId: string) => {
     setSelectedPetId(petId);
@@ -204,6 +207,21 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                      </div>
                   </button>
                   
+                  {appointment && (
+                    <button 
+                      onClick={() => setShowServiceNote(true)}
+                      className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center gap-3 hover:bg-indigo-100 transition-colors w-full text-left group"
+                    >
+                       <div className="p-1.5 bg-white rounded-full text-indigo-600 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+                          <FileText size={14} />
+                       </div>
+                       <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold text-indigo-600/70 uppercase">Nota de Serviço</p>
+                          <p className="font-bold text-indigo-900 text-sm">Gerar PDF do serviço</p>
+                       </div>
+                    </button>
+                  )}
+                  
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3">
                      <div className="p-1.5 bg-white rounded-full text-slate-900 shadow-sm shrink-0 mt-0.5">
                         <MapPin size={14} />
@@ -234,12 +252,16 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contatos</h3>
                   <div className="space-y-3">
                     {client.phones.map((phone, i) => (
-                      <div key={i} className="flex items-center gap-3 text-slate-600">
+                      <button 
+                        key={i} 
+                        onClick={(e) => handleWhatsAppClick(e, phone)}
+                        className="flex items-center gap-3 text-slate-600 p-2 -ml-2 rounded-lg hover:bg-slate-100 transition-colors w-full text-left"
+                      >
                         <div className="p-2 bg-slate-100 rounded-lg">
                           <Phone size={14} />
                         </div>
                         <span className="text-sm font-medium">{phone}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -429,6 +451,15 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
           </button>
         </footer>
       </motion.div>
+
+      {showServiceNote && appointment && (
+        <ServiceNote 
+          client={client} 
+          appointment={appointment} 
+          pets={data.pets[client.id] || []} 
+          onClose={() => setShowServiceNote(false)} 
+        />
+      )}
     </div>
   );
 };
