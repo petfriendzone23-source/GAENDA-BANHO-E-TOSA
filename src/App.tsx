@@ -49,62 +49,81 @@ export default function App() {
   // Firebase Auth Listener & Firestore Real-time Sync
   React.useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setSyncStatus('syncing');
-        
-        const unsubscribers: (() => void)[] = [];
+      try {
+        setUser(currentUser);
+        if (currentUser) {
+          setSyncStatus('syncing');
+          
+          const unsubscribers: (() => void)[] = [];
 
-        // Helper for simple collections
-        const setupListener = (collName: string, key: keyof AppData) => {
-          const q = query(collection(db, `users/${currentUser.uid}/${collName}`));
-          const unsub = onSnapshot(q, (snapshot) => {
-            const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            setData(prev => ({ ...prev, [key]: docs }));
-            setSyncStatus('synced');
-          }, (err) => {
-            console.error(`Error syncing ${collName}:`, err);
-            setSyncStatus('error');
-          });
-          unsubscribers.push(unsub);
-        };
+          // Helper for simple collections
+          const setupListener = (collName: string, key: keyof AppData) => {
+            try {
+              const q = query(collection(db, `users/${currentUser.uid}/${collName}`));
+              const unsub = onSnapshot(q, (snapshot) => {
+                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                setData(prev => ({ ...prev, [key]: docs }));
+                setSyncStatus('synced');
+              }, (err) => {
+                console.error(`Error syncing ${collName}:`, err);
+                setSyncStatus('error');
+              });
+              unsubscribers.push(unsub);
+            } catch (e) {
+              console.error(`Failed to setup listener for ${collName}`, e);
+            }
+          };
 
-        setupListener('appointments', 'appointments');
-        setupListener('clients', 'clients');
-        setupListener('services', 'services');
-        setupListener('packages', 'packages');
-        setupListener('whatsappTemplates', 'whatsappTemplates');
+          setupListener('appointments', 'appointments');
+          setupListener('clients', 'clients');
+          setupListener('services', 'services');
+          setupListener('packages', 'packages');
+          setupListener('whatsappTemplates', 'whatsappTemplates');
 
-        // Special listener for Pets (Record structure)
-        const qPets = query(collection(db, `users/${currentUser.uid}/pets`));
-        const unsubPets = onSnapshot(qPets, (snapshot) => {
-          const petsRecord: Record<string, Pet[]> = {};
-          snapshot.docs.forEach(d => {
-            const p = d.data() as any;
-            if (!petsRecord[p.clientId]) petsRecord[p.clientId] = [];
-            petsRecord[p.clientId].push({ id: d.id, ...p });
-          });
-          setData(prev => ({ ...prev, pets: petsRecord }));
-        }, (err) => {
-          console.error('Error syncing pets:', err);
-          setSyncStatus('error');
-        });
-        unsubscribers.push(unsubPets);
-
-        // Listener for Company Info
-        const unsubCompany = onSnapshot(doc(db, `users/${currentUser.uid}/settings`, 'companyInfo'), (docSnap) => {
-          if (docSnap.exists()) {
-            setData(prev => ({ ...prev, companyInfo: docSnap.data() as CompanyInfo }));
+          // Special listener for Pets (Record structure)
+          try {
+            const qPets = query(collection(db, `users/${currentUser.uid}/pets`));
+            const unsubPets = onSnapshot(qPets, (snapshot) => {
+              const petsRecord: Record<string, Pet[]> = {};
+              snapshot.docs.forEach(d => {
+                const p = d.data() as any;
+                if (!petsRecord[p.clientId]) petsRecord[p.clientId] = [];
+                petsRecord[p.clientId].push({ id: d.id, ...p });
+              });
+              setData(prev => ({ ...prev, pets: petsRecord }));
+            }, (err) => {
+              console.error('Error syncing pets:', err);
+              setSyncStatus('error');
+            });
+            unsubscribers.push(unsubPets);
+          } catch (e) {
+            console.error('Failed to setup pets listener', e);
           }
-        });
-        unsubscribers.push(unsubCompany);
 
-        return () => unsubscribers.forEach(unsub => unsub());
-      } else {
-        setSyncStatus('offline');
-        setData(loadData());
+          // Listener for Company Info
+          try {
+            const unsubCompany = onSnapshot(doc(db, `users/${currentUser.uid}/settings`, 'companyInfo'), (docSnap) => {
+              if (docSnap.exists()) {
+                setData(prev => ({ ...prev, companyInfo: docSnap.data() as CompanyInfo }));
+              }
+            }, (err) => {
+              console.error('Error syncing company info:', err);
+            });
+            unsubscribers.push(unsubCompany);
+          } catch (e) {
+            console.error('Failed to setup company listener', e);
+          }
+
+          return () => unsubscribers.forEach(unsub => unsub());
+        } else {
+          setSyncStatus('offline');
+          setData(loadData());
+        }
+      } catch (globalErr) {
+        console.error('Global auth error:', globalErr);
+      } finally {
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     });
     return () => unsubscribeAuth();
   }, []);
