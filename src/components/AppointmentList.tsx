@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
@@ -10,12 +10,20 @@ import { ClientDetails } from './ClientDetails';
 interface AppointmentListProps {
   data: AppData;
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
+  onDeleteAppointment: (id: string) => void;
   onEditAppointment: (appointment: Appointment) => void;
   onNewAppointmentAtTime?: (time: string, date: string) => void;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
 }
 
-export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment, onNewAppointmentAtTime, onUpdatePet }) => {
+export const AppointmentList: React.FC<AppointmentListProps> = ({ 
+  data, 
+  onUpdateStatus, 
+  onDeleteAppointment,
+  onEditAppointment, 
+  onNewAppointmentAtTime, 
+  onUpdatePet 
+}) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
   const [dateFilter, setDateFilter] = React.useState<'Hoje' | 'Próximos' | 'Data Específica' | 'Todos'>('Hoje');
@@ -283,6 +291,16 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                               >
                                 <Edit2 size={14} />
                               </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteAppointment(app.id);
+                                }}
+                                className="p-1.5 bg-white rounded-lg shadow-sm text-rose-400 hover:text-rose-600 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                           </motion.div>
                         );
@@ -408,6 +426,13 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                             )}
                           >
                             <X size={18} />
+                          </button>
+                          <button 
+                            onClick={() => onDeleteAppointment(app.id)}
+                            title="Excluir"
+                            className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
+                          >
+                            <Trash2 size={18} />
                           </button>
                           <button className="p-2 hover:bg-slate-100 text-slate-400 rounded-lg transition-colors">
                             <MoreVertical size={18} />

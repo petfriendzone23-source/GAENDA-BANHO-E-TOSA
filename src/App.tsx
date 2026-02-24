@@ -26,6 +26,16 @@ import {
 } from 'firebase/firestore';
 import { Login } from './components/Login';
 
+const cleanData = (obj: any) => {
+  const newObj = { ...obj };
+  Object.keys(newObj).forEach(key => {
+    if (newObj[key] === undefined) {
+      delete newObj[key];
+    }
+  });
+  return newObj;
+};
+
 export default function App() {
   const [user, setUser] = React.useState<User | null>(null);
   const [authLoading, setAuthLoading] = React.useState(true);
@@ -135,11 +145,11 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       const { id: cid, ...clientData } = client;
-      await setDoc(doc(db, `users/${user.uid}/clients`, cid), clientData);
+      await setDoc(doc(db, `users/${user.uid}/clients`, cid), cleanData(clientData));
 
       for (const pet of pets) {
         const { id: pid, ...petData } = pet;
-        await setDoc(doc(db, `users/${user.uid}/pets`, pid), { ...petData, clientId: cid });
+        await setDoc(doc(db, `users/${user.uid}/pets`, pid), cleanData({ ...petData, clientId: cid }));
       }
 
       setIsClientFormOpen(false);
@@ -173,7 +183,7 @@ export default function App() {
       // 3. Save Appointments
       for (const app of appointments) {
         const { id, ...appData } = app;
-        const dataToSave = { ...appData, userId: user.uid };
+        const dataToSave = cleanData({ ...appData, userId: user.uid });
         
         if (editingAppointment && app.id === editingAppointment.id) {
           // Update existing
@@ -205,15 +215,29 @@ export default function App() {
     }
   };
 
+  const handleDeleteAppointment = async (id: string) => {
+    if (!user) return;
+    if (!window.confirm('Tem certeza que deseja excluir este agendamento?')) return;
+    try {
+      setSyncStatus('syncing');
+      await deleteDoc(doc(db, `users/${user.uid}/appointments`, id));
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting appointment:', err);
+      setSyncStatus('error');
+    }
+  };
+
   const handleSaveService = async (service: Service) => {
     if (!user) return;
     try {
       setSyncStatus('syncing');
       const { id, ...serviceData } = service;
+      const dataToSave = cleanData(serviceData);
       if (id && !id.startsWith('temp_')) { // Assuming temp_ for new ones or just check if exists
-        await setDoc(doc(db, `users/${user.uid}/services`, id), serviceData);
+        await setDoc(doc(db, `users/${user.uid}/services`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/services`), serviceData);
+        await addDoc(collection(db, `users/${user.uid}/services`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -239,10 +263,11 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       const { id, ...packageData } = pkg;
+      const dataToSave = cleanData(packageData);
       if (id && !id.startsWith('temp_')) {
-        await setDoc(doc(db, `users/${user.uid}/packages`, id), packageData);
+        await setDoc(doc(db, `users/${user.uid}/packages`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/packages`), packageData);
+        await addDoc(collection(db, `users/${user.uid}/packages`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -267,7 +292,7 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      await updateDoc(doc(db, `users/${user.uid}/pets`, petId), updatedPet);
+      await updateDoc(doc(db, `users/${user.uid}/pets`, petId), cleanData(updatedPet));
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error updating pet:', err);
@@ -297,10 +322,11 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       const { id, ...templateData } = template;
+      const dataToSave = cleanData(templateData);
       if (id && !id.startsWith('temp_')) {
-        await setDoc(doc(db, `users/${user.uid}/whatsappTemplates`, id), templateData);
+        await setDoc(doc(db, `users/${user.uid}/whatsappTemplates`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/whatsappTemplates`), templateData);
+        await addDoc(collection(db, `users/${user.uid}/whatsappTemplates`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -349,6 +375,7 @@ export default function App() {
           <AppointmentList 
             data={data} 
             onUpdateStatus={handleUpdateStatus} 
+            onDeleteAppointment={handleDeleteAppointment}
             onEditAppointment={(app) => {
               setEditingAppointment(app);
               setIsFormOpen(true);
