@@ -14,16 +14,11 @@ export interface Client {
   email?: string;
 }
 
-export interface AppointmentService {
-  name: string;
-  price: number;
-}
-
 export interface Appointment {
   id: string;
   clientId: string;
   petId: string;
-  services: AppointmentService[];
+  services: string[];
   date: string; // ISO string
   time: string; // HH:mm
   status: 'Agendado' | 'Concluído' | 'Cancelado';

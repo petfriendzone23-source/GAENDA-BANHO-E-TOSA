@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppData, Appointment, Client, Pet, Package, AppointmentService, Service } from '../types';
+import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
 
 interface AppointmentFormProps {
@@ -22,40 +22,39 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [sessions, setSessions] = React.useState(1);
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
   const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || '09:00']);
-  const [sessionServices, setSessionServices] = React.useState<AppointmentService[][]>([appointment?.services || []]);
-  const [price, setPrice] = React.useState(appointment?.price || 0);
+  const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
+  const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>({});
+  const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId);
 
   const togglePackage = (pkg: Package) => {
-    const pkgServices: AppointmentService[] = pkg.serviceIds
-      .map(sid => {
-        const service = data.services.find(s => s.id === sid);
-        return service ? { name: service.name, price: service.price } : null;
-      })
-      .filter((s): s is AppointmentService => s !== null);
-
-    const isSelected = sessionServices[0]?.every(s => pkgServices.some(ps => ps.name === s.name));
-
-    if (isSelected) {
+    const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
+    
+    // Check if all services of the package are already selected in the first session (simplified check)
+    const allSelected = pkgServiceNames.every(name => sessionServices[0]?.includes(name));
+    
+    if (allSelected) {
       setSessions(1);
       setSessionDates([sessionDates[0]]);
       setSessionTimes([sessionTimes[0]]);
       setSessionServices([[]]);
       setSelectedPackageId(undefined);
-      setPrice(0);
     } else {
       setSessions(pkg.sessions);
       
       const newDates = [...sessionDates];
       const newTimes = [...sessionTimes];
+      const newServices = [...sessionServices];
       
       while (newDates.length < pkg.sessions) {
         newDates.push(new Date().toISOString().split('T')[0]);
         newTimes.push('09:00');
+        newServices.push([]);
       }
       
-      const initializedServices = Array(pkg.sessions).fill(pkgServices);
+      // Initialize all sessions with the package services (user can then prune them)
+      const initializedServices = newServices.slice(0, pkg.sessions).map(() => [...pkgServiceNames]);
       
       setSessionDates(newDates.slice(0, pkg.sessions));
       setSessionTimes(newTimes.slice(0, pkg.sessions));
@@ -65,34 +64,50 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     }
   };
 
-  const toggleServiceInSession = (sessionIdx: number, service: Service) => {
-    const currentServices = sessionServices[sessionIdx] || [];
-    const isSelected = currentServices.some(s => s.name === service.name);
-    let nextSessionServices = [...sessionServices];
-
-    if (isSelected) {
-      nextSessionServices[sessionIdx] = currentServices.filter(s => s.name !== service.name);
-    } else {
-      nextSessionServices[sessionIdx] = [...currentServices, { name: service.name, price: service.price }];
-    }
-    setSessionServices(nextSessionServices);
-  };
-
-  const handleServicePriceChange = (sessionIdx: number, serviceName: string, newPrice: number) => {
+  const toggleServiceInSession = (sessionIdx: number, serviceName: string) => {
     const nextSessionServices = [...sessionServices];
-    const serviceIndex = nextSessionServices[sessionIdx].findIndex(s => s.name === serviceName);
-    if (serviceIndex > -1) {
-      nextSessionServices[sessionIdx][serviceIndex].price = newPrice;
-      setSessionServices(nextSessionServices);
+    const currentServices = nextSessionServices[sessionIdx] || [];
+    let nextPrices = { ...sessionServicePrices };
+    
+    if (currentServices.includes(serviceName)) {
+      nextSessionServices[sessionIdx] = currentServices.filter(s => s !== serviceName);
+      // Remove price override if it was the last instance of this service across all sessions
+      const isUsedElsewhere = nextSessionServices.some((services, idx) => idx !== sessionIdx && services.includes(serviceName));
+      if (!isUsedElsewhere) {
+        delete nextPrices[serviceName];
+      }
+    } else {
+      nextSessionServices[sessionIdx] = [...currentServices, serviceName];
+      // Set default price if not already set
+      if (!(serviceName in nextPrices)) {
+        nextPrices[serviceName] = data.services.find(sv => sv.name === serviceName)?.price || 0;
+      }
     }
+    
+    setSessionServices(nextSessionServices);
+    setSessionServicePrices(nextPrices);
+    
+    // Recalculate price if not a fixed package price (simplified: always recalculate if custom)
+    // If it was a package, the user might have changed it, so we should probably recalculate based on all services across all sessions
+    const totalSum = nextSessionServices.reduce((acc, services) => {
+      return acc + services.reduce((sAcc, sName) => {
+        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+      }, 0);
+    }, 0);
+    setPrice(totalSum);
   };
 
-  React.useEffect(() => {
-    if (selectedPackageId) return;
-
-    const totalSum = sessionServices.flat().reduce((acc, service) => acc + service.price, 0);
+  const handleServicePriceChange = (serviceName: string, newPrice: number) => {
+    const nextPrices = { ...sessionServicePrices, [serviceName]: newPrice };
+    setSessionServicePrices(nextPrices);
+    
+    const totalSum = sessionServices.reduce((acc, services) => {
+      return acc + services.reduce((sAcc, sName) => {
+        return sAcc + (nextPrices[sName] !== undefined ? nextPrices[sName] : (data.services.find(sv => sv.name === sName)?.price || 0));
+      }, 0);
+    }, 0);
     setPrice(totalSum);
-  }, [sessionServices, selectedPackageId]);
+  };
 
   // New Client State
   const [clientName, setClientName] = React.useState('');
@@ -467,54 +482,56 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                       </div>
                     </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
-                        <select 
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
-                          value=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              const service = data.services.find(s => s.id === e.target.value);
-                              if (service) toggleServiceInSession(idx, service);
-                            }
-                          }}
-                        >
-                          <option value="">Adicionar serviço...</option>
-                          {data.services.filter(s => !sessionServices[idx]?.some(ss => ss.name === s.name)).map(s => (
-                            <option key={s.id} value={s.id}>{s.name} (R$ {s.price.toFixed(2)})</option>
-                          ))}
-                        </select>
-                        
-                        {sessionServices[idx]?.length > 0 && (
-                          <div className="flex flex-col gap-2 mt-2">
-                            {sessionServices[idx].map(service => (
-                                <div key={service.name} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl p-2">
-                                  <span className="flex-1 text-xs font-bold text-indigo-700">{service.name}</span>
-                                  <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
-                                    <span className="text-xs font-bold text-slate-400">R$</span>
-                                    <input 
-                                      type="number" 
-                                      step="0.01"
-                                      value={service.price}
-                                      onChange={(e) => handleServicePriceChange(idx, service.name, Number(e.target.value))}
-                                      className="w-16 bg-transparent text-xs font-bold text-slate-700 outline-none"
-                                    />
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const s = data.services.find(ds => ds.name === service.name);
-                                      if (s) toggleServiceInSession(idx, s);
-                                    }}
-                                    className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors"
-                                  >
-                                    <X size={14} />
-                                  </button>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
+                      <select 
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            toggleServiceInSession(idx, e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="">Adicionar serviço...</option>
+                        {data.services.filter(s => !sessionServices[idx]?.includes(s.name)).map(s => (
+                          <option key={s.id} value={s.name}>{s.name} (R$ {s.price.toFixed(2)})</option>
+                        ))}
+                      </select>
+                      
+                      {sessionServices[idx]?.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-2">
+                          {sessionServices[idx].map(serviceName => {
+                            const s = data.services.find(sv => sv.name === serviceName);
+                            if (!s) return null;
+                            const currentPrice = sessionServicePrices[s.name] !== undefined ? sessionServicePrices[s.name] : s.price;
+                            
+                            return (
+                              <div key={s.id} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl p-2">
+                                <span className="flex-1 text-xs font-bold text-indigo-700">{s.name}</span>
+                                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
+                                  <span className="text-xs font-bold text-slate-400">R$</span>
+                                  <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={currentPrice}
+                                    onChange={(e) => handleServicePriceChange(s.name, Number(e.target.value))}
+                                    className="w-16 bg-transparent text-xs font-bold text-slate-700 outline-none"
+                                  />
                                 </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleServiceInSession(idx, s.name)}
+                                  className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

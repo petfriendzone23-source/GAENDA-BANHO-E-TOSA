@@ -66,7 +66,13 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
   }
 
   const packageDays = packageInstanceAppointments.map(app => {
-    const dayServices = app.services || [];
+    const dayServices = (app.services || []).map(serviceName => {
+      const service = allServices.find(s => s.name === serviceName);
+      return {
+        name: serviceName,
+        price: service?.price || 0
+      };
+    });
     const dayTotal = dayServices.reduce((sum, s) => sum + s.price, 0);
     return {
       date: app.date,

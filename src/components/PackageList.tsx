@@ -56,28 +56,19 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
     handleCancel();
   };
 
-  const sumOfServices = selectedServiceIds.reduce((acc, sid) => {
-    const s = data.services.find(sv => sv.id === sid);
-    return acc + (s?.price || 0);
-  }, 0);
-
-  const totalFullPrice = sumOfServices * sessions;
-  const discount = totalFullPrice - price;
-
   const toggleService = (id: string) => {
     const next = selectedServiceIds.includes(id)
       ? selectedServiceIds.filter(sid => sid !== id)
       : [...selectedServiceIds, id];
     setSelectedServiceIds(next);
-  };
-
-  React.useEffect(() => {
-    const sum = selectedServiceIds.reduce((acc, sid) => {
+    
+    // Auto-calculate price based on sum of services (optional, user can override)
+    const sum = next.reduce((acc, sid) => {
       const s = data.services.find(sv => sv.id === sid);
       return acc + (s?.price || 0);
     }, 0);
-    setPrice(sum * sessions);
-  }, [selectedServiceIds, sessions, data.services]);
+    setPrice(sum);
+  };
 
   return (
     <div className="space-y-6">
@@ -201,18 +192,6 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                       className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600"
                     />
                   </div>
-                  {selectedServiceIds.length > 0 && (
-                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 font-medium">Valor total dos serviços</span>
-                        <span className="font-bold text-slate-700">R$ {totalFullPrice.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-emerald-600 font-medium">Desconto aplicado</span>
-                        <span className="font-bold text-emerald-600">- R$ {discount.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex gap-2 pt-1">

@@ -21,7 +21,8 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
 
   const relevantPet = pets.find(p => p.id === appointment.petId);
 
-  const totalServicesPrice = appointment.services.reduce((sum, service) => {
+  const totalServicesPrice = appointment.services.reduce((sum, serviceName) => {
+    const service = allServices.find(s => s.name === serviceName);
     return sum + (service?.price || 0);
   }, 0);
 
@@ -154,12 +155,15 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
             <div className="mb-6">
               <p className="text-xs font-bold text-slate-400 uppercase mb-2">Serviços Realizados</p>
               <ul className="space-y-2">
-                {appointment.services.map((service, i) => (
-                  <li key={i} className="flex justify-between items-center text-slate-700">
-                    <span className="font-medium">{service.name}</span>
-                    <span className="font-bold">R$ {service.price.toFixed(2)}</span>
-                  </li>
-                ))}
+                {appointment.services.map((serviceName, i) => {
+                  const service = allServices.find(s => s.name === serviceName);
+                  return (
+                    <li key={i} className="flex justify-between items-center text-slate-700">
+                      <span className="font-medium">{serviceName}</span>
+                      <span className="font-bold">R$ {service?.price.toFixed(2) || '0.00'}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
