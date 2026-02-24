@@ -88,7 +88,7 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
         )}
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <AnimatePresence mode="popLayout">
           {(isAdding || editingId) && (
             <motion.div
@@ -96,68 +96,70 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white p-6 rounded-2xl border-2 border-indigo-500 shadow-xl shadow-indigo-50 col-span-full md:col-span-2 lg:col-span-1"
+              className="bg-white p-4 rounded-xl border-2 border-indigo-500 shadow-lg shadow-indigo-50 col-span-full md:col-span-2"
             >
-              <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Box size={18} className="text-indigo-600" />
+              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                <Box size={16} className="text-indigo-600" />
                 {editingId ? 'Editar Pacote' : 'Novo Pacote'}
               </h3>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Nome do Pacote</label>
-                  <input 
-                    autoFocus
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="Ex: Combo Mensal"
-                  />
-                </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Nome do Pacote</label>
+                    <input 
+                      autoFocus
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                      placeholder="Ex: Combo Mensal"
+                    />
+                  </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Tipo de Pacote</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'custom', label: 'Avulso', sessions: 1 },
-                      { id: 'weekly', label: 'Semanal', sessions: 2 },
-                      { id: 'monthly', label: 'Mensal', sessions: 4 }
-                    ].map(t => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => {
-                          setType(t.id as any);
-                          setSessions(t.sessions);
-                        }}
-                        className={cn(
-                          "py-2 rounded-xl text-xs font-bold border-2 transition-all",
-                          type === t.id 
-                            ? "bg-indigo-600 border-indigo-600 text-white" 
-                            : "bg-slate-50 border-slate-100 text-slate-500 hover:border-indigo-100"
-                        )}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Pacote</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { id: 'custom', label: 'Avulso', sessions: 1 },
+                        { id: 'weekly', label: 'Semanal', sessions: 2 },
+                        { id: 'monthly', label: 'Mensal', sessions: 4 }
+                      ].map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => {
+                            setType(t.id as any);
+                            setSessions(t.sessions);
+                          }}
+                          className={cn(
+                            "py-1.5 rounded-lg text-[10px] font-bold border-2 transition-all",
+                            type === t.id 
+                              ? "bg-indigo-600 border-indigo-600 text-white" 
+                              : "bg-slate-50 border-slate-100 text-slate-500 hover:border-indigo-100"
+                          )}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {type === 'custom' && (
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-400 uppercase">Número de Sessões</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Número de Sessões</label>
                     <input 
                       type="number"
                       value={sessions}
                       onChange={e => setSessions(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
                       min="1"
                     />
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Serviços Inclusos</label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços Inclusos</label>
+                  <div className="flex flex-wrap gap-1.5">
                     {data.services.map(s => {
                       const isSelected = selectedServiceIds.includes(s.id);
                       return (
@@ -166,7 +168,7 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                           type="button"
                           onClick={() => toggleService(s.id)}
                           className={cn(
-                            "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2",
+                            "px-2 py-1 rounded-md text-[10px] font-bold transition-all border-2",
                             isSelected 
                               ? "bg-indigo-600 border-indigo-600 text-white" 
                               : "bg-white border-slate-100 text-slate-500 hover:border-indigo-100"
@@ -180,30 +182,30 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Preço do Pacote (R$)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Preço do Pacote (R$)</label>
                   <div className="relative">
-                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input 
                       type="number"
                       value={price}
                       onChange={e => setPrice(Number(e.target.value))}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600"
+                      className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-1">
                   <button 
                     onClick={handleCancel}
-                    className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="flex-1 py-2 text-xs rounded-lg font-bold text-slate-500 hover:bg-slate-100 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button 
                     onClick={handleSave}
-                    className="flex-1 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                    className="flex-1 py-2 text-xs rounded-lg font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-1.5"
                   >
-                    <Save size={18} />
+                    <Save size={14} />
                     Salvar
                   </button>
                 </div>
@@ -218,32 +220,32 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                 key={pkg.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
+                className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
-                    <Box size={24} />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
+                    <Box size={18} />
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => handleEdit(pkg)}
-                      className="p-2 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                      className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-md transition-all"
                     >
-                      <Edit2 size={18} />
+                      <Edit2 size={14} />
                     </button>
                     <button 
                       onClick={() => onDeletePackage(pkg.id)}
-                      className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
+                      className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-md transition-all"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-900 text-lg">{pkg.name}</h4>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="font-bold text-slate-900 text-sm leading-tight truncate">{pkg.name}</h4>
                     <span className={cn(
-                      "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider",
+                      "text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0",
                       pkg.type === 'monthly' ? "bg-purple-100 text-purple-600" :
                       pkg.type === 'weekly' ? "bg-blue-100 text-blue-600" :
                       "bg-slate-100 text-slate-600"
@@ -251,21 +253,21 @@ export const PackageList: React.FC<PackageListProps> = ({ data, onSavePackage, o
                       {pkg.type === 'monthly' ? 'Mensal' : pkg.type === 'weekly' ? 'Semanal' : 'Personalizado'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 font-medium mt-1">{pkg.sessions} sessões inclusas</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <p className="text-[10px] text-slate-400 font-medium mb-2">{pkg.sessions} sessões inclusas</p>
+                  <div className="flex flex-wrap gap-1 mb-3">
                     {pkg.serviceIds.map(sid => {
                       const s = data.services.find(sv => sv.id === sid);
                       return (
-                        <span key={sid} className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md font-medium">
-                          {s?.name || 'Serviço Removido'}
+                        <span key={sid} className="text-[9px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100 font-medium truncate max-w-[100px]">
+                          {s?.name || 'Removido'}
                         </span>
                       );
                     })}
                   </div>
-                  <div className="flex items-center gap-1 text-indigo-600 font-bold mt-3">
-                    <span className="text-sm">R$</span>
-                    <span className="text-2xl">{pkg.price.toFixed(2)}</span>
-                  </div>
+                </div>
+                <div className="mt-auto pt-3 border-t border-slate-50 flex items-center gap-1 text-indigo-600 font-bold">
+                  <span className="text-xs">R$</span>
+                  <span className="text-lg">{pkg.price.toFixed(2)}</span>
                 </div>
               </motion.div>
             )

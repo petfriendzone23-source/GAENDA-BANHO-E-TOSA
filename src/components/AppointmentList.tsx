@@ -11,9 +11,10 @@ interface AppointmentListProps {
   data: AppData;
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
   onEditAppointment: (appointment: Appointment) => void;
+  onNewAppointmentAtTime?: (time: string, date: string) => void;
 }
 
-export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment }) => {
+export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment, onNewAppointmentAtTime }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
   const [dateFilter, setDateFilter] = React.useState<'Hoje' | 'Próximos' | 'Data Específica' | 'Todos'>('Hoje');
@@ -152,7 +153,15 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                     <Clock size={14} className="text-slate-300 sm:mt-1 hidden sm:block" />
                     <span className="sm:hidden text-xs text-slate-500 font-medium">{hourAppointments.length} agendamentos</span>
                   </div>
-                  <div className="flex-1 p-4 flex flex-col sm:flex-row flex-wrap gap-4">
+                  <div 
+                    className="flex-1 p-4 flex flex-col sm:flex-row flex-wrap gap-4 cursor-pointer"
+                    onClick={() => {
+                      if (onNewAppointmentAtTime) {
+                        const dateToUse = dateFilter === 'Data Específica' ? customDate : new Date().toISOString().split('T')[0];
+                        onNewAppointmentAtTime(hour, dateToUse);
+                      }
+                    }}
+                  >
                     {hourAppointments.length > 0 ? (
                       hourAppointments.map(app => {
                         const client = data.clients.find(c => c.id === app.clientId);
@@ -161,7 +170,10 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                           <motion.div
                             layoutId={app.id}
                             key={app.id}
-                            onClick={() => setSelectedAppointment(app)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAppointment(app);
+                            }}
                             className={cn(
                               "w-full sm:flex-1 sm:min-w-[250px] sm:max-w-[400px] p-4 rounded-2xl border-2 cursor-pointer transition-all relative group/card",
                               app.status === 'Concluído' ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" :
@@ -269,8 +281,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                         );
                       })
                     ) : (
-                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl opacity-20">
-                        <span className="text-xs font-medium text-slate-400 italic">Disponível</span>
+                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl opacity-20 hover:opacity-50 transition-opacity">
+                        <span className="text-xs font-medium text-slate-400 italic">Clique para agendar às {hour}</span>
                       </div>
                     )}
                   </div>

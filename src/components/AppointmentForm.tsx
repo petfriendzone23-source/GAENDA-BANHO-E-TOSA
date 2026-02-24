@@ -9,9 +9,10 @@ interface AppointmentFormProps {
   onSave: (appointments: Appointment[], client?: Client, pets?: Pet[]) => void;
   onClose: () => void;
   appointment?: Appointment;
+  initialData?: { time?: string, date?: string };
 }
 
-export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose, appointment }) => {
+export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose, appointment, initialData }) => {
   const [step, setStep] = React.useState(1);
   const [isNewClient, setIsNewClient] = React.useState(false);
   
@@ -19,8 +20,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [clientId, setClientId] = React.useState(appointment?.clientId || '');
   const [petId, setPetId] = React.useState(appointment?.petId || '');
   const [sessions, setSessions] = React.useState(1);
-  const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || new Date().toISOString().split('T')[0]]);
-  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || '09:00']);
+  const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
+  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || '09:00']);
   const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
   const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>({});
   const [price, setPrice] = React.useState(appointment?.price || 40);

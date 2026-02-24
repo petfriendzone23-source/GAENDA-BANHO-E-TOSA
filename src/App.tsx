@@ -16,6 +16,8 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
 
+  const [initialAppointmentData, setInitialAppointmentData] = React.useState<{time?: string, date?: string}>({});
+
   // Sync state with storage
   React.useEffect(() => {
     setData(loadData());
@@ -124,6 +126,10 @@ export default function App() {
               setEditingAppointment(app);
               setIsFormOpen(true);
             }}
+            onNewAppointmentAtTime={(time, date) => {
+              setInitialAppointmentData({ time, date });
+              setIsFormOpen(true);
+            }}
           />
         );
       case 'clients':
@@ -163,8 +169,10 @@ export default function App() {
           onClose={() => {
             setIsFormOpen(false);
             setEditingAppointment(undefined);
+            setInitialAppointmentData({});
           }} 
           appointment={editingAppointment}
+          initialData={initialAppointmentData}
         />
       )}
     </Layout>

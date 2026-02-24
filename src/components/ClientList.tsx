@@ -40,7 +40,7 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredClients.length > 0 ? (
           filteredClients.map((client) => {
             const clientPets = data.pets[client.id] || [];
@@ -48,52 +48,49 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
               <div 
                 key={client.id} 
                 onClick={() => setSelectedClient(client)}
-                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group flex flex-col"
               >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                      <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} alt={client.name} className="rounded-2xl" />
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                    <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} alt={client.name} className="rounded-full w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-900 text-sm truncate pr-2">{client.name}</h4>
+                      <button className="p-1 text-slate-400 hover:bg-slate-50 rounded-lg shrink-0">
+                        <MoreHorizontal size={16} />
+                      </button>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">{client.name}</h4>
-                      <div className="space-y-1 mt-1">
-                        {client.phones.map((phone, i) => (
-                          <div key={i} className="flex items-center gap-2 text-slate-500 text-xs">
-                            <Phone size={12} />
-                            <span>{phone}</span>
-                          </div>
-                        ))}
-                        {client.addresses.map((address, i) => (
-                          <div key={i} className="flex items-center gap-2 text-slate-500 text-xs">
-                            <MapPin size={12} />
-                            <span>{address}</span>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="flex flex-col gap-0.5 mt-0.5">
+                      {client.phones[0] && (
+                        <div className="flex items-center gap-1.5 text-slate-500 text-[11px] truncate">
+                          <Phone size={10} className="shrink-0" />
+                          <span className="truncate">{client.phones[0]}</span>
+                          {client.phones.length > 1 && <span className="text-slate-400 text-[9px] bg-slate-100 px-1 rounded">+{client.phones.length - 1}</span>}
+                        </div>
+                      )}
+                      {client.addresses[0] && (
+                        <div className="flex items-center gap-1.5 text-slate-500 text-[11px] truncate">
+                          <MapPin size={10} className="shrink-0" />
+                          <span className="truncate">{client.addresses[0]}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-lg">
-                    <MoreHorizontal size={20} />
-                  </button>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pets</p>
-                  {clientPets.map(pet => (
-                    <div key={pet.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <Dog size={18} className="text-indigo-500" />
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{pet.name}</p>
-                          <p className="text-[10px] text-slate-500">{pet.breed} • {pet.size}</p>
-                        </div>
+                <div className="mt-auto pt-3 border-t border-slate-50">
+                  <div className="flex flex-wrap gap-1.5">
+                    {clientPets.map(pet => (
+                      <div key={pet.id} className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50/50 text-indigo-700 rounded-md border border-indigo-100/50">
+                        <Dog size={10} className="shrink-0" />
+                        <span className="text-[10px] font-semibold truncate max-w-[80px]">{pet.name}</span>
                       </div>
-                      <span className="text-[10px] bg-white px-2 py-1 rounded-lg border border-slate-200 text-slate-500 font-medium">
-                        {data.appointments.filter(a => a.petId === pet.id).length} visitas
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                    {clientPets.length === 0 && (
+                      <span className="text-[10px] text-slate-400 italic">Sem pets cadastrados</span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

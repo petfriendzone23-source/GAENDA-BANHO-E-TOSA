@@ -107,7 +107,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
             )}
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <AnimatePresence mode="popLayout">
               {(isAdding || editingId) && (
                 <motion.div
@@ -115,47 +115,47 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-white p-6 rounded-2xl border-2 border-indigo-500 shadow-xl shadow-indigo-50"
+                  className="bg-white p-4 rounded-xl border-2 border-indigo-500 shadow-lg shadow-indigo-50"
                 >
-                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Scissors size={18} className="text-indigo-600" />
+                  <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                    <Scissors size={16} className="text-indigo-600" />
                     {editingId ? 'Editar Serviço' : 'Novo Serviço'}
                   </h3>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Nome do Serviço</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Nome do Serviço</label>
                       <input 
                         autoFocus
                         value={name}
                         onChange={e => setName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
                         placeholder="Ex: Banho Premium"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Preço (R$)</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Preço (R$)</label>
                       <div className="relative">
-                        <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input 
                           type="number"
                           value={price}
                           onChange={e => setPrice(Number(e.target.value))}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                          className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
                       </div>
                     </div>
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 pt-1">
                       <button 
                         onClick={handleCancel}
-                        className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors"
+                        className="flex-1 py-2 text-xs rounded-lg font-bold text-slate-500 hover:bg-slate-100 transition-colors"
                       >
                         Cancelar
                       </button>
                       <button 
                         onClick={handleSave}
-                        className="flex-1 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                        className="flex-1 py-2 text-xs rounded-lg font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-1.5"
                       >
-                        <Save size={18} />
+                        <Save size={14} />
                         Salvar
                       </button>
                     </div>
@@ -170,35 +170,35 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                     key={service.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
+                    className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
-                        <Scissors size={24} />
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                        <Scissors size={18} />
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleEdit(service)}
-                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                          className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-md transition-all"
                         >
-                          <Edit2 size={18} />
+                          <Edit2 size={14} />
                         </button>
                         <button 
                           onClick={() => onDeleteService(service.id)}
-                          className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
+                          className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-md transition-all"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">{service.name}</h4>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 text-sm leading-tight">{service.name}</h4>
                       <div className="flex items-center gap-1 text-indigo-600 font-bold mt-1">
-                        <span className="text-sm">R$</span>
-                        <span className="text-2xl">{service.price.toFixed(2)}</span>
+                        <span className="text-xs">R$</span>
+                        <span className="text-lg">{service.price.toFixed(2)}</span>
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-medium">
+                    <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between text-[10px] text-slate-400 font-medium">
                       <span>{data.appointments.filter(a => (a.services || []).includes(service.name)).length} agendamentos</span>
                     </div>
                   </motion.div>
