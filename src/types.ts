@@ -48,6 +48,12 @@ export interface WhatsAppTemplate {
   message: string;
 }
 
+export interface CompanyInfo {
+  name: string;
+  address: string;
+  phone: string;
+}
+
 export interface AppData {
   appointments: Appointment[];
   clients: Client[];
@@ -55,4 +61,5 @@ export interface AppData {
   services: Service[];
   packages: Package[];
   whatsappTemplates: WhatsAppTemplate[];
+  companyInfo: CompanyInfo;
 }

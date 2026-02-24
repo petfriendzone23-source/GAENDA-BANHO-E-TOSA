@@ -1,5 +1,5 @@
 import React from 'react';
-import { Appointment, Client, Pet, Service, Package } from '../types';
+import { Appointment, Client, Pet, Service, Package, CompanyInfo } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toPng } from 'html-to-image';
@@ -12,10 +12,11 @@ interface PackageServiceNoteProps {
   pets: Pet[];
   allServices: Service[];
   allPackages: Package[];
+  companyInfo: CompanyInfo;
   onClose: () => void;
 }
 
-export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointment, client, pets, allServices, allPackages, onClose }) => {
+export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointment, client, pets, allServices, allPackages, companyInfo, onClose }) => {
   const serviceNoteRef = React.useRef<HTMLDivElement>(null);
   const [isGeneratingImage, setIsGeneratingImage] = React.useState(false);
 
@@ -122,9 +123,9 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointm
           <div ref={serviceNoteRef} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             {/* Visible content for display */}
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">PetGroom Serviços</h3>
-              <p className="text-slate-500 text-sm">Rua Fictícia, 123 - Cidade, Estado</p>
-              <p className="text-slate-500 text-sm">(11) 98765-4321 | contato@petgroom.com</p>
+              <h3 className="text-2xl font-bold text-slate-900">{companyInfo.name}</h3>
+              <p className="text-slate-500 text-sm">{companyInfo.address}</p>
+              <p className="text-slate-500 text-sm">{companyInfo.phone}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6 border-b pb-4 border-slate-100">

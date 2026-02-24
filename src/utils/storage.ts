@@ -33,6 +33,11 @@ const initialData: AppData = {
     { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80, type: 'custom', sessions: 1 }
   ],
   whatsappTemplates: [],
+  companyInfo: {
+    name: 'PetGroom Serviços',
+    address: 'Rua Fictícia, 123 - Cidade, Estado',
+    phone: '(11) 98765-4321'
+  }
 };
 
 export const loadData = (): AppData => {
@@ -77,6 +82,11 @@ export const loadData = (): AppData => {
     // Migrate whatsappTemplates
     if (!parsed.whatsappTemplates) {
       parsed.whatsappTemplates = [];
+    }
+
+    // Migrate companyInfo
+    if (!parsed.companyInfo) {
+      parsed.companyInfo = initialData.companyInfo;
     }
 
     return parsed as AppData;

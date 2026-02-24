@@ -1,6 +1,6 @@
 import React from 'react';
-import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X } from 'lucide-react';
-import { AppData, WhatsAppTemplate } from '../types';
+import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2 } from 'lucide-react';
+import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
 
 interface SettingsProps {
   zoomLevel: number;
@@ -13,6 +13,8 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
   const [editingTemplate, setEditingTemplate] = React.useState<WhatsAppTemplate | null>(null);
   const [isAddingNew, setIsAddingNew] = React.useState(false);
   const [newTemplate, setNewTemplate] = React.useState<Partial<WhatsAppTemplate>>({ title: '', message: '' });
+  const [companyInfo, setCompanyInfo] = React.useState<CompanyInfo>(data.companyInfo);
+  const [isEditingCompany, setIsEditingCompany] = React.useState(false);
 
   const handleIncrease = () => {
     setZoomLevel(Math.min(zoomLevel + 6.25, 150)); // Max 150%
@@ -44,6 +46,12 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
     setEditingTemplate(null);
     setIsAddingNew(false);
     setNewTemplate({ title: '', message: '' });
+  };
+
+  const handleSaveCompanyInfo = () => {
+    const newData = { ...data, companyInfo };
+    onSaveData(newData);
+    setIsEditingCompany(false);
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -110,6 +118,98 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
               <span className="font-bold text-indigo-600">PetGroom</span> ajuda você a gerenciar seu negócio.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Building2 size={20} className="text-blue-600" />
+              Informações da Empresa
+            </h3>
+            <p className="text-slate-500 text-sm mt-1">
+              Estes dados aparecerão nas notas de serviço geradas.
+            </p>
+          </div>
+          {!isEditingCompany && (
+            <button 
+              onClick={() => setIsEditingCompany(true)}
+              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold"
+            >
+              <Edit2 size={16} />
+              Editar
+            </button>
+          )}
+        </div>
+
+        <div className="p-6">
+          {isEditingCompany ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nome da Loja</label>
+                  <input 
+                    type="text" 
+                    value={companyInfo.name}
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, name: e.target.value })}
+                    className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Telefone</label>
+                  <input 
+                    type="text" 
+                    value={companyInfo.phone}
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, phone: e.target.value })}
+                    className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Endereço</label>
+                <input 
+                  type="text" 
+                  value={companyInfo.address}
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
+                  className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button 
+                  onClick={() => {
+                    setCompanyInfo(data.companyInfo);
+                    setIsEditingCompany(false);
+                  }}
+                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleSaveCompanyInfo}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 flex items-center gap-2"
+                >
+                  <Save size={16} />
+                  Salvar Alterações
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Nome da Loja</p>
+                <p className="font-bold text-slate-900 mt-1">{data.companyInfo.name}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Telefone</p>
+                <p className="font-bold text-slate-900 mt-1">{data.companyInfo.phone}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Endereço</p>
+                <p className="font-bold text-slate-900 mt-1">{data.companyInfo.address}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

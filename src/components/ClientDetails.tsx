@@ -462,6 +462,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
             pets={clientPets}
             allServices={data.services}
             allPackages={data.packages}
+            companyInfo={data.companyInfo}
             onClose={() => setShowServiceNote(false)}
           />
         ) : (
@@ -470,6 +471,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
             appointment={appointment} 
             pets={clientPets} 
             allServices={data.services} 
+            companyInfo={data.companyInfo}
             onClose={() => setShowServiceNote(false)} 
           />
         )
