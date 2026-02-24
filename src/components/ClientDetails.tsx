@@ -6,6 +6,7 @@ import { cn } from '../utils/cn';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ServiceNote } from './ServiceNote';
+import { PackageServiceNote } from './PackageServiceNote';
 
 
 interface ClientDetailsProps {
@@ -454,13 +455,24 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
       </motion.div>
 
       {showServiceNote && appointment && (
-        <ServiceNote 
-          client={client} 
-          appointment={appointment} 
-          pets={clientPets} 
-          allServices={data.services} 
-          onClose={() => setShowServiceNote(false)} 
-        />
+        appointment.packageId ? (
+          <PackageServiceNote
+            client={client}
+            appointment={appointment}
+            pets={clientPets}
+            allServices={data.services}
+            allPackages={data.packages}
+            onClose={() => setShowServiceNote(false)}
+          />
+        ) : (
+          <ServiceNote 
+            client={client} 
+            appointment={appointment} 
+            pets={clientPets} 
+            allServices={data.services} 
+            onClose={() => setShowServiceNote(false)} 
+          />
+        )
       )}
     </div>
   );
