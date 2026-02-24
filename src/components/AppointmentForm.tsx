@@ -23,7 +23,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
   const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || '09:00']);
   const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
-  const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>({});
+  const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>(appointment?.customServicePrices || {});
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId);
@@ -154,6 +154,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       price: idx === 0 ? price : 0, 
       notes,
       packageId: selectedPackageId,
+      customServicePrices: sessionServicePrices,
     }));
 
     onSave(appointments, newClient, createdPets);

@@ -8,7 +8,7 @@ const initialData: AppData = {
       id: '1',
       clientId: 'c1',
       petId: 'p1',
-      services: ['Banho e Tosa'],
+      services: [{ name: 'Banho e Tosa', price: 80 }],
       date: new Date().toISOString().split('T')[0],
       time: '14:30',
       status: 'Agendado',
@@ -50,7 +50,9 @@ export const loadData = (): AppData => {
     if (parsed.appointments) {
       parsed.appointments = parsed.appointments.map((app: any) => ({
         ...app,
-        services: app.services || (app.service ? [app.service] : []),
+        services: app.services.map((s: any) => 
+          typeof s === 'string' ? { name: s, price: parsed.services.find((ps: any) => ps.name === s)?.price || 0 } : (s.price === undefined ? { ...s, price: parsed.services.find((ps: any) => ps.name === s.name)?.price || 0 } : s)
+        ),
       }));
     }
 

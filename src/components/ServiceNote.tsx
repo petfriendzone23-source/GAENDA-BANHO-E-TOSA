@@ -21,10 +21,7 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
 
   const relevantPet = pets.find(p => p.id === appointment.petId);
 
-  const totalServicesPrice = appointment.services.reduce((sum, serviceName) => {
-    const service = allServices.find(s => s.name === serviceName);
-    return sum + (service?.price || 0);
-  }, 0);
+  const totalServicesPrice = appointment.price;
 
   const handleGenerateImage = async (share = false) => {
     if (!serviceNoteRef.current) return;
@@ -157,13 +154,31 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
               <ul className="space-y-2">
                 {appointment.services.map((serviceName, i) => {
                   const service = allServices.find(s => s.name === serviceName);
+                  const price = appointment.customServicePrices?.[serviceName] ?? service?.price ?? 0;
                   return (
                     <li key={i} className="flex justify-between items-center text-slate-700">
                       <span className="font-medium">{serviceName}</span>
-                      <span className="font-bold">R$ {service?.price.toFixed(2) || '0.00'}</span>
+                      <span className="font-bold">R$ {price.toFixed(2)}</span>
                     </li>
                   );
                 })}
+                {(() => {
+                  const calculatedSum = appointment.services.reduce((sum, serviceName) => {
+                    const service = allServices.find(s => s.name === serviceName);
+                    return sum + (appointment.customServicePrices?.[serviceName] ?? service?.price ?? 0);
+                  }, 0);
+                  const adjustment = appointment.price - calculatedSum;
+                  
+                  if (Math.abs(adjustment) > 0.01) {
+                    return (
+                      <li className="flex justify-between items-center text-slate-500 italic border-t border-dashed border-slate-200 pt-2 mt-2">
+                        <span className="font-medium">Ajuste / Desconto</span>
+                        <span className="font-bold">R$ {adjustment.toFixed(2)}</span>
+                      </li>
+                    );
+                  }
+                  return null;
+                })()}
               </ul>
             </div>
 

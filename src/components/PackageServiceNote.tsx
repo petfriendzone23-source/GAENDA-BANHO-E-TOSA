@@ -70,7 +70,7 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
       const service = allServices.find(s => s.name === serviceName);
       return {
         name: serviceName,
-        price: service?.price || 0
+        price: app.customServicePrices?.[serviceName] ?? service?.price ?? 0
       };
     });
     const dayTotal = dayServices.reduce((sum, s) => sum + s.price, 0);
