@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -12,9 +12,33 @@ interface ClientDetailsProps {
   onClose: () => void;
   appointment?: Appointment;
   showHistory?: boolean;
+  onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet }) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [selectedPetId, setSelectedPetId] = React.useState<string | null>(null);
+
+  const handlePhotoClick = (petId: string) => {
+    setSelectedPetId(petId);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && selectedPetId && onUpdatePet) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onUpdatePet(client.id, selectedPetId, { photoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setSelectedPetId(null);
+  };
   const clientPets = data.pets[client.id] || [];
   const clientAppointments = data.appointments
     .filter(a => a.clientId === client.id)
@@ -88,15 +112,33 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
 
             <section className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pets</h3>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
               <div className="space-y-3">
                 {clientPets.map(pet => (
                   <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-xl text-indigo-600 shadow-sm">
-                      <Dog size={20} />
+                    <div 
+                      className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
+                      onClick={() => handlePhotoClick(pet.id)}
+                      title="Alterar foto"
+                    >
+                      {pet.photoUrl ? (
+                        <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Dog size={24} />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera size={16} className="text-white" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-900 text-sm">{pet.name}</p>
-                      <p className="text-[10px] text-indigo-600 font-medium">{pet.breed} • {pet.size}</p>
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
+                      <p className="text-[10px] text-indigo-600 font-medium truncate">{pet.breed} • {pet.size}</p>
                     </div>
                   </div>
                 ))}

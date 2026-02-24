@@ -3,6 +3,7 @@ export interface Pet {
   name: string;
   breed: string;
   size: 'Pequeno' | 'Médio' | 'Grande';
+  photoUrl?: string;
 }
 
 export interface Client {

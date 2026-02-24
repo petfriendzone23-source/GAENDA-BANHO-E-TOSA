@@ -94,6 +94,19 @@ export default function App() {
     setData(newData);
   };
 
+  const handleUpdatePet = (clientId: string, petId: string, updatedPet: Partial<Pet>) => {
+    const newData = { ...data };
+    const pets = newData.pets[clientId];
+    if (pets) {
+      const index = pets.findIndex(p => p.id === petId);
+      if (index !== -1) {
+        pets[index] = { ...pets[index], ...updatedPet };
+        setData(newData);
+        saveData(newData);
+      }
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -130,10 +143,11 @@ export default function App() {
               setInitialAppointmentData({ time, date });
               setIsFormOpen(true);
             }}
+            onUpdatePet={handleUpdatePet}
           />
         );
       case 'clients':
-        return <ClientList data={data} />;
+        return <ClientList data={data} onUpdatePet={handleUpdatePet} />;
       case 'best-clients':
         return <BestClients data={data} />;
       case 'services':

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Search, Plus, Phone, Mail, Dog, MoreHorizontal, MapPin } from 'lucide-react';
-import { AppData, Client } from '../types';
+import { AppData, Client, Pet } from '../types';
 import { ClientDetails } from './ClientDetails';
 
 interface ClientListProps {
   data: AppData;
+  onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
 }
 
-export const ClientList: React.FC<ClientListProps> = ({ data }) => {
+export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
 
@@ -83,7 +84,11 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
                   <div className="flex flex-wrap gap-1.5">
                     {clientPets.map(pet => (
                       <div key={pet.id} className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50/50 text-indigo-700 rounded-md border border-indigo-100/50">
-                        <Dog size={10} className="shrink-0" />
+                        {pet.photoUrl ? (
+                          <img src={pet.photoUrl} alt={pet.name} className="w-3 h-3 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <Dog size={10} className="shrink-0" />
+                        )}
                         <span className="text-[10px] font-semibold truncate max-w-[80px]">{pet.name}</span>
                       </div>
                     ))}
@@ -107,6 +112,7 @@ export const ClientList: React.FC<ClientListProps> = ({ data }) => {
           client={selectedClient} 
           data={data} 
           onClose={() => setSelectedClient(null)} 
+          onUpdatePet={onUpdatePet}
         />
       )}
     </div>

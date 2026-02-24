@@ -3,7 +3,7 @@ import { format, parseISO, isToday, isAfter, startOfDay, isSameDay } from 'date-
 import { ptBR } from 'date-fns/locale';
 import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppData, Appointment, Client } from '../types';
+import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
 
@@ -12,9 +12,10 @@ interface AppointmentListProps {
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
   onEditAppointment: (appointment: Appointment) => void;
   onNewAppointmentAtTime?: (time: string, date: string) => void;
+  onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
 }
 
-export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment, onNewAppointmentAtTime }) => {
+export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdateStatus, onEditAppointment, onNewAppointmentAtTime, onUpdatePet }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
   const [dateFilter, setDateFilter] = React.useState<'Hoje' | 'Próximos' | 'Data Específica' | 'Todos'>('Hoje');
@@ -419,6 +420,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
           data={data} 
           showHistory={false}
           onClose={() => setSelectedAppointment(null)} 
+          onUpdatePet={onUpdatePet}
         />
       )}
     </div>
