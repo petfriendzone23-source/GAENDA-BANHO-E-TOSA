@@ -483,26 +483,32 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
-                      <div className="flex flex-col gap-2">
-                        {data.services.map(s => {
-                          const isSelected = sessionServices[idx]?.includes(s.name);
-                          const currentPrice = sessionServicePrices[s.name] !== undefined ? sessionServicePrices[s.name] : s.price;
-                          return (
-                            <div key={s.id} className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => toggleServiceInSession(idx, s.name)}
-                                className={cn(
-                                  "px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all flex-1 text-left",
-                                  isSelected 
-                                    ? "bg-indigo-600 border-indigo-600 text-white" 
-                                    : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200"
-                                )}
-                              >
-                                {s.name}
-                              </button>
-                              {isSelected && (
-                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1">
+                      <select 
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            toggleServiceInSession(idx, e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="">Adicionar serviço...</option>
+                        {data.services.filter(s => !sessionServices[idx]?.includes(s.name)).map(s => (
+                          <option key={s.id} value={s.name}>{s.name} (R$ {s.price.toFixed(2)})</option>
+                        ))}
+                      </select>
+                      
+                      {sessionServices[idx]?.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-2">
+                          {sessionServices[idx].map(serviceName => {
+                            const s = data.services.find(sv => sv.name === serviceName);
+                            if (!s) return null;
+                            const currentPrice = sessionServicePrices[s.name] !== undefined ? sessionServicePrices[s.name] : s.price;
+                            
+                            return (
+                              <div key={s.id} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl p-2">
+                                <span className="flex-1 text-xs font-bold text-indigo-700">{s.name}</span>
+                                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
                                   <span className="text-xs font-bold text-slate-400">R$</span>
                                   <input 
                                     type="number" 
@@ -512,11 +518,18 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                                     className="w-16 bg-transparent text-xs font-bold text-slate-700 outline-none"
                                   />
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleServiceInSession(idx, s.name)}
+                                  className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

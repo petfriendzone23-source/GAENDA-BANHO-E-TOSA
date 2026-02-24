@@ -78,12 +78,12 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
             className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="flex bg-slate-100 p-1 rounded-xl">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+          <div className="flex bg-slate-100 p-1 rounded-xl justify-center">
             <button 
               onClick={() => setViewType('Grade')}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all",
                 viewType === 'Grade' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
               )}
             >
@@ -92,42 +92,44 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
             <button 
               onClick={() => setViewType('Lista')}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all",
                 viewType === 'Lista' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
               )}
             >
               Lista
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar size={18} className="text-slate-400" />
-            <div className="flex gap-2">
-              <select 
-                value={dateFilter}
-                onChange={e => setDateFilter(e.target.value as any)}
-                className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
-              >
-                <option value="Hoje">Hoje</option>
-                <option value="Próximos">Próximos Dias</option>
-                <option value="Data Específica">Data Específica</option>
-                <option value="Todos">Todos os Dias</option>
-              </select>
-              {dateFilter === 'Data Específica' && (
-                <input 
-                  type="date"
-                  value={customDate}
-                  onChange={e => setCustomDate(e.target.value)}
-                  className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
-                />
-              )}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-4 py-1">
+              <Calendar size={18} className="text-slate-400 shrink-0" />
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <select 
+                  value={dateFilter}
+                  onChange={e => setDateFilter(e.target.value as any)}
+                  className="bg-transparent border-none py-2 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full"
+                >
+                  <option value="Hoje">Hoje</option>
+                  <option value="Próximos">Próximos Dias</option>
+                  <option value="Data Específica">Data Específica</option>
+                  <option value="Todos">Todos os Dias</option>
+                </select>
+                {dateFilter === 'Data Específica' && (
+                  <input 
+                    type="date"
+                    value={customDate}
+                    onChange={e => setCustomDate(e.target.value)}
+                    className="bg-transparent border-none py-2 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-2"
+                  />
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-slate-400" />
+          <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-4 py-1">
+            <Filter size={18} className="text-slate-400 shrink-0" />
             <select 
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value as any)}
-              className="bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600 font-medium text-sm"
+              className="bg-transparent border-none py-2 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full"
             >
               <option value="Todos">Status</option>
               <option value="Agendado">Agendado</option>
@@ -144,12 +146,13 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
             {hours.map(hour => {
               const hourAppointments = filteredAppointments.filter(app => app.time.startsWith(hour.split(':')[0]));
               return (
-                <div key={hour} className="flex min-h-[100px] group hover:bg-slate-50/30 transition-colors">
-                  <div className="w-24 flex flex-col items-center justify-start pt-4 border-r border-slate-100 bg-slate-50/50">
+                <div key={hour} className="flex flex-col sm:flex-row min-h-[100px] group hover:bg-slate-50/30 transition-colors border-b border-slate-100 last:border-0">
+                  <div className="w-full sm:w-24 flex sm:flex-col items-center justify-between sm:justify-start p-4 sm:pt-4 sm:border-r border-slate-100 bg-slate-50/50">
                     <span className="text-sm font-black text-slate-900">{hour}</span>
-                    <Clock size={14} className="text-slate-300 mt-1" />
+                    <Clock size={14} className="text-slate-300 sm:mt-1 hidden sm:block" />
+                    <span className="sm:hidden text-xs text-slate-500 font-medium">{hourAppointments.length} agendamentos</span>
                   </div>
-                  <div className="flex-1 p-4 flex flex-wrap gap-4">
+                  <div className="flex-1 p-4 flex flex-col sm:flex-row flex-wrap gap-4">
                     {hourAppointments.length > 0 ? (
                       hourAppointments.map(app => {
                         const client = data.clients.find(c => c.id === app.clientId);
@@ -160,7 +163,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                             key={app.id}
                             onClick={() => setSelectedAppointment(app)}
                             className={cn(
-                              "flex-1 min-w-[250px] max-w-[400px] p-4 rounded-2xl border-2 cursor-pointer transition-all relative group/card",
+                              "w-full sm:flex-1 sm:min-w-[250px] sm:max-w-[400px] p-4 rounded-2xl border-2 cursor-pointer transition-all relative group/card",
                               app.status === 'Concluído' ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" :
                               app.status === 'Cancelado' ? "bg-rose-50 border-rose-100 hover:border-rose-300" :
                               "bg-indigo-50 border-indigo-100 hover:border-indigo-300 shadow-sm hover:shadow-md"
@@ -208,7 +211,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                                 </span>
                               ))}
                             </div>
-                            <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
+                            <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
