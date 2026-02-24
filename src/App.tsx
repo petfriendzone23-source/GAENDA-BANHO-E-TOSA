@@ -6,6 +6,7 @@ import { ClientList } from './components/ClientList';
 import { BestClients } from './components/BestClients';
 import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
+import { Settings } from './components/Settings';
 import { AppointmentForm } from './components/AppointmentForm';
 import { AppData, Appointment, Client, Pet, Service, Package } from './types';
 import { loadData, saveData } from './utils/storage';
@@ -15,8 +16,18 @@ export default function App() {
   const [data, setData] = React.useState<AppData>(loadData());
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
+  const [zoomLevel, setZoomLevel] = React.useState(() => {
+    const saved = localStorage.getItem('zoomLevel');
+    return saved ? parseInt(saved, 10) : 100;
+  });
 
   const [initialAppointmentData, setInitialAppointmentData] = React.useState<{time?: string, date?: string}>({});
+
+  // Apply zoom level
+  React.useEffect(() => {
+    document.documentElement.style.fontSize = `${zoomLevel}%`;
+    localStorage.setItem('zoomLevel', zoomLevel.toString());
+  }, [zoomLevel]);
 
   // Sync state with storage
   React.useEffect(() => {
@@ -161,12 +172,7 @@ export default function App() {
           />
         );
       case 'settings':
-        return (
-          <div className="py-20 text-center">
-            <h2 className="text-2xl font-bold text-slate-900">Configurações</h2>
-            <p className="text-slate-500 mt-2">Em breve: Gerenciamento de serviços, preços e horários de funcionamento.</p>
-          </div>
-        );
+        return <Settings zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />;
       default:
         return <Dashboard data={data} onNewAppointment={() => setIsFormOpen(true)} />;
     }

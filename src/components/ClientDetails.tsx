@@ -44,220 +44,322 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
     .filter(a => a.clientId === client.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const isAppointmentView = !!appointment && !showHistory;
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className={cn(
+          "bg-white w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
+          isAppointmentView ? "max-w-sm" : "max-w-3xl"
+        )}
       >
-        <header className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden">
+        <header className={cn(
+          "border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white",
+          isAppointmentView ? "p-4" : "p-6"
+        )}>
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "rounded-xl bg-white/10 flex items-center justify-center overflow-hidden",
+              isAppointmentView ? "w-10 h-10 rounded-lg" : "w-16 h-16 rounded-2xl"
+            )}>
               <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} alt={client.name} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">{client.name}</h2>
-              <p className="text-slate-400 text-sm">Desde {clientAppointments.length > 0 ? format(parseISO(clientAppointments[clientAppointments.length - 1].date), 'MMMM yyyy', { locale: ptBR }) : 'sem registros'}</p>
+              <h2 className={cn("font-bold", isAppointmentView ? "text-lg" : "text-2xl")}>{client.name}</h2>
+              {!isAppointmentView && (
+                <p className="text-slate-400 text-sm">Desde {clientAppointments.length > 0 ? format(parseISO(clientAppointments[clientAppointments.length - 1].date), 'MMMM yyyy', { locale: ptBR }) : 'sem registros'}</p>
+              )}
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <X size={24} />
+            <X size={isAppointmentView ? 20 : 24} />
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Sidebar: Info & Pets */}
-          <div className="space-y-8">
-            <section className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contatos</h3>
-              <div className="space-y-3">
-                {client.phones.map((phone, i) => (
-                  <div key={i} className="flex items-center gap-3 text-slate-600">
-                    <div className="p-2 bg-slate-100 rounded-lg">
-                      <Phone size={14} />
-                    </div>
-                    <span className="text-sm font-medium">{phone}</span>
+        <div className={cn(
+          "flex-1 overflow-y-auto",
+          isAppointmentView ? "p-4 flex flex-col gap-3" : "p-6 grid grid-cols-1 md:grid-cols-3 gap-8"
+        )}>
+          {isAppointmentView && appointment ? (
+             <>
+               {/* Appointment Card - Hero */}
+               <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
+                  <div className={cn(
+                    "p-3 text-center",
+                    appointment.packageId ? "bg-purple-50" : "bg-indigo-50"
+                  )}>
+                     <div className="inline-flex p-2 rounded-lg bg-white shadow-sm mb-2 text-indigo-600">
+                        <Scissors size={20} />
+                     </div>
+                     <h2 className="text-lg font-bold text-slate-900 mb-0.5 leading-tight">
+                       {(appointment.services || []).join(', ')}
+                     </h2>
+                     <p className="text-xs font-medium text-slate-500">
+                       {data.pets[appointment.clientId]?.find(p => p.id === appointment.petId)?.name}
+                     </p>
                   </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Endereços</h3>
-              <div className="space-y-3">
-                {client.addresses.map((address, i) => (
-                  <div key={i} className="group relative">
-                    <div className="flex items-start gap-3 text-slate-600 p-3 rounded-2xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 transition-colors">
-                      <div className="p-2 bg-white rounded-lg mt-0.5 shadow-sm">
-                        <MapPin size={14} className="text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-sm font-medium leading-relaxed block mb-2">{address}</span>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:text-indigo-700 transition-colors"
-                        >
-                          <MapPin size={12} />
-                          Ver no Google Maps
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pets</h3>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept="image/*" 
-                className="hidden" 
-              />
-              <div className="space-y-3">
-                {clientPets.map(pet => (
-                  <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-3">
-                    <div 
-                      className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
-                      onClick={() => handlePhotoClick(pet.id)}
-                      title="Alterar foto"
-                    >
-                      {pet.photoUrl ? (
-                        <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Dog size={24} />
-                      )}
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera size={16} className="text-white" />
-                      </div>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
-                      <p className="text-[10px] text-indigo-600 font-medium truncate">{pet.breed} • {pet.size}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          {/* Main Content: History or Appointment Details */}
-          <div className="md:col-span-2 space-y-6">
-            {appointment && (
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-slate-900">Serviço Agendado</h3>
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Hoje</span>
-                </div>
-                <div className="p-6 rounded-3xl border-2 border-indigo-500 bg-indigo-50/30 shadow-xl shadow-indigo-50">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-indigo-600 text-white">
-                        <Scissors size={24} />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-slate-900">{(appointment.services || []).join(', ')}</p>
-                        <p className="text-slate-500 font-medium">{data.pets[appointment.clientId]?.find(p => p.id === appointment.petId)?.name}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-indigo-600">R$ {appointment.price.toFixed(2)}</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{appointment.status}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-indigo-100">
-                    <div className="flex items-center gap-3 text-slate-700">
-                      <Calendar size={18} className="text-indigo-600" />
-                      <span className="font-bold">{format(parseISO(appointment.date), "dd 'de' MMMM", { locale: ptBR })}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-700">
-                      <Clock size={18} className="text-indigo-600" />
-                      <span className="font-bold">{appointment.time}</span>
-                    </div>
-                  </div>
-
-                  {appointment.notes && (
-                    <div className="mt-6 p-4 bg-white rounded-2xl border border-indigo-100 text-sm text-slate-600 italic">
-                      <p className="font-bold text-[10px] uppercase text-indigo-400 mb-1 not-italic tracking-wider">Observações</p>
-                      "{appointment.notes}"
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {showHistory && (
-              <>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-slate-900">Histórico de Serviços</h3>
-                  <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{clientAppointments.length} Registros</span>
-                </div>
-
-                <div className="space-y-4">
-                  {clientAppointments.length > 0 ? (
-                    clientAppointments.map(app => (
-                      <div key={app.id} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors flex flex-col gap-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                              "p-1.5 rounded-lg shrink-0",
-                              app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
-                              app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
-                              "bg-rose-100 text-rose-600"
-                            )}>
-                              {app.status === 'Concluído' ? <CheckCircle2 size={14} /> : 
-                               app.status === 'Agendado' ? <Clock size={14} /> : 
-                               <AlertCircle size={14} />}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-900 text-sm truncate">{(app.services || []).join(', ')}</p>
-                              <p className="text-[10px] text-slate-500 truncate">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0 ml-2">
-                            <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
-                            <p className={cn(
-                              "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
-                              app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :
-                              app.status === 'Agendado' ? "bg-amber-50 text-amber-600" :
-                              "bg-rose-50 text-rose-600"
-                            )}>{app.status}</p>
-                          </div>
+                  
+                  <div className="p-3 space-y-2">
+                     <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center">
+                           <Calendar size={14} className="text-indigo-500 mb-0.5" />
+                           <span className="font-bold text-slate-900 block text-xs">
+                             {format(parseISO(appointment.date), "dd 'de' MMM", { locale: ptBR })}
+                           </span>
                         </div>
-                        
-                        <div className="flex items-center gap-4 pt-2 border-t border-slate-50 text-slate-500">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar size={12} />
-                            <span className="text-[11px] font-medium">{format(parseISO(app.date), "dd/MM/yyyy")}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={12} />
-                            <span className="text-[11px] font-medium">{app.time}</span>
-                          </div>
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center">
+                           <Clock size={14} className="text-indigo-500 mb-0.5" />
+                           <span className="font-bold text-slate-900 block text-xs">
+                             {appointment.time}
+                           </span>
                         </div>
+                     </div>
 
-                        {app.notes && (
-                          <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-500 italic">
-                            "{app.notes}"
-                          </div>
+                     <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 text-white">
+                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total</span>
+                        <span className="text-base font-bold">R$ {appointment.price.toFixed(2)}</span>
+                     </div>
+
+                     {appointment.notes && (
+                        <div className="p-2 rounded-lg bg-amber-50 border border-amber-100 text-amber-800 text-[10px] italic text-center">
+                           "{appointment.notes}"
+                        </div>
+                     )}
+                  </div>
+               </div>
+
+               {/* Client Quick Info */}
+               <div className="flex flex-col gap-2">
+                  <a href={`tel:${client.phones[0]}`} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3 hover:bg-slate-100 transition-colors">
+                     <div className="p-1.5 bg-white rounded-full text-slate-900 shadow-sm shrink-0">
+                        <Phone size={14} />
+                     </div>
+                     <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Telefone</p>
+                        <p className="font-bold text-slate-900 text-sm">{client.phones[0]}</p>
+                     </div>
+                  </a>
+                  
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3">
+                     <div className="p-1.5 bg-white rounded-full text-slate-900 shadow-sm shrink-0 mt-0.5">
+                        <MapPin size={14} />
+                     </div>
+                     <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Endereço</p>
+                        {client.addresses && client.addresses[0] ? (
+                          <a 
+                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.addresses[0])}`}
+                             target="_blank"
+                             rel="noreferrer"
+                             className="font-bold text-slate-900 text-sm leading-snug break-words hover:text-indigo-600 transition-colors block"
+                          >
+                             {client.addresses[0]}
+                          </a>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic">Endereço não cadastrado</p>
                         )}
+                     </div>
+                  </div>
+               </div>
+             </>
+          ) : (
+            <>
+              {/* Sidebar: Info & Pets */}
+              <div className="space-y-8">
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contatos</h3>
+                  <div className="space-y-3">
+                    {client.phones.map((phone, i) => (
+                      <div key={i} className="flex items-center gap-3 text-slate-600">
+                        <div className="p-2 bg-slate-100 rounded-lg">
+                          <Phone size={14} />
+                        </div>
+                        <span className="text-sm font-medium">{phone}</span>
                       </div>
-                    ))
-                  ) : (
-                    <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                      <p className="text-slate-400 font-medium">Nenhum serviço registrado ainda.</p>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Endereços</h3>
+                  <div className="space-y-3">
+                    {client.addresses.map((address, i) => (
+                      <div key={i} className="group relative">
+                        <div className="flex items-start gap-3 text-slate-600 p-3 rounded-2xl bg-slate-50 border border-slate-100 group-hover:border-indigo-200 transition-colors">
+                          <div className="p-2 bg-white rounded-lg mt-0.5 shadow-sm">
+                            <MapPin size={14} className="text-indigo-600" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-sm font-medium leading-relaxed block mb-2">{address}</span>
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:text-indigo-700 transition-colors"
+                            >
+                              <MapPin size={12} />
+                              Ver no Google Maps
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pets</h3>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                  <div className="space-y-3">
+                    {clientPets.map(pet => (
+                      <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-3">
+                        <div 
+                          className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
+                          onClick={() => handlePhotoClick(pet.id)}
+                          title="Alterar foto"
+                        >
+                          {pet.photoUrl ? (
+                            <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Dog size={24} />
+                          )}
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera size={16} className="text-white" />
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
+                          <p className="text-[10px] text-indigo-600 font-medium truncate">{pet.breed} • {pet.size}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              {/* Main Content: History or Appointment Details */}
+              <div className="md:col-span-2 space-y-6">
+                {appointment && (
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-slate-900">Serviço Agendado</h3>
+                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Hoje</span>
                     </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+                    <div className="p-6 rounded-3xl border-2 border-indigo-500 bg-indigo-50/30 shadow-xl shadow-indigo-50">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-2xl bg-indigo-600 text-white">
+                            <Scissors size={24} />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-slate-900">{(appointment.services || []).join(', ')}</p>
+                            <p className="text-slate-500 font-medium">{data.pets[appointment.clientId]?.find(p => p.id === appointment.petId)?.name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-indigo-600">R$ {appointment.price.toFixed(2)}</p>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{appointment.status}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-6 border-t border-indigo-100">
+                        <div className="flex items-center gap-3 text-slate-700">
+                          <Calendar size={18} className="text-indigo-600" />
+                          <span className="font-bold">{format(parseISO(appointment.date), "dd 'de' MMMM", { locale: ptBR })}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-700">
+                          <Clock size={18} className="text-indigo-600" />
+                          <span className="font-bold">{appointment.time}</span>
+                        </div>
+                      </div>
+
+                      {appointment.notes && (
+                        <div className="mt-6 p-4 bg-white rounded-2xl border border-indigo-100 text-sm text-slate-600 italic">
+                          <p className="font-bold text-[10px] uppercase text-indigo-400 mb-1 not-italic tracking-wider">Observações</p>
+                          "{appointment.notes}"
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {showHistory && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-slate-900">Histórico de Serviços</h3>
+                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{clientAppointments.length} Registros</span>
+                    </div>
+
+                    <div className="space-y-4">
+                      {clientAppointments.length > 0 ? (
+                        clientAppointments.map(app => (
+                          <div key={app.id} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors flex flex-col gap-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className={cn(
+                                  "p-1.5 rounded-lg shrink-0",
+                                  app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
+                                  app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
+                                  "bg-rose-100 text-rose-600"
+                                )}>
+                                  {app.status === 'Concluído' ? <CheckCircle2 size={14} /> : 
+                                   app.status === 'Agendado' ? <Clock size={14} /> : 
+                                   <AlertCircle size={14} />}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-900 text-sm truncate">{(app.services || []).join(', ')}</p>
+                                  <p className="text-[10px] text-slate-500 truncate">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0 ml-2">
+                                <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
+                                <p className={cn(
+                                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
+                                  app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :
+                                  app.status === 'Agendado' ? "bg-amber-50 text-amber-600" :
+                                  "bg-rose-50 text-rose-600"
+                                )}>{app.status}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 pt-2 border-t border-slate-50 text-slate-500">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                <span className="text-[11px] font-medium">{format(parseISO(app.date), "dd/MM/yyyy")}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock size={12} />
+                                <span className="text-[11px] font-medium">{app.time}</span>
+                              </div>
+                            </div>
+
+                            {app.notes && (
+                              <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-500 italic">
+                                "{app.notes}"
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                          <p className="text-slate-400 font-medium">Nenhum serviço registrado ainda.</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <footer className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
