@@ -179,6 +179,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                               "w-full sm:flex-1 sm:min-w-[250px] sm:max-w-[400px] p-4 rounded-2xl border-2 cursor-pointer transition-all relative group/card",
                               app.status === 'Concluído' ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" :
                               app.status === 'Cancelado' ? "bg-rose-50 border-rose-100 hover:border-rose-300" :
+                              app.packageId ? "bg-purple-50 border-purple-100 hover:border-purple-300 shadow-sm hover:shadow-md" :
                               "bg-indigo-50 border-indigo-100 hover:border-indigo-300 shadow-sm hover:shadow-md"
                             )}
                           >
@@ -186,12 +187,17 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                               <div className="flex items-center gap-3">
                                 <div className="relative">
                                   <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm",
+                                    "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm overflow-hidden",
                                     app.status === 'Concluído' ? "bg-emerald-500" :
                                     app.status === 'Cancelado' ? "bg-rose-500" :
+                                    app.packageId ? "bg-purple-600" :
                                     "bg-indigo-600"
                                   )}>
-                                    {pet?.name[0]}
+                                    {pet?.photoUrl ? (
+                                      <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      pet?.name[0]
+                                    )}
                                   </div>
                                   <div className={cn(
                                     "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
@@ -318,11 +324,23 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({ data, onUpdate
                           className="flex items-center gap-3 cursor-pointer group"
                           onClick={() => setSelectedAppointment(app)}
                         >
-                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                            {pet?.name[0]}
+                          <div className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all",
+                            app.packageId 
+                              ? "bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white" 
+                              : "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white"
+                          )}>
+                            {pet?.photoUrl ? (
+                              <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                              pet?.name[0]
+                            )}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pet?.name}</p>
+                            <p className={cn(
+                              "font-bold transition-colors",
+                              app.packageId ? "text-slate-900 group-hover:text-purple-600" : "text-slate-900 group-hover:text-indigo-600"
+                            )}>{pet?.name}</p>
                             <p className="text-xs text-slate-500">{client?.name}</p>
                           </div>
                         </div>

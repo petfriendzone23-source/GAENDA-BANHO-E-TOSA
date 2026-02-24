@@ -117,7 +117,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                     {dayAppointments.slice(0, 2).map(app => (
                       <div 
                         key={app.id} 
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium truncate"
+                        className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded font-medium truncate",
+                          app.packageId ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"
+                        )}
                       >
                         {app.time} {data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}
                       </div>
@@ -150,7 +153,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                   return (
                     <div 
                       key={app.id} 
-                      className="flex gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 group/item relative cursor-pointer hover:border-indigo-200 transition-colors"
+                      className={cn(
+                        "flex gap-4 p-3 rounded-2xl border group/item relative cursor-pointer transition-colors",
+                        app.packageId ? "bg-purple-50 border-purple-100 hover:border-purple-200" : "bg-slate-50 border-slate-100 hover:border-indigo-200"
+                      )}
                       onClick={() => setSelectedAppointment(app)}
                     >
                       <div className="flex flex-col items-center justify-center min-w-[60px] border-r border-slate-200 pr-4">
