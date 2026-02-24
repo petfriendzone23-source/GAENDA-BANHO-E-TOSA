@@ -1,6 +1,8 @@
 import React from 'react';
-import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2 } from 'lucide-react';
+import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2, LogOut } from 'lucide-react';
 import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
+import { auth } from '../lib/firebase';
+import { signOut } from 'firebase/auth';
 
 interface SettingsProps {
   zoomLevel: number;
@@ -66,6 +68,16 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
     setEditingTemplate(template);
     setNewTemplate({ title: template.title, message: template.message });
     setIsAddingNew(true);
+  };
+
+  const handleLogout = async () => {
+    if (window.confirm('Deseja realmente sair do sistema?')) {
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.error('Erro ao sair:', err);
+      }
+    }
   };
 
   return (
@@ -322,6 +334,19 @@ export const Settings: React.FC<SettingsProps> = ({ zoomLevel, setZoomLevel, dat
             )}
           </div>
         </div>
+      </div>
+
+      <div className="pt-4">
+        <button 
+          onClick={handleLogout}
+          className="w-full py-4 bg-rose-50 text-rose-600 rounded-2xl font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-2 border border-rose-100 shadow-sm"
+        >
+          <LogOut size={20} />
+          Sair do Sistema
+        </button>
+        <p className="text-center text-slate-400 text-xs mt-4">
+          PetGroom v1.0.0 • Versão PWA instalável
+        </p>
       </div>
     </div>
   );

@@ -10,8 +10,14 @@ import { Settings } from './components/Settings';
 import { AppointmentForm } from './components/AppointmentForm';
 import { AppData, Appointment, Client, Pet, Service, Package } from './types';
 import { loadData, saveData } from './utils/storage';
+import { auth, db } from './lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Login } from './components/Login';
 
 export default function App() {
+  const [user, setUser] = React.useState<User | null>(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [data, setData] = React.useState<AppData>(loadData());
   const [isFormOpen, setIsFormOpen] = React.useState(false);
@@ -29,10 +35,42 @@ export default function App() {
     localStorage.setItem('zoomLevel', zoomLevel.toString());
   }, [zoomLevel]);
 
-  // Sync state with storage
+  // Firebase Auth Listener
   React.useEffect(() => {
-    setData(loadData());
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        // Load data from Firestore
+        try {
+          const docRef = doc(db, 'users', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const firestoreData = docSnap.data() as AppData;
+            setData(firestoreData);
+            saveData(firestoreData);
+          }
+        } catch (err) {
+          console.error('Erro ao carregar dados do Firestore:', err);
+        }
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
+
+  // Sync state with storage and Firestore
+  React.useEffect(() => {
+    if (user) {
+      const syncFirestore = async () => {
+        try {
+          await setDoc(doc(db, 'users', user.uid), data);
+        } catch (err) {
+          console.error('Erro ao salvar dados no Firestore:', err);
+        }
+      };
+      syncFirestore();
+    }
+  }, [data, user]);
 
   const handleSaveAppointments = (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
     const newData = { ...data };
@@ -187,6 +225,18 @@ export default function App() {
         return <Dashboard data={data} onNewAppointment={() => setIsFormOpen(true)} />;
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
