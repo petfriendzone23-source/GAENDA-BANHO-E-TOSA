@@ -21,23 +21,32 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
   const relevantPet = pets.find(p => p.id === appointment.petId); // Find the specific pet for the appointment
 
   const handleDownloadPdf = async () => {
-    if (serviceNoteRef.current) {
-      setIsGeneratingPdf(true);
-      try {
-        const opt = {
-          margin: 1,
-          filename: `nota_servico_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        await html2pdf().from(serviceNoteRef.current).set(opt).save();
-      } catch (error) {
-        console.error("Erro ao gerar PDF:", error);
-        // Optionally, show a user-friendly error message
-      } finally {
-        setIsGeneratingPdf(false);
-      }
+    if (!serviceNoteRef.current) {
+      console.error("ServiceNoteRef is null. Cannot generate PDF.");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    console.log("Iniciando geração de PDF...");
+    try {
+      const opt = {
+        margin: 1,
+        filename: `nota_servico_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      console.log("Opções de PDF:", opt);
+      console.log("Elemento para PDF:", serviceNoteRef.current);
+
+      await html2pdf().from(serviceNoteRef.current).set(opt).save();
+      console.log("PDF gerado e salvo com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      // Optionally, show a user-friendly error message
+    } finally {
+      setIsGeneratingPdf(false);
+      console.log("Geração de PDF finalizada.");
     }
   };
 

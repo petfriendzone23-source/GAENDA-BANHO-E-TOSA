@@ -23,23 +23,32 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointm
   const relevantPackage = allPackages.find(p => p.id === appointment.packageId);
 
   const handleDownloadPdf = async () => {
-    if (serviceNoteRef.current) {
-      setIsGeneratingPdf(true);
-      try {
-        const opt = {
-          margin: 1,
-          filename: `nota_servico_pacote_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        await html2pdf().from(serviceNoteRef.current).set(opt).save();
-      } catch (error) {
-        console.error("Erro ao gerar PDF:", error);
-        // Optionally, show a user-friendly error message
-      } finally {
-        setIsGeneratingPdf(false);
-      }
+    if (!serviceNoteRef.current) {
+      console.error("PackageServiceNoteRef is null. Cannot generate PDF.");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    console.log("Iniciando geração de PDF para pacote...");
+    try {
+      const opt = {
+        margin: 1,
+        filename: `nota_servico_pacote_${client.name.replace(/\s/g, '_')}_${format(parseISO(appointment.date), 'yyyyMMdd')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      console.log("Opções de PDF para pacote:", opt);
+      console.log("Elemento para PDF de pacote:", serviceNoteRef.current);
+
+      await html2pdf().from(serviceNoteRef.current).set(opt).save();
+      console.log("PDF de pacote gerado e salvo com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF de pacote:", error);
+      // Optionally, show a user-friendly error message
+    } finally {
+      setIsGeneratingPdf(false);
+      console.log("Geração de PDF de pacote finalizada.");
     }
   };
 
