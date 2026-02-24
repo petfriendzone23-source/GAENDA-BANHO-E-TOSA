@@ -6,9 +6,10 @@ import { ClientDetails } from './ClientDetails';
 interface ClientListProps {
   data: AppData;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
+  onAddClient?: () => void;
 }
 
-export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet }) => {
+export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
 
@@ -24,7 +25,10 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet }) => 
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Clientes</h2>
           <p className="text-slate-500 mt-1">Gerencie sua base de clientes e seus pets.</p>
         </div>
-        <button className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+        <button 
+          onClick={onAddClient}
+          className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+        >
           <Plus size={20} />
           Adicionar Cliente
         </button>

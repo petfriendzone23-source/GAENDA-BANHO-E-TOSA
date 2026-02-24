@@ -339,7 +339,7 @@ export default function App() {
           />
         );
       case 'clients':
-        return <ClientList data={data} onUpdatePet={handleUpdatePet} />;
+        return <ClientList data={data} onUpdatePet={handleUpdatePet} onAddClient={() => setIsFormOpen(true)} />;
       case 'best-clients':
         return <BestClients data={data} />;
       case 'services':
