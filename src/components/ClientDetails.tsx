@@ -24,6 +24,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
   const [targetPhone, setTargetPhone] = React.useState<string>('');
   const [showServiceNote, setShowServiceNote] = React.useState(false);
+  const [expandedPhoto, setExpandedPhoto] = React.useState<string | null>(null);
 
 
   const handlePhotoClick = (petId: string) => {
@@ -307,19 +308,40 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                   <div className="space-y-3">
                     {clientPets.map(pet => (
                       <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-3">
-                        <div 
-                          className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
-                          onClick={() => handlePhotoClick(pet.id)}
-                          title="Alterar foto"
-                        >
+                        <div className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden group shrink-0">
                           {pet.photoUrl ? (
-                            <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                            <>
+                              <img 
+                                src={pet.photoUrl} 
+                                alt={pet.name} 
+                                className="w-full h-full object-cover cursor-zoom-in"
+                                onClick={() => setExpandedPhoto(pet.photoUrl!)}
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePhotoClick(pet.id);
+                                  }}
+                                  className="p-1.5 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
+                                  title="Alterar foto"
+                                >
+                                  <Camera size={16} />
+                                </button>
+                              </div>
+                            </>
                           ) : (
-                            <Dog size={24} />
+                            <div 
+                              className="w-full h-full flex items-center justify-center cursor-pointer"
+                              onClick={() => handlePhotoClick(pet.id)}
+                              title="Adicionar foto"
+                            >
+                              <Dog size={24} />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera size={16} className="text-white" />
+                              </div>
+                            </div>
                           )}
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera size={16} className="text-white" />
-                          </div>
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
@@ -476,6 +498,26 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
             onClose={() => setShowServiceNote(false)} 
           />
         )
+      )}
+
+      {expandedPhoto && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setExpandedPhoto(null)}
+        >
+          <button 
+            onClick={() => setExpandedPhoto(null)}
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+          >
+            <X size={32} />
+          </button>
+          <img 
+            src={expandedPhoto} 
+            alt="Pet ampliado" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </div>
       )}
     </div>
   );
