@@ -459,6 +459,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
           <PackageServiceNote
             client={client}
             appointment={appointment}
+            allAppointments={data.appointments}
             pets={clientPets}
             allServices={data.services}
             allPackages={data.packages}

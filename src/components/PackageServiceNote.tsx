@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 
 interface PackageServiceNoteProps {
   appointment: Appointment;
+  allAppointments: Appointment[];
   client: Client;
   pets: Pet[];
   allServices: Service[];
@@ -16,23 +17,74 @@ interface PackageServiceNoteProps {
   onClose: () => void;
 }
 
-export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointment, client, pets, allServices, allPackages, companyInfo, onClose }) => {
+export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ 
+  appointment, 
+  allAppointments,
+  client, 
+  pets, 
+  allServices, 
+  allPackages, 
+  companyInfo, 
+  onClose 
+}) => {
   const serviceNoteRef = React.useRef<HTMLDivElement>(null);
   const [isGeneratingImage, setIsGeneratingImage] = React.useState(false);
 
   const relevantPet = pets.find(p => p.id === appointment.petId);
   const relevantPackage = allPackages.find(p => p.id === appointment.packageId);
 
-  const packageServicesDetails = relevantPackage ? relevantPackage.serviceIds.map(serviceId => {
-    const service = allServices.find(s => s.id === serviceId);
-    return {
-      name: service?.name || 'Serviço Desconhecido',
-      fullPrice: service?.price || 0,
-    };
-  }) : [];
+  const relatedAppointments = allAppointments
+    .filter(a => a.clientId === appointment.clientId && a.petId === appointment.petId && a.packageId === appointment.packageId)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const totalFullPrice = packageServicesDetails.reduce((sum, s) => sum + s.fullPrice, 0);
-  const discountAmount = totalFullPrice - appointment.price;
+  let packageInstanceAppointments: Appointment[] = [];
+  if (relevantPackage) {
+    let startIndex = -1;
+    for (let i = 0; i < relatedAppointments.length; i++) {
+      if (relatedAppointments[i].id === appointment.id) {
+        for (let j = i; j >= 0; j--) {
+          if (relatedAppointments[j].price > 0) {
+            startIndex = j;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    
+    if (startIndex !== -1) {
+      packageInstanceAppointments = relatedAppointments.slice(startIndex, startIndex + relevantPackage.sessions);
+    } else {
+      const index = relatedAppointments.findIndex(a => a.id === appointment.id);
+      const start = Math.floor(index / relevantPackage.sessions) * relevantPackage.sessions;
+      packageInstanceAppointments = relatedAppointments.slice(start, start + relevantPackage.sessions);
+    }
+  }
+
+  if (packageInstanceAppointments.length === 0) {
+    packageInstanceAppointments = [appointment];
+  }
+
+  const packageDays = packageInstanceAppointments.map(app => {
+    const dayServices = (app.services || []).map(serviceName => {
+      const service = allServices.find(s => s.name === serviceName);
+      return {
+        name: serviceName,
+        price: service?.price || 0
+      };
+    });
+    const dayTotal = dayServices.reduce((sum, s) => sum + s.price, 0);
+    return {
+      date: app.date,
+      time: app.time,
+      services: dayServices,
+      dayTotal
+    };
+  });
+
+  const totalFullPrice = packageDays.reduce((sum, day) => sum + day.dayTotal, 0);
+  const packagePrice = packageInstanceAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
+  const discountAmount = Math.max(0, totalFullPrice - packagePrice);
 
   const handleGenerateImage = async (share = false) => {
     if (!serviceNoteRef.current) return;
@@ -161,27 +213,39 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({ appointm
 
             <div className="mb-6">
               <p className="text-xs font-bold text-slate-400 uppercase mb-2">Pacote: {relevantPackage.name}</p>
-              <ul className="space-y-2">
-                {packageServicesDetails.map((service, i) => (
-                  <li key={i} className="flex justify-between items-center text-slate-700">
-                    <span className="font-medium">{service.name} ({format(parseISO(appointment.date), 'dd/MM/yyyy')})</span>
-                    <span className="font-bold">R$ {service.fullPrice.toFixed(2)}</span>
-                  </li>
+              <div className="space-y-4">
+                {packageDays.map((day, i) => (
+                  <div key={i} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200">
+                      <span className="font-bold text-slate-700 text-sm">
+                        Sessão {i + 1} - {format(parseISO(day.date), 'dd/MM/yyyy')} às {day.time}
+                      </span>
+                      <span className="font-bold text-slate-900 text-sm">R$ {day.dayTotal.toFixed(2)}</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {day.services.map((service, j) => (
+                        <li key={j} className="flex justify-between items-center text-slate-600 text-xs">
+                          <span>{service.name}</span>
+                          <span>R$ {service.price.toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-              <p className="text-lg font-bold text-slate-900">Total dos Serviços (sem desconto)</p>
-              <p className="text-xl font-bold text-slate-700">R$ {totalFullPrice.toFixed(2)}</p>
+              <p className="text-sm font-bold text-slate-500">Total dos Serviços (sem desconto)</p>
+              <p className="text-base font-bold text-slate-500">R$ {totalFullPrice.toFixed(2)}</p>
             </div>
             <div className="flex justify-between items-center mt-2">
-              <p className="text-lg font-bold text-red-600">Desconto do Pacote</p>
-              <p className="text-xl font-bold text-red-600">- R$ {discountAmount.toFixed(2)}</p>
+              <p className="text-sm font-bold text-emerald-600">Desconto do Pacote</p>
+              <p className="text-base font-bold text-emerald-600">- R$ {discountAmount.toFixed(2)}</p>
             </div>
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200">
               <p className="text-xl font-bold text-slate-900">Valor Final do Pacote</p>
-              <p className="text-2xl font-bold text-indigo-600">R$ {appointment.price.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-indigo-600">R$ {packagePrice.toFixed(2)}</p>
             </div>
 
             {appointment.notes && (
