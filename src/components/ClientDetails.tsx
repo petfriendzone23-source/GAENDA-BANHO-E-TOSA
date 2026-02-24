@@ -5,6 +5,7 @@ import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ServiceNote } from './ServiceNote';
 
 
 interface ClientDetailsProps {
@@ -456,7 +457,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
         <ServiceNote 
           client={client} 
           appointment={appointment} 
-          pets={data.pets[client.id] || []} 
+          pets={clientPets} 
+          allServices={data.services} 
           onClose={() => setShowServiceNote(false)} 
         />
       )}

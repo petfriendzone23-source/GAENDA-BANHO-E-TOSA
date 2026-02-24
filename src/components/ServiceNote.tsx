@@ -9,13 +9,15 @@ import { motion } from 'motion/react';
 interface ServiceNoteProps {
   appointment: Appointment;
   client: Client;
-  pet: Pet;
-  services: Service[];
+  pets: Pet[]; // Changed from single pet to array of pets
+  allServices: Service[]; // Added allServices prop
   onClose: () => void;
 }
 
-export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, pet, services, onClose }) => {
+export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, pets, allServices, onClose }) => {
   const serviceNoteRef = React.useRef<HTMLDivElement>(null);
+
+  const relevantPet = pets.find(p => p.id === appointment.petId); // Find the specific pet for the appointment
 
   const handleDownloadPdf = () => {
     if (serviceNoteRef.current) {
@@ -31,9 +33,11 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
   };
 
   const totalServicesPrice = appointment.services.reduce((sum, serviceName) => {
-    const service = services.find(s => s.name === serviceName);
+    const service = allServices.find(s => s.name === serviceName); // Use allServices to find price
     return sum + (service?.price || 0);
   }, 0);
+
+  if (!relevantPet) return null; // Handle case where pet is not found
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
@@ -75,15 +79,15 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
               <p className="text-xs font-bold text-slate-400 uppercase mb-2">Pet</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center overflow-hidden">
-                  {pet.photoUrl ? (
-                    <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                  {relevantPet.photoUrl ? (
+                    <img src={relevantPet.photoUrl} alt={relevantPet.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-indigo-600 text-lg font-bold">{pet.name.charAt(0)}</span>
+                    <span className="text-indigo-600 text-lg font-bold">{relevantPet.name.charAt(0)}</span>
                   )}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900">{pet.name}</p>
-                  <p className="text-sm text-slate-600">{pet.breed} - {pet.size}</p>
+                  <p className="font-bold text-slate-900">{relevantPet.name}</p>
+                  <p className="text-sm text-slate-600">{relevantPet.breed} - {relevantPet.size}</p>
                 </div>
               </div>
             </div>
@@ -92,7 +96,7 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
               <p className="text-xs font-bold text-slate-400 uppercase mb-2">Serviços Realizados</p>
               <ul className="space-y-2">
                 {appointment.services.map((serviceName, i) => {
-                  const service = services.find(s => s.name === serviceName);
+                  const service = allServices.find(s => s.name === serviceName);
                   return (
                     <li key={i} className="flex justify-between items-center text-slate-700">
                       <span className="font-medium">{serviceName}</span>
