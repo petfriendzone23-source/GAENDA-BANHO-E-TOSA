@@ -1,12 +1,11 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
-import { WhatsAppModal } from './WhatsAppModal';
 
 interface AppointmentListProps {
   data: AppData;
@@ -31,7 +30,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   const [viewType, setViewType] = React.useState<'Lista' | 'Grade'>('Grade');
   const [customDate, setCustomDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
-  const [whatsappAppointment, setWhatsappAppointment] = React.useState<Appointment | null>(null);
 
   const handlePrevDay = () => {
     const currentDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
@@ -286,16 +284,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setWhatsappAppointment(app);
-                                }}
-                                className="p-1.5 bg-white rounded-lg shadow-sm text-green-500 hover:text-green-600 hover:bg-green-50 transition-colors"
-                                title="Enviar WhatsApp"
-                              >
-                                <MessageCircle size={14} />
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
                                   onUpdateStatus(app.id, 'Concluído');
                                 }}
                                 className={cn(
@@ -442,13 +430,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => setWhatsappAppointment(app)}
-                            className="p-2 hover:bg-green-50 text-green-500 hover:text-green-600 rounded-lg transition-all"
-                            title="Enviar WhatsApp"
-                          >
-                            <MessageCircle size={18} />
-                          </button>
-                          <button 
                             onClick={() => onEditAppointment(app)}
                             className="p-2 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
                             title="Editar"
@@ -525,15 +506,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
           showHistory={false}
           onClose={() => setSelectedAppointment(null)} 
           onUpdatePet={onUpdatePet}
-        />
-      )}
-
-      {whatsappAppointment && (
-        <WhatsAppModal
-          isOpen={!!whatsappAppointment}
-          onClose={() => setWhatsappAppointment(null)}
-          appointment={whatsappAppointment}
-          data={data}
         />
       )}
     </div>
