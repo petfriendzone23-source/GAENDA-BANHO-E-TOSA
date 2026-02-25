@@ -1,7 +1,7 @@
 import React from 'react';
-import { format, parseISO, isToday, isAfter, startOfDay, isSameDay } from 'date-fns';
+import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2 } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
@@ -30,6 +30,20 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   const [viewType, setViewType] = React.useState<'Lista' | 'Grade'>('Grade');
   const [customDate, setCustomDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
+
+  const handlePrevDay = () => {
+    const currentDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
+    const prevDay = subDays(currentDate, 1);
+    setCustomDate(format(prevDay, 'yyyy-MM-dd'));
+    setDateFilter('Data Específica');
+  };
+
+  const handleNextDay = () => {
+    const currentDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
+    const nextDay = addDays(currentDate, 1);
+    setCustomDate(format(nextDay, 'yyyy-MM-dd'));
+    setDateFilter('Data Específica');
+  };
 
   const filteredAppointments = data.appointments
     .filter(app => {
@@ -110,28 +124,46 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
             </button>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-4 py-1">
-              <Calendar size={18} className="text-slate-400 shrink-0" />
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
-                <select 
-                  value={dateFilter}
-                  onChange={e => setDateFilter(e.target.value as any)}
-                  className="bg-transparent border-none py-2 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full"
-                >
-                  <option value="Hoje">Hoje</option>
-                  <option value="Próximos">Próximos Dias</option>
-                  <option value="Data Específica">Data Específica</option>
-                  <option value="Todos">Todos os Dias</option>
-                </select>
-                {dateFilter === 'Data Específica' && (
-                  <input 
-                    type="date"
-                    value={customDate}
-                    onChange={e => setCustomDate(e.target.value)}
-                    className="bg-transparent border-none py-2 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-2"
-                  />
-                )}
+            <div className="flex items-center bg-slate-50 rounded-xl p-1">
+              <button 
+                onClick={handlePrevDay}
+                className="p-2 hover:bg-white rounded-lg text-slate-500 hover:text-indigo-600 transition-all shadow-sm hover:shadow"
+                title="Dia Anterior"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              
+              <div className="flex items-center gap-2 px-3 border-l border-r border-slate-200 mx-1">
+                <Calendar size={16} className="text-slate-400 shrink-0" />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select 
+                    value={dateFilter}
+                    onChange={e => setDateFilter(e.target.value as any)}
+                    className="bg-transparent border-none py-1 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full min-w-[100px]"
+                  >
+                    <option value="Hoje">Hoje</option>
+                    <option value="Próximos">Próximos Dias</option>
+                    <option value="Data Específica">Data Específica</option>
+                    <option value="Todos">Todos os Dias</option>
+                  </select>
+                  {dateFilter === 'Data Específica' && (
+                    <input 
+                      type="date"
+                      value={customDate}
+                      onChange={e => setCustomDate(e.target.value)}
+                      className="bg-transparent border-none py-1 focus:ring-0 outline-none text-slate-600 font-medium text-sm w-full border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-2"
+                    />
+                  )}
+                </div>
               </div>
+
+              <button 
+                onClick={handleNextDay}
+                className="p-2 hover:bg-white rounded-lg text-slate-500 hover:text-indigo-600 transition-all shadow-sm hover:shadow"
+                title="Próximo Dia"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-4 py-1">
