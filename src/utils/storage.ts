@@ -8,7 +8,7 @@ const initialData: AppData = {
       id: '1',
       clientId: 'c1',
       petId: 'p1',
-      services: [{ name: 'Banho e Tosa', price: 80 }],
+      services: ['Banho e Tosa'],
       date: new Date().toISOString().split('T')[0],
       time: '14:30',
       status: 'Agendado',
@@ -23,11 +23,11 @@ const initialData: AppData = {
     'c1': [{ id: 'p1', name: 'Bolinha', breed: 'Poodle', size: 'Pequeno' }]
   },
   services: [
-    { id: '1', name: 'Banho', price: 40 },
-    { id: '2', name: 'Tosa', price: 50 },
-    { id: '3', name: 'Banho e Tosa', price: 80 },
-    { id: '4', name: 'Hidratação', price: 30 },
-    { id: '5', name: 'Corte de Unha', price: 15 },
+    { id: '1', name: 'Banho', price: 40, color: '#3b82f6' },
+    { id: '2', name: 'Tosa', price: 50, color: '#8b5cf6' },
+    { id: '3', name: 'Banho e Tosa', price: 80, color: '#10b981' },
+    { id: '4', name: 'Hidratação', price: 30, color: '#f59e0b' },
+    { id: '5', name: 'Corte de Unha', price: 15, color: '#ef4444' },
   ],
   packages: [
     { id: 'pkg1', name: 'Combo Banho + Tosa', serviceIds: ['1', '2'], price: 80, type: 'custom', sessions: 1 }
@@ -51,7 +51,7 @@ export const loadData = (): AppData => {
       parsed.appointments = parsed.appointments.map((app: any) => ({
         ...app,
         services: app.services.map((s: any) => 
-          typeof s === 'string' ? { name: s, price: parsed.services.find((ps: any) => ps.name === s)?.price || 0 } : (s.price === undefined ? { ...s, price: parsed.services.find((ps: any) => ps.name === s.name)?.price || 0 } : s)
+          typeof s === 'string' ? s : s.name
         ),
       }));
     }

@@ -27,11 +27,13 @@ export const ServiceList: React.FC<ServiceListProps> = ({
   // Form state
   const [name, setName] = React.useState('');
   const [price, setPrice] = React.useState<number>(0);
+  const [color, setColor] = React.useState('#6366f1'); // Default to indigo
 
   const handleEdit = (service: Service) => {
     setEditingId(service.id);
     setName(service.name);
     setPrice(service.price);
+    setColor(service.color || '#6366f1');
     setIsAdding(false);
   };
 
@@ -40,6 +42,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     setIsAdding(false);
     setName('');
     setPrice(0);
+    setColor('#6366f1');
   };
 
   const handleSave = () => {
@@ -48,7 +51,8 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     onSaveService({
       id: editingId || Math.random().toString(36).substr(2, 9),
       name: name.trim(),
-      price: price
+      price: price,
+      color: color
     });
     
     handleCancel();
@@ -143,6 +147,23 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                           className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Cor</label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="color" 
+                            value={color}
+                            onChange={e => setColor(e.target.value)}
+                            className="w-8 h-8 p-1 rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                          <input 
+                            type="text" 
+                            value={color}
+                            onChange={e => setColor(e.target.value)}
+                            className="w-full px-3 py-2 text-sm rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="flex gap-2 pt-1">
                       <button 
@@ -173,7 +194,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                     className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: service.color ? `${service.color}1A` : '#eef2ff', color: service.color || '#4f46e5' }}>
                         <Scissors size={18} />
                       </div>
                       <div className="flex gap-1">
