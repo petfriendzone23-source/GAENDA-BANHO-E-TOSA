@@ -22,23 +22,23 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, a
   const defaultTemplates: WhatsAppTemplate[] = [
     {
       id: 'temp_1',
-      name: 'Lembrete de Agendamento',
-      content: 'Olá {nome}, passando para lembrar do agendamento do {pet} para {servico} no dia {data} às {hora}. Podemos confirmar?'
+      title: 'Lembrete de Agendamento',
+      message: 'Olá {nome}, passando para lembrar do agendamento do {pet} para {servico} no dia {data} às {hora}. Podemos confirmar?'
     },
     {
       id: 'temp_2',
-      name: 'Agendamento Confirmado',
-      content: 'Oi {nome}! O agendamento do {pet} para {servico} está confirmado para {data} às {hora}. Até lá!'
+      title: 'Agendamento Confirmado',
+      message: 'Oi {nome}! O agendamento do {pet} para {servico} está confirmado para {data} às {hora}. Até lá!'
     },
     {
       id: 'temp_3',
-      name: 'Aviso de Atraso',
-      content: 'Olá {nome}, notamos que o {pet} ainda não chegou para o agendamento de {hora}. Está tudo bem?'
+      title: 'Aviso de Atraso',
+      message: 'Olá {nome}, notamos que o {pet} ainda não chegou para o agendamento de {hora}. Está tudo bem?'
     },
     {
       id: 'temp_4',
-      name: 'Serviço Concluído',
-      content: 'Oie {nome}! O {pet} já está pronto e ficou lindo! Pode vir buscar quando quiser. 🥰'
+      title: 'Serviço Concluído',
+      message: 'Oie {nome}! O {pet} já está pronto e ficou lindo! Pode vir buscar quando quiser. 🥰'
     }
   ];
 
@@ -56,7 +56,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, a
     if (selectedTemplateId && client && pet) {
       const template = templates.find(t => t.id === selectedTemplateId);
       if (template) {
-        let formattedMessage = template.content;
+        let formattedMessage = template.message;
         
         // Replace placeholders
         formattedMessage = formattedMessage.replace(/{nome}/g, client.name.split(' ')[0]);
@@ -108,7 +108,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, a
               className="w-full p-2 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-green-500 outline-none"
             >
               {templates.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>{t.title}</option>
               ))}
             </select>
           </div>

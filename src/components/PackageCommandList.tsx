@@ -13,6 +13,14 @@ interface PackageCommandListProps {
   onDeletePackageCommand: (appointments: Appointment[]) => void;
 }
 
+interface Command {
+  key: string;
+  client: Client | undefined;
+  pet: Pet | undefined;
+  package: Package | undefined;
+  appointments: Appointment[];
+}
+
 export const PackageCommandList: React.FC<PackageCommandListProps> = ({ 
   data, 
   onEditAppointment, 
@@ -28,7 +36,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
   } | null>(null);
 
   // Group appointments by package instance
-  const packageCommands = data.appointments.reduce((acc, app) => {
+  const packageCommands = data.appointments.reduce<Record<string, Command>>((acc, app) => {
     if (app.packageId) {
       // A unique key for each package instance for a client's pet
       const commandKey = `${app.clientId}-${app.petId}-${app.packageId}`;
@@ -47,7 +55,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
       acc[commandKey].appointments.push(app);
     }
     return acc;
-  }, {} as Record<string, { key: string; client: any; pet: any; package: Package | undefined; appointments: Appointment[] }>);
+  }, {});
 
   return (
     <div className="space-y-6">
@@ -69,7 +77,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {Object.values(packageCommands).map(command => {
+              {Object.values(packageCommands).map((command: Command) => {
                 const completedSessions = command.appointments.filter(a => a.status === 'Concluído').length;
                 const totalSessions = command.package?.sessions || command.appointments.length;
                 const isPackageCompleted = completedSessions === totalSessions;
