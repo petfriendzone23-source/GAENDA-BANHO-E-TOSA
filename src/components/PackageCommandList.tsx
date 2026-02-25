@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppData, Appointment, Package } from '../types';
-import { Edit2, Trash2, Box } from 'lucide-react';
+import { Edit2, Trash2, Box, CheckCircle } from 'lucide-react';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -8,9 +8,10 @@ interface PackageCommandListProps {
   data: AppData;
   onEditAppointment: (appointment: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
+  onClosePackageCommand: (appointments: Appointment[]) => void;
 }
 
-export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, onEditAppointment, onDeleteAppointment }) => {
+export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, onEditAppointment, onDeleteAppointment, onClosePackageCommand }) => {
   // Group appointments by package instance
   const packageCommands = data.appointments.reduce((acc, app) => {
     if (app.packageId) {
@@ -90,6 +91,14 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, on
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => onClosePackageCommand(command.appointments)}
+                          disabled={!isPackageCompleted}
+                          className="p-2 bg-emerald-100 text-emerald-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-200 enabled:shadow-sm"
+                          title="Fechar Comanda"
+                        >
+                          <CheckCircle size={18} />
+                        </button>
                         <button 
                           onClick={() => nextAppointment && onEditAppointment(nextAppointment)}
                           disabled={!nextAppointment}

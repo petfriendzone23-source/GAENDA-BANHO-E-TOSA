@@ -358,6 +358,21 @@ export default function App() {
     }
   };
 
+  const handleClosePackageCommand = async (appointments: Appointment[]) => {
+    if (!user) return;
+    if (!window.confirm('Tem certeza que deseja fechar esta comanda? Esta ação não pode ser desfeita.')) return;
+    try {
+      setSyncStatus('syncing');
+      for (const app of appointments) {
+        await updateDoc(doc(db, `users/${user.uid}/appointments`, app.id), { packageId: '' });
+      }
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error closing package command:', err);
+      setSyncStatus('error');
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -431,6 +446,7 @@ export default function App() {
               setIsFormOpen(true);
             }}
             onDeleteAppointment={handleDeleteAppointment}
+            onClosePackageCommand={handleClosePackageCommand}
           />
         );
       case 'settings':
