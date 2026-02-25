@@ -1,6 +1,8 @@
 import React from 'react';
 import { AppData, Appointment, Package } from '../types';
 import { Edit2, Trash2, Box } from 'lucide-react';
+import { parseISO, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface PackageCommandListProps {
   data: AppData;
@@ -57,7 +59,11 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, on
                 const isPackageCompleted = completedSessions === totalSessions;
                 const nextAppointment = command.appointments
                   .filter(a => a.status === 'Agendado')
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+                  .sort((a, b) => {
+                    const dateA = parseISO(`${a.date}T${a.time}`);
+                    const dateB = parseISO(`${b.date}T${b.time}`);
+                    return dateA.getTime() - dateB.getTime();
+                  })[0];
 
                 return (
                   <tr key={command.key} className={`transition-colors ${isPackageCompleted ? 'bg-emerald-50' : 'hover:bg-slate-50/50'}`}>
@@ -78,7 +84,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, on
                     </td>
                     <td className="px-6 py-4">
                       {nextAppointment ? 
-                        `${new Date(nextAppointment.date).toLocaleDateString()} às ${nextAppointment.time}` :
+                        `${format(parseISO(nextAppointment.date), 'dd/MM/yyyy', { locale: ptBR })} às ${nextAppointment.time}` :
                         <span className="text-slate-400">N/A</span>
                       }
                     </td>
