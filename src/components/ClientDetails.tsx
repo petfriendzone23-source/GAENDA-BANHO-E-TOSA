@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -16,9 +16,10 @@ interface ClientDetailsProps {
   appointment?: Appointment;
   showHistory?: boolean;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
+  onEdit?: () => void;
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet, onEdit }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedPetId, setSelectedPetId] = React.useState<string | null>(null);
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
@@ -138,9 +139,16 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
               )}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <X size={isAppointmentView ? 20 : 24} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button onClick={onEdit} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Editar Cliente">
+                <Edit2 size={20} />
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <X size={isAppointmentView ? 20 : 24} />
+            </button>
+          </div>
         </header>
 
         <div className={cn(

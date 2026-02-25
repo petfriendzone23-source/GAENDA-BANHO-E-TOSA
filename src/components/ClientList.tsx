@@ -7,9 +7,10 @@ interface ClientListProps {
   data: AppData;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
   onAddClient?: () => void;
+  onEditClient?: (client: Client, pets: Pet[]) => void;
 }
 
-export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient }) => {
+export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient, onEditClient }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
 
@@ -117,6 +118,7 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
           data={data} 
           onClose={() => setSelectedClient(null)} 
           onUpdatePet={onUpdatePet}
+          onEdit={() => onEditClient?.(selectedClient, data.pets[selectedClient.id] || [])}
         />
       )}
     </div>

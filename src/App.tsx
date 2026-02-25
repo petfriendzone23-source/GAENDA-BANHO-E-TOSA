@@ -44,6 +44,7 @@ export default function App() {
   const [syncStatus, setSyncStatus] = React.useState<'synced' | 'syncing' | 'error' | 'offline'>('offline');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isClientFormOpen, setIsClientFormOpen] = React.useState(false);
+  const [editingClient, setEditingClient] = React.useState<{ client: Client, pets: Pet[] } | undefined>(undefined);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
   const [zoomLevel, setZoomLevel] = React.useState(() => {
     const saved = localStorage.getItem('zoomLevel');
@@ -147,12 +148,22 @@ export default function App() {
       const { id: cid, ...clientData } = client;
       await setDoc(doc(db, `users/${user.uid}/clients`, cid), cleanData(clientData));
 
+      // Handle pet deletions
+      const existingPets = data.pets[cid] || [];
+      const newPetIds = new Set(pets.map(p => p.id));
+      const petsToDelete = existingPets.filter(p => !newPetIds.has(p.id));
+
+      for (const pet of petsToDelete) {
+        await deleteDoc(doc(db, `users/${user.uid}/pets`, pet.id));
+      }
+
       for (const pet of pets) {
         const { id: pid, ...petData } = pet;
         await setDoc(doc(db, `users/${user.uid}/pets`, pid), cleanData({ ...petData, clientId: cid }));
       }
 
       setIsClientFormOpen(false);
+      setEditingClient(undefined);
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error saving client:', err);
@@ -388,7 +399,17 @@ export default function App() {
           />
         );
       case 'clients':
-        return <ClientList data={data} onUpdatePet={handleUpdatePet} onAddClient={() => setIsClientFormOpen(true)} />;
+        return (
+          <ClientList 
+            data={data} 
+            onUpdatePet={handleUpdatePet} 
+            onAddClient={() => setIsClientFormOpen(true)} 
+            onEditClient={(client, pets) => {
+              setEditingClient({ client, pets });
+              setIsClientFormOpen(true);
+            }}
+          />
+        );
       case 'best-clients':
         return <BestClients data={data} />;
       case 'services':
@@ -450,7 +471,11 @@ export default function App() {
       {isClientFormOpen && (
         <ClientForm 
           onSave={handleSaveClient}
-          onClose={() => setIsClientFormOpen(false)}
+          onClose={() => {
+            setIsClientFormOpen(false);
+            setEditingClient(undefined);
+          }}
+          initialData={editingClient}
         />
       )}
     </Layout>

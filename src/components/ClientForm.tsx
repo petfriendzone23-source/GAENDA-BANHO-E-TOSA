@@ -6,23 +6,28 @@ import { Client, Pet } from '../types';
 interface ClientFormProps {
   onSave: (client: Client, pets: Pet[]) => void;
   onClose: () => void;
+  initialData?: { client: Client; pets: Pet[] };
 }
 
-export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose }) => {
-  const [clientName, setClientName] = React.useState('');
-  const [clientPhones, setClientPhones] = React.useState<string[]>(['']);
-  const [clientAddresses, setClientAddresses] = React.useState<string[]>(['']);
-  const [newClientPets, setNewClientPets] = React.useState<{ name: string, breed: string, size: Pet['size'] }[]>([{ name: '', breed: '', size: 'Médio' }]);
+export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose, initialData }) => {
+  const [clientName, setClientName] = React.useState(initialData?.client.name || '');
+  const [clientPhones, setClientPhones] = React.useState<string[]>(initialData?.client.phones || ['']);
+  const [clientAddresses, setClientAddresses] = React.useState<string[]>(initialData?.client.addresses || ['']);
+  const [newClientPets, setNewClientPets] = React.useState<{ id?: string, name: string, breed: string, size: Pet['size'], photoUrl?: string }[]>(
+    initialData?.pets.map(p => ({ id: p.id, name: p.name, breed: p.breed, size: p.size, photoUrl: p.photoUrl })) || 
+    [{ name: '', breed: '', size: 'Médio' }]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const clientId = Math.random().toString(36).substr(2, 9);
+    const clientId = initialData?.client.id || Math.random().toString(36).substr(2, 9);
     const createdPets: Pet[] = newClientPets.map(p => ({
-      id: Math.random().toString(36).substr(2, 9),
+      id: p.id || Math.random().toString(36).substr(2, 9),
       name: p.name,
       breed: p.breed,
-      size: p.size
+      size: p.size,
+      photoUrl: p.photoUrl
     }));
     
     const newClient: Client = { 
@@ -44,8 +49,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose }) => {
       >
         <header className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-600 text-white">
           <div>
-            <h2 className="text-xl font-bold">Novo Cadastro de Cliente</h2>
-            <p className="text-indigo-100 text-sm">Cadastre o dono e seus pets no sistema.</p>
+            <h2 className="text-xl font-bold">{initialData ? 'Editar Cliente' : 'Novo Cadastro de Cliente'}</h2>
+            <p className="text-indigo-100 text-sm">{initialData ? 'Atualize os dados do cliente e seus pets.' : 'Cadastre o dono e seus pets no sistema.'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={24} />
@@ -234,7 +239,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose }) => {
           </button>
           <button onClick={handleSubmit} className="flex-1 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2">
             <Save size={20} />
-            Cadastrar Cliente
+            {initialData ? 'Salvar Alterações' : 'Cadastrar Cliente'}
           </button>
         </footer>
       </motion.div>
