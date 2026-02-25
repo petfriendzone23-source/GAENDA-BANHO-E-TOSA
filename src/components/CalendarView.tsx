@@ -114,17 +114,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                   </span>
 
                   <div className="mt-2 space-y-1 overflow-hidden">
-                    {dayAppointments.slice(0, 2).map(app => (
-                      <div 
-                        key={app.id} 
-                        className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded font-medium truncate",
-                          app.packageId ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"
-                        )}
-                      >
-                        {app.time} {data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}
-                      </div>
-                    ))}
+                    {dayAppointments.slice(0, 2).map(app => {
+                      const firstService = data.services.find(s => s.name === (app.services || [])[0]);
+                      return (
+                        <div 
+                          key={app.id} 
+                          className="text-[10px] px-1.5 py-0.5 rounded font-medium truncate text-white"
+                          style={{ backgroundColor: firstService?.color || '#64748b' }}
+                        >
+                          {app.time} {data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}
+                        </div>
+                      );
+                    })}
                     {dayAppointments.length > 2 && (
                       <div className="text-[10px] text-slate-400 font-medium pl-1">
                         + {dayAppointments.length - 2} mais

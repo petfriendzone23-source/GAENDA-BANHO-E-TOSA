@@ -264,11 +264,21 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {(app.services || []).map(s => (
-                                <span key={s} className="text-[9px] bg-white/60 text-slate-600 px-2 py-0.5 rounded-md border border-slate-100 font-bold">
-                                  {s}
-                                </span>
-                              ))}
+                              {(app.services || []).map(s => {
+                                const service = data.services.find(ds => ds.name === s);
+                                return (
+                                  <span 
+                                    key={s} 
+                                    className="text-[9px] text-white px-2 py-0.5 rounded-md border font-bold"
+                                    style={{
+                                      backgroundColor: service?.color || '#64748b',
+                                      borderColor: service?.color ? `${service.color}B3` : '#cbd5e1'
+                                    }}
+                                  >
+                                    {s}
+                                  </span>
+                                );
+                              })}
                             </div>
                             <div className="absolute top-2 right-2 flex gap-1">
                               <button 
