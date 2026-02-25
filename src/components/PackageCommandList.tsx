@@ -36,7 +36,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
   } | null>(null);
 
   // Group appointments by package instance
-  const packageCommands = data.appointments.reduce<Record<string, Command>>((acc, app) => {
+  const packageCommands = data.appointments.reduce((acc, app) => {
     if (app.packageId) {
       // A unique key for each package instance for a client's pet
       const commandKey = `${app.clientId}-${app.petId}-${app.packageId}`;
@@ -55,7 +55,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
       acc[commandKey].appointments.push(app);
     }
     return acc;
-  }, {});
+  }, {} as Record<string, Command>);
 
   return (
     <div className="space-y-6">
