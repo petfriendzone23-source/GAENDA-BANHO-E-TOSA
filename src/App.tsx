@@ -24,7 +24,7 @@ import {
   deleteDoc, 
   updateDoc 
 } from 'firebase/firestore';
-import { Login } from './components/Login';
+import { PackageCommandList } from './components/PackageCommandList';
 
 const cleanData = (obj: any) => {
   const newObj = { ...obj };
@@ -420,6 +420,17 @@ export default function App() {
             onDeleteService={handleDeleteService}
             onSavePackage={handleSavePackage}
             onDeletePackage={handleDeletePackage}
+          />
+        );
+      case 'package-commands':
+        return (
+          <PackageCommandList 
+            data={data} 
+            onEditAppointment={(app) => {
+              setEditingAppointment(app);
+              setIsFormOpen(true);
+            }}
+            onDeleteAppointment={handleDeleteAppointment}
           />
         );
       case 'settings':
