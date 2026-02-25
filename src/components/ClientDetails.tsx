@@ -317,13 +317,13 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                                 className="w-full h-full object-cover cursor-zoom-in"
                                 onClick={() => setExpandedPhoto(pet.photoUrl!)}
                               />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handlePhotoClick(pet.id);
                                   }}
-                                  className="p-1.5 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
+                                  className="p-1.5 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors pointer-events-auto"
                                   title="Alterar foto"
                                 >
                                   <Camera size={16} />
