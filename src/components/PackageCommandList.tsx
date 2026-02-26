@@ -13,7 +13,7 @@ interface PackageCommandListProps {
   onDeletePackageCommand: (appointments: Appointment[]) => void;
 }
 
-interface Command {
+interface PackageCommand {
   key: string;
   client: Client | undefined;
   pet: Pet | undefined;
@@ -55,7 +55,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
       acc[commandKey].appointments.push(app);
     }
     return acc;
-  }, {} as Record<string, Command>);
+  }, {} as Record<string, PackageCommand>);
 
   return (
     <div className="space-y-6">
@@ -77,7 +77,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {Object.values(packageCommands).map((command: Command) => {
+              {(Object.values(packageCommands) as PackageCommand[]).map((command) => {
                 const completedSessions = command.appointments.filter(a => a.status === 'Concluído').length;
                 const totalSessions = command.package?.sessions || command.appointments.length;
                 const isPackageCompleted = completedSessions === totalSessions;
