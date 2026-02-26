@@ -24,6 +24,7 @@ import {
   deleteDoc, 
   updateDoc 
 } from 'firebase/firestore';
+import { Login } from './components/Login';
 import { PackageCommandList } from './components/PackageCommandList';
 
 const cleanData = (obj: any) => {
@@ -373,6 +374,21 @@ export default function App() {
     }
   };
 
+  const handleDeletePackageCommand = async (appointments: Appointment[]) => {
+    if (!user) return;
+    if (!window.confirm('Tem certeza que deseja excluir esta comanda e TODOS os agendamentos relacionados? Esta ação não pode ser desfeita.')) return;
+    try {
+      setSyncStatus('syncing');
+      for (const app of appointments) {
+        await deleteDoc(doc(db, `users/${user.uid}/appointments`, app.id));
+      }
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting package command:', err);
+      setSyncStatus('error');
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -447,6 +463,7 @@ export default function App() {
             }}
             onDeleteAppointment={handleDeleteAppointment}
             onClosePackageCommand={handleClosePackageCommand}
+            onDeletePackageCommand={handleDeletePackageCommand}
           />
         );
       case 'settings':
