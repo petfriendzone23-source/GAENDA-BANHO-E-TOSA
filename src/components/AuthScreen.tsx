@@ -2,7 +2,7 @@ import React from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { LogIn, UserPlus, Lock, Mail, AlertCircle } from 'lucide-react';
+import { LogIn as LogInIcon, UserPlus, Lock, Mail, AlertCircle } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = React.useState(true);
@@ -116,7 +116,7 @@ const AuthScreen: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {isLogin ? <LogIn size={20} /> : <UserPlus size={20} />}
+                  {isLogin ? <LogInIcon size={20} /> : <UserPlus size={20} />}
                   {isLogin ? 'Entrar no Sistema' : 'Criar minha Conta'}
                 </>
               )}

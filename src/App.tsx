@@ -24,6 +24,7 @@ import {
   deleteDoc, 
   updateDoc 
 } from 'firebase/firestore';
+// Auth Screen Component
 import AuthScreen from './components/AuthScreen';
 import { PackageCommandList } from './components/PackageCommandList';
 
