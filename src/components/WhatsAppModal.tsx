@@ -114,12 +114,23 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, a
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Mensagem</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Conteúdo do Modelo</label>
+            <textarea
+              readOnly
+              value={templates.find(t => t.id === selectedTemplateId)?.message || ''}
+              rows={3}
+              className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Mensagem Final (Editável)</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              rows={6}
+              rows={5}
               className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-green-500 outline-none resize-none text-sm"
+              placeholder="A mensagem editável aparecerá aqui..."
             />
           </div>
 
