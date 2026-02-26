@@ -1,40 +1,17 @@
-import React, { useState } from 'react';
-import { AppData, Appointment, Package, Client, Pet } from '../types';
+import React from 'react';
+import { AppData, Appointment, Package } from '../types';
 import { Edit2, Trash2, Box, CheckCircle } from 'lucide-react';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { PackageDetails } from './PackageDetails';
 
 interface PackageCommandListProps {
   data: AppData;
   onEditAppointment: (appointment: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
   onClosePackageCommand: (appointments: Appointment[]) => void;
-  onDeletePackageCommand: (appointments: Appointment[]) => void;
 }
 
-interface PackageCommand {
-  key: string;
-  client: Client | undefined;
-  pet: Pet | undefined;
-  package: Package | undefined;
-  appointments: Appointment[];
-}
-
-export const PackageCommandList: React.FC<PackageCommandListProps> = ({ 
-  data, 
-  onEditAppointment, 
-  onDeleteAppointment, 
-  onClosePackageCommand,
-  onDeletePackageCommand
-}) => {
-  const [selectedCommand, setSelectedCommand] = useState<{
-    client: Client;
-    pet: Pet;
-    package: Package;
-    appointments: Appointment[];
-  } | null>(null);
-
+export const PackageCommandList: React.FC<PackageCommandListProps> = ({ data, onEditAppointment, onDeleteAppointment, onClosePackageCommand }) => {
   // Group appointments by package instance
   const packageCommands = data.appointments.reduce((acc, app) => {
     if (app.packageId) {
@@ -55,7 +32,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
       acc[commandKey].appointments.push(app);
     }
     return acc;
-  }, {} as Record<string, PackageCommand>);
+  }, {} as Record<string, { key: string; client: any; pet: any; package: Package | undefined; appointments: Appointment[] }>);
 
   return (
     <div className="space-y-6">
@@ -77,7 +54,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {(Object.values(packageCommands) as PackageCommand[]).map((command) => {
+              {Object.values(packageCommands).map(command => {
                 const completedSessions = command.appointments.filter(a => a.status === 'Concluído').length;
                 const totalSessions = command.package?.sessions || command.appointments.length;
                 const isPackageCompleted = completedSessions === totalSessions;
@@ -90,20 +67,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
                   })[0];
 
                 return (
-                  <tr 
-                    key={command.key} 
-                    className={`transition-colors cursor-pointer ${isPackageCompleted ? 'bg-emerald-50' : 'hover:bg-slate-50/50'}`}
-                    onClick={() => {
-                      if (command.client && command.pet && command.package) {
-                        setSelectedCommand({
-                          client: command.client,
-                          pet: command.pet,
-                          package: command.package,
-                          appointments: command.appointments
-                        });
-                      }
-                    }}
-                  >
+                  <tr key={command.key} className={`transition-colors ${isPackageCompleted ? 'bg-emerald-50' : 'hover:bg-slate-50/50'}`}>
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-900">{command.client?.name}</p>
                       <p className="text-xs text-slate-500">{command.pet?.name}</p>
@@ -125,7 +89,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
                         <span className="text-slate-400">N/A</span>
                       }
                     </td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => onClosePackageCommand(command.appointments)}
@@ -144,9 +108,10 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
                           <Edit2 size={18} />
                         </button>
                         <button 
-                          onClick={() => onDeletePackageCommand(command.appointments)}
-                          className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
-                          title="Excluir Comanda e Agendamentos"
+                          onClick={() => nextAppointment && onDeleteAppointment(nextAppointment.id)}
+                          disabled={!nextAppointment}
+                          className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Excluir Próximo Agendamento"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -159,13 +124,6 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
           </table>
         </div>
       </div>
-
-      {selectedCommand && (
-        <PackageDetails 
-          packageInfo={selectedCommand} 
-          onClose={() => setSelectedCommand(null)} 
-        />
-      )}
     </div>
   );
 };
