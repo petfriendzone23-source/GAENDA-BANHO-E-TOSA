@@ -4,7 +4,7 @@ import { auth } from '../lib/firebase';
 import { motion } from 'motion/react';
 import { LogIn, UserPlus, Lock, Mail, AlertCircle } from 'lucide-react';
 
-const Login: React.FC = () => {
+const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = React.useState(true);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -134,4 +134,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default AuthScreen;

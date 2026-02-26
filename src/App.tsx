@@ -24,7 +24,7 @@ import {
   deleteDoc, 
   updateDoc 
 } from 'firebase/firestore';
-import Login from './components/Login';
+import AuthScreen from './components/AuthScreen';
 import { PackageCommandList } from './components/PackageCommandList';
 
 const cleanData = (obj: any) => {
@@ -491,7 +491,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login />;
+    return <AuthScreen />;
   }
 
   return (
