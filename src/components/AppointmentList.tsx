@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
@@ -15,6 +15,7 @@ interface AppointmentListProps {
   onEditAppointment: (appointment: Appointment) => void;
   onNewAppointmentAtTime?: (time: string, date: string) => void;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
+  onOpenReport: (appointment: Appointment) => void;
 }
 
 export const AppointmentList: React.FC<AppointmentListProps> = ({ 
@@ -23,7 +24,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   onDeleteAppointment,
   onEditAppointment, 
   onNewAppointmentAtTime, 
-  onUpdatePet 
+  onUpdatePet, 
+  onOpenReport
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
@@ -286,6 +288,16 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  onDeleteAppointment(app.id);
+                                }}
+                                className="p-1.5 bg-white rounded-lg shadow-sm text-rose-400 hover:text-rose-600 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setWhatsappAppointment(app);
                                 }}
                                 className="p-1.5 bg-white rounded-lg shadow-sm text-green-500 hover:text-green-600 hover:bg-green-50 transition-colors"
@@ -338,22 +350,27 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  onOpenReport(app);
+                                }}
+                                className={cn(
+                                  "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
+                                  app.report
+                                    ? "text-green-500 hover:text-green-600 hover:bg-green-50"
+                                    : "text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                )}
+                                title={app.report ? "Visualizar Relatório" : "Criar Relatório de Serviço"}
+                              >
+                                {app.report ? <Eye size={14} /> : <FileText size={14} />}
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   onEditAppointment(app);
                                 }}
                                 className="p-1.5 bg-white rounded-lg shadow-sm text-slate-400 hover:text-indigo-600 transition-colors"
                                 title="Editar"
                               >
                                 <Edit2 size={14} />
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDeleteAppointment(app.id);
-                                }}
-                                className="p-1.5 bg-white rounded-lg shadow-sm text-rose-400 hover:text-rose-600 transition-colors"
-                                title="Excluir"
-                              >
-                                <Trash2 size={14} />
                               </button>
                             </div>
                           </motion.div>
@@ -442,6 +459,18 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button 
+                            onClick={() => onOpenReport(app)}
+                            className={cn(
+                              "p-2 rounded-lg transition-all",
+                              app.report 
+                                ? "hover:bg-green-50 text-green-500 hover:text-green-600"
+                                : "hover:bg-blue-50 text-slate-400 hover:text-blue-600"
+                            )}
+                            title={app.report ? "Visualizar Relatório" : "Criar Relatório de Serviço"}
+                          >
+                            {app.report ? <Eye size={18} /> : <FileText size={18} />}
+                          </button>
+                          <button 
                             onClick={() => setWhatsappAppointment(app)}
                             className="p-2 hover:bg-green-50 text-green-500 hover:text-green-600 rounded-lg transition-all"
                             title="Enviar WhatsApp"
@@ -495,9 +524,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                           >
                             <Trash2 size={18} />
                           </button>
-                          <button className="p-2 hover:bg-slate-100 text-slate-400 rounded-lg transition-colors">
-                            <MoreVertical size={18} />
-                          </button>
+
                         </div>
                       </td>
                     </tr>

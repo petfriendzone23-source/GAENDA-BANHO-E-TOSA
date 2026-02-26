@@ -14,6 +14,17 @@ export interface Client {
   email?: string;
 }
 
+export interface ServiceReport {
+  skinAndCoat: string[];
+  ears: string[];
+  nails: string[];
+  ectoparasites: string[];
+  productsUsed: string[];
+  stressLevel: 'Calmo' | 'Agitado' | 'Medroso' | 'Reativo/Agressivo';
+  waterAndDryerAcceptance: 'Boa' | 'Resistiu ao secador' | 'Medo de água';
+  notes?: string;
+}
+
 export interface Appointment {
   id: string;
   clientId: string;
@@ -26,6 +37,7 @@ export interface Appointment {
   notes?: string;
   packageId?: string;
   customServicePrices?: Record<string, number>;
+  report?: ServiceReport;
 }
 
 export interface Service {
