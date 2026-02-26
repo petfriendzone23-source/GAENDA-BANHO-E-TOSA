@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { LogIn as LogInIcon, UserPlus, Lock, Mail, AlertCircle } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
-  const [isLogin, setIsLogin] = React.useState(true);
+  const [isSignInMode, setIsSignInMode] = React.useState(true);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
@@ -17,7 +17,7 @@ const AuthScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isSignInMode) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
@@ -56,14 +56,14 @@ const AuthScreen: React.FC = () => {
         <div className="p-8">
           <div className="flex bg-slate-100 p-1 rounded-xl mb-8">
             <button 
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => setIsSignInMode(true)}
+              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${isSignInMode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Entrar
             </button>
             <button 
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${!isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => setIsSignInMode(false)}
+              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${!isSignInMode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Criar Conta
             </button>
@@ -116,8 +116,8 @@ const AuthScreen: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {isLogin ? <LogInIcon size={20} /> : <UserPlus size={20} />}
-                  {isLogin ? 'Entrar no Sistema' : 'Criar minha Conta'}
+                  {isSignInMode ? <LogInIcon size={20} /> : <UserPlus size={20} />}
+                  {isSignInMode ? 'Entrar no Sistema' : 'Criar minha Conta'}
                 </>
               )}
             </button>
