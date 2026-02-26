@@ -61,14 +61,15 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, a
         // Replace placeholders
         formattedMessage = formattedMessage.replace(/{nome}/g, client.name.split(' ')[0]);
         formattedMessage = formattedMessage.replace(/{pet}/g, pet.name);
-        formattedMessage = formattedMessage.replace(/{servico}/g, (appointment.services || []).join(', '));
+        formattedMessage = formattedMessage.replace(/{servi[cç]o(s)?}/g, (appointment.services || []).join(', '));
         formattedMessage = formattedMessage.replace(/{data}/g, format(parseISO(appointment.date), 'dd/MM', { locale: ptBR }));
-        formattedMessage = formattedMessage.replace(/{hora}/g, appointment.time);
+        formattedMessage = formattedMessage.replace(/{hora(s)?}/g, appointment.time);
         
         setMessage(formattedMessage);
       }
     }
-  }, [selectedTemplateId, appointment, client, pet, templates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplateId, client, pet]);
 
   if (!isOpen || !client) return null;
 

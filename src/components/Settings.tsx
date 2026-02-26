@@ -275,11 +275,20 @@ export const Settings: React.FC<SettingsProps> = ({
                   <textarea 
                     value={newTemplate.message}
                     onChange={(e) => setNewTemplate({ ...newTemplate, message: e.target.value })}
-                    placeholder="Olá! Gostaríamos de confirmar seu agendamento para..."
+                    placeholder="Olá {nome}! Gostaríamos de confirmar o agendamento do {pet}..."
                     rows={4}
                     className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                   />
-                  <p className="text-xs text-slate-400 mt-1">Dica: Use a mensagem para agilizar o contato.</p>
+                  <div className="text-xs text-slate-500 mt-2 p-2 bg-slate-100 rounded-lg border border-slate-200">
+                    <span className="font-bold">Variáveis disponíveis:</span>
+                    <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                      <code className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md">{'{nome}'}</code>
+                      <code className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md">{'{pet}'}</code>
+                      <code className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md">{'{serviço}'}</code>
+                      <code className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md">{'{data}'}</code>
+                      <code className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md">{'{horas}'}</code>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex justify-end pt-2">
                   <button 
