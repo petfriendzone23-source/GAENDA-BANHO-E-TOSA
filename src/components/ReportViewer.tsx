@@ -94,8 +94,14 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, o
       setTimeout(() => setIsCopied(false), 3000);
 
       // 2. Abrir o WhatsApp do cliente
-      if (client?.phone) {
-        const cleanPhone = client.phone.replace(/\D/g, '');
+      const clientPhone = client?.phones && client.phones.length > 0 ? client.phones[0] : null;
+      
+      if (clientPhone) {
+        let cleanPhone = clientPhone.replace(/\D/g, '');
+        // Garantir que tenha o código do país (Brasil = 55)
+        if (cleanPhone.length <= 11) {
+          cleanPhone = `55${cleanPhone}`;
+        }
         const whatsappUrl = `https://wa.me/${cleanPhone}`;
         window.open(whatsappUrl, '_blank');
       } else {
