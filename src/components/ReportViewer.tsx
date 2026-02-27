@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { Appointment, AppData, ServiceReport } from '../types';
-import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors } from 'lucide-react';
+import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors, Share2, Copy, CheckCircle2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -13,23 +13,69 @@ interface ReportViewerProps {
 
 export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, onClose }) => {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [isCopied, setIsCopied] = React.useState(false);
   const pet = data.pets[appointment.clientId]?.find(p => p.id === appointment.petId);
   const client = data.clients.find(c => c.id === appointment.clientId);
   const report = appointment.report as ServiceReport;
 
-  const handleDownload = () => {
-    if (reportRef.current === null) return;
+  const getBlob = async () => {
+    if (reportRef.current === null) return null;
+    const dataUrl = await toPng(reportRef.current, { cacheBust: true, backgroundColor: '#ffffff', quality: 0.95 });
+    const res = await fetch(dataUrl);
+    return await res.blob();
+  };
 
-    toPng(reportRef.current, { cacheBust: true, backgroundColor: '#ffffff', quality: 0.95 })
-      .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = `relatorio-${pet?.name?.toLowerCase().replace(' ', '-')}-${appointment.date}.png`;
-        link.href = dataUrl;
-        link.click();
-      })
-      .catch((err) => {
-        console.error('oops, something went wrong!', err);
-      });
+  const handleDownload = async () => {
+    const blob = await getBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `relatorio-${pet?.name?.toLowerCase().replace(' ', '-')}-${appointment.date}.png`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    try {
+      const blob = await getBlob();
+      if (!blob) return;
+      
+      const file = new File([blob], `relatorio-${pet?.name}.png`, { type: 'image/png' });
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Relatório de Serviço - ${pet?.name}`,
+          text: `Confira o relatório de serviço do ${pet?.name} na ${data.companyInfo.name}!`,
+        });
+      } else {
+        // Fallback to copy if share is not available
+        handleCopy();
+      }
+    } catch (err) {
+      console.error('Erro ao compartilhar:', err);
+      handleCopy();
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      const blob = await getBlob();
+      if (!blob) return;
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ]);
+      
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 3000);
+    } catch (err) {
+      console.error('Erro ao copiar imagem:', err);
+      alert('Não foi possível copiar a imagem automaticamente. Por favor, use o botão de baixar.');
+    }
   };
 
   if (!report || !pet || !client) return null;
@@ -106,13 +152,30 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, o
           </div>
         </div>
 
-        <div className="p-4 bg-slate-100 border-t border-slate-200 flex justify-end">
+        <div className="p-4 bg-slate-100 border-t border-slate-200 flex justify-end gap-3">
+          <button
+            onClick={handleShare}
+            className="py-2.5 px-5 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+            title="Compartilhar ou Copiar Imagem"
+          >
+            {isCopied ? (
+              <>
+                <CheckCircle2 size={18} className="text-emerald-500" />
+                Copiado!
+              </>
+            ) : (
+              <>
+                <Share2 size={18} className="text-blue-500" />
+                Compartilhar
+              </>
+            )}
+          </button>
           <button
             onClick={handleDownload}
             className="py-2.5 px-5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <Download size={18} />
-            Baixar como Imagem
+            Baixar
           </button>
         </div>
       </div>
