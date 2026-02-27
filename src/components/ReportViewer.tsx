@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { Appointment, AppData, ServiceReport } from '../types';
-import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors, Share2, Copy, CheckCircle2 } from 'lucide-react';
+import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors, Share2, Copy, CheckCircle2, MessageCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -75,6 +75,36 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, o
     } catch (err) {
       console.error('Erro ao copiar imagem:', err);
       alert('Não foi possível copiar a imagem automaticamente. Por favor, use o botão de baixar.');
+    }
+  };
+
+  const handleWhatsAppShare = async () => {
+    try {
+      // 1. Copiar a imagem para a área de transferência
+      const blob = await getBlob();
+      if (!blob) return;
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ]);
+      
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 3000);
+
+      // 2. Abrir o WhatsApp do cliente
+      if (client?.phone) {
+        const cleanPhone = client.phone.replace(/\D/g, '');
+        const whatsappUrl = `https://wa.me/${cleanPhone}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        alert('Cliente não possui número de telefone cadastrado.');
+      }
+    } catch (err) {
+      console.error('Erro ao compartilhar no WhatsApp:', err);
+      alert('Não foi possível automatizar o processo. A imagem foi baixada, por favor anexe-a manualmente no WhatsApp.');
+      handleDownload();
     }
   };
 
@@ -152,27 +182,26 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, o
           </div>
         </div>
 
-        <div className="p-4 bg-slate-100 border-t border-slate-200 flex justify-end gap-3">
+        <div className="p-4 bg-slate-100 border-t border-slate-200 flex flex-wrap justify-end gap-3">
+          <button
+            onClick={handleWhatsAppShare}
+            className="py-2.5 px-5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            title="Abrir WhatsApp e Copiar Imagem"
+          >
+            <MessageCircle size={18} />
+            {isCopied ? 'Copiado! Abrindo...' : 'Enviar WhatsApp'}
+          </button>
           <button
             onClick={handleShare}
             className="py-2.5 px-5 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
-            title="Compartilhar ou Copiar Imagem"
+            title="Outras opções de compartilhamento"
           >
-            {isCopied ? (
-              <>
-                <CheckCircle2 size={18} className="text-emerald-500" />
-                Copiado!
-              </>
-            ) : (
-              <>
-                <Share2 size={18} className="text-blue-500" />
-                Compartilhar
-              </>
-            )}
+            <Share2 size={18} className="text-blue-500" />
+            Outros
           </button>
           <button
             onClick={handleDownload}
-            className="py-2.5 px-5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="py-2.5 px-5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
           >
             <Download size={18} />
             Baixar
