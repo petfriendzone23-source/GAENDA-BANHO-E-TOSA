@@ -1,5 +1,5 @@
 import React from 'react';
-import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
+import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -85,6 +85,17 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
     const h = i + 7; // 07:00 to 20:00
     return `${h.toString().padStart(2, '0')}:00`;
   });
+
+  const weekDays = React.useMemo(() => {
+    const baseDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
+    const start = startOfWeek(baseDate, { weekStartsOn: 1 }); // Monday
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  }, [customDate, dateFilter]);
+
+  const handleDayClick = (date: Date) => {
+    setCustomDate(format(date, 'yyyy-MM-dd'));
+    setDateFilter('Data Específica');
+  };
 
   return (
     <div className="space-y-6">
@@ -184,6 +195,40 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
             </select>
           </div>
         </div>
+      </div>
+
+      <div className="flex overflow-x-auto pb-2 sm:pb-0 gap-2 no-scrollbar">
+        {weekDays.map((day) => {
+          const isSelected = dateFilter === 'Data Específica' 
+            ? isSameDay(day, parseISO(customDate))
+            : isToday(day) && dateFilter === 'Hoje';
+          
+          return (
+            <button
+              key={day.toISOString()}
+              onClick={() => handleDayClick(day)}
+              className={cn(
+                "flex-1 min-w-[80px] flex flex-col items-center p-3 rounded-2xl border transition-all",
+                isSelected 
+                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-105 z-10" 
+                  : "bg-white border-slate-100 text-slate-500 hover:border-indigo-200 hover:bg-slate-50"
+              )}
+            >
+              <span className={cn(
+                "text-[10px] uppercase font-black tracking-widest mb-1",
+                isSelected ? "text-indigo-100" : "text-slate-400"
+              )}>
+                {format(day, 'eee', { locale: ptBR })}
+              </span>
+              <span className="text-lg font-bold">
+                {format(day, 'dd')}
+              </span>
+              {isToday(day) && !isSelected && (
+                <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {viewType === 'Grade' ? (

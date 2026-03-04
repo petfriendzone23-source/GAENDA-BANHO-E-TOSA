@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Plus, Phone, Mail, Dog, MoreHorizontal, MapPin } from 'lucide-react';
+import { Search, Plus, Phone, Mail, Dog, MoreHorizontal, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppData, Client, Pet } from '../types';
+import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
 
 interface ClientListProps {
@@ -10,14 +11,26 @@ interface ClientListProps {
   onEditClient?: (client: Client, pets: Pet[]) => void;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient, onEditClient }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   const filteredClients = data.clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phones.some(p => p.includes(searchTerm))
   );
+
+  // Reset to first page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedClients = filteredClients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -47,8 +60,8 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredClients.length > 0 ? (
-          filteredClients.map((client) => {
+        {paginatedClients.length > 0 ? (
+          paginatedClients.map((client) => {
             const clientPets = data.pets[client.id] || [];
             return (
               <div 
@@ -111,6 +124,46 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-slate-100 shadow-sm">
+          <div className="text-sm text-slate-500">
+            Mostrando <span className="font-bold text-slate-900">{startIndex + 1}</span> a <span className="font-bold text-slate-900">{Math.min(startIndex + ITEMS_PER_PAGE, filteredClients.length)}</span> de <span className="font-bold text-slate-900">{filteredClients.length}</span> clientes
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={cn(
+                    "w-10 h-10 rounded-lg text-sm font-bold transition-all",
+                    currentPage === page 
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" 
+                      : "text-slate-500 hover:bg-slate-50"
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedClient && (
         <ClientDetails 
