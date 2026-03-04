@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
@@ -18,6 +18,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   
   // Form State
   const [clientId, setClientId] = React.useState(appointment?.clientId || '');
+  const [clientSearchTerm, setClientSearchTerm] = React.useState(
+    appointment?.clientId ? data.clients.find(c => c.id === appointment.clientId)?.name || '' : ''
+  );
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = React.useState(false);
   const [petId, setPetId] = React.useState(appointment?.petId || '');
   const [sessions, setSessions] = React.useState(1);
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
@@ -385,18 +389,81 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <label className="text-sm font-semibold text-slate-700">Selecionar Cliente</label>
-                  <select required value={clientId} onChange={e => setClientId(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option value="">Selecione...</option>
-                    {data.clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <div className="relative">
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text"
+                      value={clientSearchTerm}
+                      onChange={e => {
+                        setClientSearchTerm(e.target.value);
+                        setIsClientDropdownOpen(true);
+                        if (clientId) {
+                          setClientId('');
+                          setPetId('');
+                        }
+                      }}
+                      onFocus={() => setIsClientDropdownOpen(true)}
+                      placeholder="Digite o nome do cliente..."
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  {isClientDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                      {data.clients
+                        .filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase()))
+                        .map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setClientId(c.id);
+                              setClientSearchTerm(c.name);
+                              setIsClientDropdownOpen(false);
+                              // Auto-select first pet if available
+                              const clientPets = data.pets[c.id] || [];
+                              if (clientPets.length > 0) {
+                                setPetId(clientPets[0].id);
+                              }
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0"
+                          >
+                            <p className="font-bold text-slate-900">{c.name}</p>
+                            {c.phones.length > 0 && (
+                              <p className="text-xs text-slate-500">{c.phones[0]}</p>
+                            )}
+                          </button>
+                        ))}
+                      {data.clients.filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase())).length === 0 && (
+                        <div className="px-4 py-3 text-sm text-slate-500 italic">
+                          Nenhum cliente encontrado.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Backdrop to close dropdown */}
+                  {isClientDropdownOpen && (
+                    <div 
+                      className="fixed inset-0 z-[-1]" 
+                      onClick={() => setIsClientDropdownOpen(false)}
+                    />
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Selecionar Pet</label>
-                  <select required value={petId} onChange={e => setPetId(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" disabled={!clientId}>
+                  <select 
+                    required 
+                    value={petId} 
+                    onChange={e => setPetId(e.target.value)} 
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-400" 
+                    disabled={!clientId}
+                  >
                     <option value="">Selecione...</option>
-                    {clientId && data.pets[clientId]?.map(p => <option key={p.id} value={p.id}>{p.name} ({p.breed})</option>)}
+                    {clientId && data.pets[clientId]?.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.breed})</option>
+                    ))}
                   </select>
                 </div>
               </div>
