@@ -97,6 +97,33 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
     setDateFilter('Data Específica');
   };
 
+  const getPackageProgress = (appointment: Appointment) => {
+    if (!appointment.packageId) return null;
+    
+    const pkg = data.packages.find(p => p.id === appointment.packageId);
+    if (!pkg) return null;
+    
+    const totalSessions = pkg.sessions;
+    
+    // Get all appointments for this client+pet+package sorted by date
+    const relatedAppointments = data.appointments.filter(a => 
+      a.clientId === appointment.clientId && 
+      a.petId === appointment.petId && 
+      a.packageId === appointment.packageId
+    ).sort((a, b) => {
+       const dateA = new Date(`${a.date}T${a.time}`);
+       const dateB = new Date(`${b.date}T${b.time}`);
+       return dateA.getTime() - dateB.getTime();
+    });
+    
+    const index = relatedAppointments.findIndex(a => a.id === appointment.id);
+    if (index === -1) return null;
+    
+    const currentSessionNumber = (index % totalSessions) + 1;
+    
+    return `${currentSessionNumber}/${totalSessions}`;
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -256,6 +283,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                       hourAppointments.map(app => {
                         const client = data.clients.find(c => c.id === app.clientId);
                         const pet = data.pets[app.clientId]?.find(p => p.id === app.petId);
+                        const progress = getPackageProgress(app);
+
                         return (
                           <motion.div
                             layoutId={app.id}
@@ -276,7 +305,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <div className="flex items-center gap-3">
                                 <div className="relative">
                                   <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm overflow-hidden",
+                                    "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm overflow-hidden relative",
                                     app.status === 'Concluído' ? "bg-emerald-500" :
                                     app.status === 'Cancelado' ? "bg-rose-500" :
                                     app.packageId ? "bg-purple-600" :
@@ -287,9 +316,15 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                     ) : (
                                       pet?.name[0]
                                     )}
+                                    {progress && (
+                                      <div className="absolute bottom-0 right-0 bg-black/60 text-white text-[8px] px-1 rounded-tl-md font-bold z-10">
+                                        {progress}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className={cn(
-                                    "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
+                                    "absolute w-4 h-4 rounded-full border-2 border-white shadow-sm",
+                                    progress ? "-top-1 -right-1" : "-bottom-1 -right-1",
                                     app.status === 'Concluído' ? "bg-emerald-500" :
                                     app.status === 'Cancelado' ? "bg-rose-500" :
                                     "bg-amber-500"
@@ -450,6 +485,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                 filteredAppointments.map((app) => {
                   const client = data.clients.find(c => c.id === app.clientId);
                   const pet = data.pets[app.clientId]?.find(p => p.id === app.petId);
+                  const progress = getPackageProgress(app);
                   
                   return (
                     <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
@@ -459,7 +495,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                           onClick={() => setSelectedAppointment(app)}
                         >
                           <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all",
+                            "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all relative",
                             app.packageId 
                               ? "bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white" 
                               : "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white"
@@ -468,6 +504,11 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover rounded-full" />
                             ) : (
                               pet?.name[0]
+                            )}
+                            {progress && (
+                              <div className="absolute -bottom-1 -right-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-sm z-10">
+                                {progress}
+                              </div>
                             )}
                           </div>
                           <div>
