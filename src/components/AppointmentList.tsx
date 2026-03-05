@@ -316,15 +316,9 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                     ) : (
                                       pet?.name[0]
                                     )}
-                                    {progress && (
-                                      <div className="absolute bottom-0 right-0 bg-black/60 text-white text-[8px] px-1 rounded-tl-md font-bold z-10">
-                                        {progress}
-                                      </div>
-                                    )}
                                   </div>
                                   <div className={cn(
-                                    "absolute w-4 h-4 rounded-full border-2 border-white shadow-sm",
-                                    progress ? "-top-1 -right-1" : "-bottom-1 -right-1",
+                                    "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
                                     app.status === 'Concluído' ? "bg-emerald-500" :
                                     app.status === 'Cancelado' ? "bg-rose-500" :
                                     "bg-amber-500"
@@ -335,16 +329,23 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                   <p className="text-[10px] text-slate-500 font-medium">{client?.name}</p>
                                 </div>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right flex flex-col items-end gap-1">
                                 <p className="text-xs font-black text-slate-900">{app.time}</p>
-                                <span className={cn(
-                                  "text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-md",
-                                  app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : 
-                                  app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 
-                                  "bg-rose-100 text-rose-700"
-                                )}>
-                                  {app.status}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  {progress && (
+                                    <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-md border border-purple-200">
+                                      {progress}
+                                    </span>
+                                  )}
+                                  <span className={cn(
+                                    "text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-md",
+                                    app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : 
+                                    app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 
+                                    "bg-rose-100 text-rose-700"
+                                  )}>
+                                    {app.status}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-1 mt-2">
@@ -505,11 +506,6 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                             ) : (
                               pet?.name[0]
                             )}
-                            {progress && (
-                              <div className="absolute -bottom-1 -right-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-sm z-10">
-                                {progress}
-                              </div>
-                            )}
                           </div>
                           <div>
                             <p className={cn(
@@ -533,14 +529,21 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                         <span className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={cn(
-                          "text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full",
-                          app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : 
-                          app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 
-                          "bg-rose-100 text-rose-700"
-                        )}>
-                          {app.status}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          <span className={cn(
+                            "text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full",
+                            app.status === 'Agendado' ? "bg-amber-100 text-amber-700" : 
+                            app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 
+                            "bg-rose-100 text-rose-700"
+                          )}>
+                            {app.status}
+                          </span>
+                          {progress && (
+                            <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200">
+                              {progress}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
