@@ -22,15 +22,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
   const todayPackages = todayAppointments.filter(a => !!a.packageId).length;
   const todayServices = todayAppointments.filter(a => !a.packageId).length;
 
-  const totalRevenue = data.appointments
-    .filter(a => a.status === 'Concluído')
-    .reduce((acc, curr) => acc + curr.price, 0);
-
   const stats = [
     { label: 'Hoje', value: todayAppointments.length, icon: CalendarIcon, color: 'bg-blue-500' },
     { label: 'Concluídos', value: completedToday, icon: CheckCircle2, color: 'bg-emerald-500' },
     { label: 'Pendentes', value: pendingToday, icon: Clock, color: 'bg-amber-500' },
-    { label: 'Faturamento', value: `R$ ${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: 'bg-indigo-500' },
   ];
 
   return (
@@ -49,7 +44,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onNewAppointment, on
         </button>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((stat, idx) => (
           <motion.div
             key={stat.label}

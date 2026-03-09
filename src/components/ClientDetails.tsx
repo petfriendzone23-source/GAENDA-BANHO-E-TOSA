@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText, Edit2 } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -26,6 +26,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
   const [targetPhone, setTargetPhone] = React.useState<string>('');
   const [showServiceNote, setShowServiceNote] = React.useState(false);
   const [expandedPhoto, setExpandedPhoto] = React.useState<string | null>(null);
+  const [historyPage, setHistoryPage] = React.useState(1);
+  const HISTORY_PER_PAGE = 5;
 
 
   const handlePhotoClick = (petId: string) => {
@@ -70,6 +72,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
   const clientAppointments = data.appointments
     .filter(a => a.clientId === client.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const totalHistoryPages = Math.ceil(clientAppointments.length / HISTORY_PER_PAGE);
+  const paginatedHistory = clientAppointments.slice(
+    (historyPage - 1) * HISTORY_PER_PAGE,
+    historyPage * HISTORY_PER_PAGE
+  );
 
   const isAppointmentView = !!appointment && !showHistory;
 
@@ -415,55 +423,81 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                     </div>
 
                     <div className="space-y-4">
-                      {clientAppointments.length > 0 ? (
-                        clientAppointments.map(app => (
-                          <div key={app.id} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors flex flex-col gap-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <div className={cn(
-                                  "p-1.5 rounded-lg shrink-0",
-                                  app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
-                                  app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
-                                  "bg-rose-100 text-rose-600"
-                                )}>
-                                  {app.status === 'Concluído' ? <CheckCircle2 size={14} /> : 
-                                   app.status === 'Agendado' ? <Clock size={14} /> : 
-                                   <AlertCircle size={14} />}
+                      {paginatedHistory.length > 0 ? (
+                        <>
+                          {paginatedHistory.map(app => (
+                            <div key={app.id} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors flex flex-col gap-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <div className={cn(
+                                    "p-1.5 rounded-lg shrink-0",
+                                    app.status === 'Concluído' ? "bg-emerald-100 text-emerald-600" :
+                                    app.status === 'Agendado' ? "bg-amber-100 text-amber-600" :
+                                    "bg-rose-100 text-rose-600"
+                                  )}>
+                                    {app.status === 'Concluído' ? <CheckCircle2 size={14} /> : 
+                                     app.status === 'Agendado' ? <Clock size={14} /> : 
+                                     <AlertCircle size={14} />}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-slate-900 text-sm truncate">{(app.services || []).join(', ')}</p>
+                                    <p className="text-[10px] text-slate-500 truncate">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-slate-900 text-sm truncate">{(app.services || []).join(', ')}</p>
-                                  <p className="text-[10px] text-slate-500 truncate">{data.pets[app.clientId]?.find(p => p.id === app.petId)?.name}</p>
+                                <div className="text-right shrink-0 ml-2">
+                                  <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
+                                  <p className={cn(
+                                    "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
+                                    app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :
+                                    app.status === 'Agendado' ? "bg-amber-50 text-amber-600" :
+                                    "bg-rose-50 text-rose-600"
+                                  )}>{app.status}</p>
                                 </div>
                               </div>
-                              <div className="text-right shrink-0 ml-2">
-                                <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
-                                <p className={cn(
-                                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
-                                  app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :
-                                  app.status === 'Agendado' ? "bg-amber-50 text-amber-600" :
-                                  "bg-rose-50 text-rose-600"
-                                )}>{app.status}</p>
+                              
+                              <div className="flex items-center gap-4 pt-2 border-t border-slate-50 text-slate-500">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar size={12} />
+                                  <span className="text-[11px] font-medium">{format(parseISO(app.date), "dd/MM/yyyy")}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock size={12} />
+                                  <span className="text-[11px] font-medium">{app.time}</span>
+                                </div>
                               </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 pt-2 border-t border-slate-50 text-slate-500">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar size={12} />
-                                <span className="text-[11px] font-medium">{format(parseISO(app.date), "dd/MM/yyyy")}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock size={12} />
-                                <span className="text-[11px] font-medium">{app.time}</span>
-                              </div>
-                            </div>
 
-                            {app.notes && (
-                              <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-500 italic">
-                                "{app.notes}"
+                              {app.notes && (
+                                <div className="p-2 bg-slate-50 rounded-lg text-[11px] text-slate-500 italic">
+                                  "{app.notes}"
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {totalHistoryPages > 1 && (
+                            <div className="flex items-center justify-between pt-4">
+                              <p className="text-xs text-slate-500 font-medium">
+                                Página <span className="text-slate-900 font-bold">{historyPage}</span> de <span className="text-slate-900 font-bold">{totalHistoryPages}</span>
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setHistoryPage(prev => Math.max(prev - 1, 1))}
+                                  disabled={historyPage === 1}
+                                  className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+                                >
+                                  <ChevronLeft size={16} />
+                                </button>
+                                <button
+                                  onClick={() => setHistoryPage(prev => Math.min(prev + 1, totalHistoryPages))}
+                                  disabled={historyPage === totalHistoryPages}
+                                  className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+                                >
+                                  <ChevronRight size={16} />
+                                </button>
                               </div>
-                            )}
-                          </div>
-                        ))
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                           <p className="text-slate-400 font-medium">Nenhum serviço registrado ainda.</p>
