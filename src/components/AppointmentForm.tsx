@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search, ChevronDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
@@ -478,29 +478,40 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-semibold text-slate-700">Pacotes Disponíveis</label>
-              <div className="flex flex-wrap gap-2">
-                {data.packages.map(pkg => {
-                  const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
-                  const isSelected = pkgServiceNames.every(name => sessionServices[0]?.includes(name));
-                  return (
-                    <button
-                      key={pkg.id}
-                      type="button"
-                      onClick={() => togglePackage(pkg)}
-                      className={cn(
-                        "px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all flex items-center gap-2",
-                        isSelected 
-                          ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-100" 
-                          : "bg-white border-slate-100 text-slate-500 hover:border-amber-200"
-                      )}
-                    >
-                      <Box size={16} />
-                      {pkg.name} (R$ {pkg.price})
-                    </button>
-                  );
-                })}
+              <label className="text-sm font-semibold text-slate-700">Pacote de Serviços</label>
+              <div className="relative">
+                <Box size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <select
+                  className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer"
+                  value={selectedPackageId || ""}
+                  onChange={(e) => {
+                    const pkgId = e.target.value;
+                    if (!pkgId) {
+                      setSessions(1);
+                      setSessionDates([sessionDates[0]]);
+                      setSessionTimes([sessionTimes[0]]);
+                      setSessionServices([[]]);
+                      setSelectedPackageId(undefined);
+                    } else {
+                      const pkg = data.packages.find(p => p.id === pkgId);
+                      if (pkg) togglePackage(pkg);
+                    }
+                  }}
+                >
+                  <option value="">Nenhum pacote (Serviço Avulso)</option>
+                  {data.packages.map(pkg => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} ({pkg.sessions} sessões - R$ {pkg.price.toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
+              {selectedPackageId && (
+                <p className="text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg inline-block border border-amber-100">
+                  Pacote selecionado: {data.packages.find(p => p.id === selectedPackageId)?.name}
+                </p>
+              )}
             </div>
 
             <div className="space-y-4">
