@@ -25,7 +25,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [petId, setPetId] = React.useState(appointment?.petId || '');
   const [sessions, setSessions] = React.useState(1);
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
-  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || '09:00']);
+  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || data.companyInfo.workingHours?.start || '08:00']);
   const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
   const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>(appointment?.customServicePrices || {});
   const [price, setPrice] = React.useState(appointment?.price || 40);
@@ -53,7 +53,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       
       while (newDates.length < pkg.sessions) {
         newDates.push(new Date().toISOString().split('T')[0]);
-        newTimes.push('09:00');
+        newTimes.push(data.companyInfo.workingHours?.start || '08:00');
         newServices.push([]);
       }
       
@@ -551,6 +551,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                         <input 
                           type="time" 
                           value={sessionTimes[idx]} 
+                          min={data.companyInfo.workingHours?.start || '08:00'}
+                          max={data.companyInfo.workingHours?.end || '18:00'}
                           onChange={e => {
                             const next = [...sessionTimes];
                             next[idx] = e.target.value;

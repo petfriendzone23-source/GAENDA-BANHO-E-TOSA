@@ -66,6 +66,10 @@ export interface CompanyInfo {
   name: string;
   address: string;
   phone: string;
+  workingHours: {
+    start: string; // HH:mm
+    end: string;   // HH:mm
+  };
 }
 
 export interface AppData {

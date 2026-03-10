@@ -36,7 +36,11 @@ const initialData: AppData = {
   companyInfo: {
     name: 'PetGroom Serviços',
     address: 'Rua Fictícia, 123 - Cidade, Estado',
-    phone: '(11) 98765-4321'
+    phone: '(11) 98765-4321',
+    workingHours: {
+      start: '08:00',
+      end: '18:00'
+    }
   }
 };
 
@@ -89,6 +93,8 @@ export const loadData = (): AppData => {
     // Migrate companyInfo
     if (!parsed.companyInfo) {
       parsed.companyInfo = initialData.companyInfo;
+    } else if (!parsed.companyInfo.workingHours) {
+      parsed.companyInfo.workingHours = initialData.companyInfo.workingHours;
     }
 
     return parsed as AppData;

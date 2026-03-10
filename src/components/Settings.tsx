@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2, LogOut } from 'lucide-react';
+import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2, LogOut, Clock } from 'lucide-react';
 import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -128,6 +128,91 @@ export const Settings: React.FC<SettingsProps> = ({
               <span className="font-bold text-indigo-600">PetGroom</span> ajuda você a gerenciar seu negócio.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Clock size={20} className="text-amber-600" />
+              Horário de Funcionamento
+            </h3>
+            <p className="text-slate-500 text-sm mt-1">
+              Defina o horário de abertura e fechamento da sua loja.
+            </p>
+          </div>
+          {!isEditingCompany && (
+            <button 
+              onClick={() => setIsEditingCompany(true)}
+              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold"
+            >
+              <Edit2 size={16} />
+              Editar
+            </button>
+          )}
+        </div>
+
+        <div className="p-6">
+          {isEditingCompany ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Horário de Abertura</label>
+                  <input 
+                    type="time" 
+                    value={companyInfo.workingHours?.start || '08:00'}
+                    onChange={(e) => setCompanyInfo({ 
+                      ...companyInfo, 
+                      workingHours: { ...companyInfo.workingHours, start: e.target.value } 
+                    })}
+                    className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Horário de Fechamento</label>
+                  <input 
+                    type="time" 
+                    value={companyInfo.workingHours?.end || '18:00'}
+                    onChange={(e) => setCompanyInfo({ 
+                      ...companyInfo, 
+                      workingHours: { ...companyInfo.workingHours, end: e.target.value } 
+                    })}
+                    className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button 
+                  onClick={() => {
+                    setCompanyInfo(data.companyInfo);
+                    setIsEditingCompany(false);
+                  }}
+                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleSaveCompanyInfo}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 flex items-center gap-2"
+                >
+                  <Save size={16} />
+                  Salvar Alterações
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Abertura</p>
+                <p className="font-bold text-slate-900 mt-1">{data.companyInfo.workingHours?.start || '08:00'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase">Fechamento</p>
+                <p className="font-bold text-slate-900 mt-1">{data.companyInfo.workingHours?.end || '18:00'}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

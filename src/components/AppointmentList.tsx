@@ -81,10 +81,16 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
       return timeA[1] - timeB[1];
     });
 
-  const hours = Array.from({ length: 14 }, (_, i) => {
-    const h = i + 7; // 07:00 to 20:00
-    return `${h.toString().padStart(2, '0')}:00`;
-  });
+  const hours = React.useMemo(() => {
+    const startHour = parseInt((data.companyInfo.workingHours?.start || '08:00').split(':')[0], 10);
+    const endHour = parseInt((data.companyInfo.workingHours?.end || '18:00').split(':')[0], 10);
+    const length = endHour - startHour + 1;
+    
+    return Array.from({ length: Math.max(0, length) }, (_, i) => {
+      const h = i + startHour;
+      return `${h.toString().padStart(2, '0')}:00`;
+    });
+  }, [data.companyInfo.workingHours]);
 
   const weekDays = React.useMemo(() => {
     const baseDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
