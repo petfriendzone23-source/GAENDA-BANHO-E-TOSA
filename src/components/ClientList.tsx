@@ -18,10 +18,15 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  const filteredClients = data.clients.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phones.some(p => p.includes(searchTerm))
-  );
+  const filteredClients = data.clients.filter(c => {
+    const matchesClient = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.phones.some(p => p.includes(searchTerm));
+    
+    const clientPets = data.pets[c.id] || [];
+    const matchesPet = clientPets.some(pet => pet.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    return matchesClient || matchesPet;
+  });
 
   // Reset to first page when search changes
   React.useEffect(() => {
@@ -52,7 +57,7 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input 
           type="text" 
-          placeholder="Buscar por nome ou telefone..." 
+          placeholder="Buscar por nome do cliente, telefone ou nome do pet..." 
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-100 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
