@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppData, Appointment, Package, Client, Pet } from '../types';
-import { Edit2, Trash2, Box, CheckCircle } from 'lucide-react';
+import { Edit2, Trash2, Box, CheckCircle, Search, SortAsc, Calendar as CalendarIcon } from 'lucide-react';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PackageDetails } from './PackageDetails';
@@ -36,6 +36,8 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
     package: Package;
     appointments: Appointment[];
   } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'date'>('date');
 
   // Group appointments by package instance
   const packageCommands = data.appointments.reduce((acc, app) => {
@@ -59,11 +61,78 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
     return acc;
   }, {} as Record<string, PackageCommand>);
 
+  // Filter and Sort
+  const filteredAndSortedCommands = (Object.values(packageCommands) as PackageCommand[])
+    .filter(command => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        command.client?.name.toLowerCase().includes(searchLower) ||
+        command.pet?.name.toLowerCase().includes(searchLower) ||
+        command.package?.name.toLowerCase().includes(searchLower)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        return (a.client?.name || '').localeCompare(b.client?.name || '');
+      } else {
+        // Sort by next appointment date
+        const nextA = a.appointments
+          .filter(app => app.status === 'Agendado')
+          .sort((appA, appB) => {
+            const dateA = parseISO(`${appA.date}T${appA.time}`);
+            const dateB = parseISO(`${appB.date}T${appB.time}`);
+            return dateA.getTime() - dateB.getTime();
+          })[0];
+
+        const nextB = b.appointments
+          .filter(app => app.status === 'Agendado')
+          .sort((appA, appB) => {
+            const dateA = parseISO(`${appA.date}T${appA.time}`);
+            const dateB = parseISO(`${appB.date}T${appB.time}`);
+            return dateA.getTime() - dateB.getTime();
+          })[0];
+
+        if (!nextA) return 1;
+        if (!nextB) return -1;
+
+        const dateA = parseISO(`${nextA.date}T${nextA.time}`);
+        const dateB = parseISO(`${nextB.date}T${nextB.time}`);
+        return dateA.getTime() - dateB.getTime();
+      }
+    });
+
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Comanda de Pacotes</h2>
-        <p className="text-slate-500 mt-1">Gerencie os pacotes de serviços agendados.</p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Comanda de Pacotes</h2>
+          <p className="text-slate-500 mt-1">Gerencie os pacotes de serviços agendados.</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+            <input
+              type="text"
+              placeholder="Pesquisar cliente ou pet..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-full sm:w-64"
+            />
+          </div>
+
+          <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 gap-2 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+            <SortAsc size={18} className="text-slate-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'date')}
+              className="bg-transparent text-sm font-medium text-slate-700 focus:outline-none cursor-pointer pr-2"
+            >
+              <option value="date">Ordenar por Data</option>
+              <option value="name">Ordem Alfabética</option>
+            </select>
+          </div>
+        </div>
       </header>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -79,7 +148,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {(Object.values(packageCommands) as PackageCommand[]).map((command) => {
+              {filteredAndSortedCommands.map((command) => {
                 const completedSessions = command.appointments.filter(a => a.status === 'Concluído').length;
                 const totalSessions = command.package?.sessions || command.appointments.length;
                 const isPackageCompleted = completedSessions === totalSessions;
