@@ -11,6 +11,7 @@ interface PackageCommandListProps {
   onDeleteAppointment: (id: string) => void;
   onClosePackageCommand: (appointments: Appointment[]) => void;
   onDeletePackageCommand: (appointments: Appointment[]) => void;
+  onRenewPackage: (clientId: string, petId: string, packageId: string) => void;
 }
 
 interface PackageCommand {
@@ -26,7 +27,8 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
   onEditAppointment, 
   onDeleteAppointment, 
   onClosePackageCommand,
-  onDeletePackageCommand
+  onDeletePackageCommand,
+  onRenewPackage
 }) => {
   const [selectedCommand, setSelectedCommand] = useState<{
     client: Client;
@@ -127,6 +129,16 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
                     </td>
                     <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
+                        {isPackageCompleted && command.client && command.pet && command.package && (
+                          <button
+                            onClick={() => onRenewPackage(command.client.id, command.pet.id, command.package.id)}
+                            className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-1"
+                            title="Renovar Pacote"
+                          >
+                            <Box size={14} />
+                            RENOVAR
+                          </button>
+                        )}
                         <button
                           onClick={() => onClosePackageCommand(command.appointments)}
                           disabled={!isPackageCompleted}

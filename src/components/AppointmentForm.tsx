@@ -9,7 +9,13 @@ interface AppointmentFormProps {
   onSave: (appointments: Appointment[], client?: Client, pets?: Pet[]) => void;
   onClose: () => void;
   appointment?: Appointment;
-  initialData?: { time?: string, date?: string };
+  initialData?: { 
+    time?: string; 
+    date?: string;
+    clientId?: string;
+    petId?: string;
+    packageId?: string;
+  };
 }
 
 export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose, appointment, initialData }) => {
@@ -17,12 +23,14 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [isNewClient, setIsNewClient] = React.useState(false);
   
   // Form State
-  const [clientId, setClientId] = React.useState(appointment?.clientId || '');
+  const [clientId, setClientId] = React.useState(appointment?.clientId || initialData?.clientId || '');
   const [clientSearchTerm, setClientSearchTerm] = React.useState(
-    appointment?.clientId ? data.clients.find(c => c.id === appointment.clientId)?.name || '' : ''
+    (appointment?.clientId || initialData?.clientId) 
+      ? data.clients.find(c => c.id === (appointment?.clientId || initialData?.clientId))?.name || '' 
+      : ''
   );
   const [isClientDropdownOpen, setIsClientDropdownOpen] = React.useState(false);
-  const [petId, setPetId] = React.useState(appointment?.petId || '');
+  const [petId, setPetId] = React.useState(appointment?.petId || initialData?.petId || '');
   const [sessions, setSessions] = React.useState(1);
   const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
   const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || data.companyInfo.workingHours?.start || '08:00']);
@@ -30,7 +38,36 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>(appointment?.customServicePrices || {});
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
-  const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId);
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId || initialData?.packageId);
+
+  // Handle initial package selection if provided in initialData
+  React.useEffect(() => {
+    if (initialData?.packageId && !appointment) {
+      const pkg = data.packages.find(p => p.id === initialData.packageId);
+      if (pkg) {
+        const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
+        setSessions(pkg.sessions);
+        
+        const newDates = [sessionDates[0]];
+        const newTimes = [sessionTimes[0]];
+        const newServices = [];
+        
+        while (newDates.length < pkg.sessions) {
+          newDates.push(new Date().toISOString().split('T')[0]);
+          newTimes.push(data.companyInfo.workingHours?.start || '08:00');
+        }
+        
+        for (let i = 0; i < pkg.sessions; i++) {
+          newServices.push([...pkgServiceNames]);
+        }
+        
+        setSessionDates(newDates);
+        setSessionTimes(newTimes);
+        setSessionServices(newServices);
+        setPrice(pkg.price);
+      }
+    }
+  }, [initialData?.packageId, appointment, data.packages, data.services]);
 
   const togglePackage = (pkg: Package) => {
     const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];

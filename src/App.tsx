@@ -487,7 +487,7 @@ export default function App() {
             onDeletePackage={handleDeletePackage}
           />
         );
-      case 'package-commands':
+    case 'package-commands':
         return (
           <PackageCommandList 
             data={data} 
@@ -498,6 +498,10 @@ export default function App() {
             onDeleteAppointment={handleDeleteAppointment}
             onClosePackageCommand={handleClosePackageCommand}
             onDeletePackageCommand={handleDeletePackageCommand}
+            onRenewPackage={(clientId, petId, packageId) => {
+              setInitialAppointmentData({ clientId, petId, packageId });
+              setIsFormOpen(true);
+            }}
           />
         );
       case 'settings':
