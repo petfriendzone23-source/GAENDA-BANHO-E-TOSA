@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Plus } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet } from '../types';
 import { cn } from '../utils/cn';
@@ -15,7 +15,7 @@ interface AppointmentListProps {
   onEditAppointment: (appointment: Appointment) => void;
   onNewAppointmentAtTime?: (time: string, date: string) => void;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
-  onOpenReport: (appointment: Appointment, serviceName: string) => void;
+  onOpenReport: (appointment: Appointment) => void;
 }
 
 export const AppointmentList: React.FC<AppointmentListProps> = ({ 
@@ -434,46 +434,21 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               >
                                 <X size={14} />
                               </button>
-                              <div className="relative group/reports">
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (app.services.length === 1) {
-                                      onOpenReport(app, app.services[0]);
-                                    }
-                                  }}
-                                  className={cn(
-                                    "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
-                                    app.reports && Object.keys(app.reports).length > 0
-                                      ? "text-green-500 hover:text-green-600 hover:bg-green-50"
-                                      : "text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                                  )}
-                                  title={app.reports && Object.keys(app.reports).length > 0 ? "Relatórios de Serviço" : "Criar Relatório de Serviço"}
-                                >
-                                  {app.reports && Object.keys(app.reports).length > 0 ? <Eye size={14} /> : <FileText size={14} />}
-                                </button>
-                                
-                                {app.services.length > 1 && (
-                                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover/reports:block bg-white rounded-xl shadow-xl border border-slate-100 min-w-[150px] z-50 overflow-hidden">
-                                    <div className="p-2 bg-slate-50 border-b border-slate-100">
-                                      <p className="text-[10px] font-bold text-slate-400 uppercase">Selecionar Serviço</p>
-                                    </div>
-                                    {app.services.map(s => (
-                                      <button
-                                        key={s}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onOpenReport(app, s);
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between gap-2"
-                                      >
-                                        <span className="truncate">{s}</span>
-                                        {app.reports?.[s] ? <Check size={12} className="text-emerald-500" /> : <Plus size={12} className="text-slate-300" />}
-                                      </button>
-                                    ))}
-                                  </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenReport(app);
+                                }}
+                                className={cn(
+                                  "p-1.5 bg-white rounded-lg shadow-sm transition-colors",
+                                  app.report
+                                    ? "text-green-500 hover:text-green-600 hover:bg-green-50"
+                                    : "text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                                 )}
-                              </div>
+                                title={app.report ? "Visualizar Relatório" : "Criar Relatório de Serviço"}
+                              >
+                                {app.report ? <Eye size={14} /> : <FileText size={14} />}
+                              </button>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -578,45 +553,18 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="relative group/reports">
-                            <button 
-                              onClick={() => {
-                                if (app.services.length === 1) {
-                                  onOpenReport(app, app.services[0]);
-                                }
-                              }}
-                              className={cn(
-                                "p-2 rounded-lg transition-all",
-                                app.reports && Object.keys(app.reports).length > 0
-                                  ? "hover:bg-green-50 text-green-500 hover:text-green-600"
-                                  : "hover:bg-blue-50 text-slate-400 hover:text-blue-600"
-                              )}
-                              title={app.reports && Object.keys(app.reports).length > 0 ? "Relatórios de Serviço" : "Criar Relatório de Serviço"}
-                            >
-                              {app.reports && Object.keys(app.reports).length > 0 ? <Eye size={18} /> : <FileText size={18} />}
-                            </button>
-
-                            {app.services.length > 1 && (
-                              <div className="absolute bottom-full right-0 mb-2 hidden group-hover/reports:block bg-white rounded-xl shadow-xl border border-slate-100 min-w-[150px] z-50 overflow-hidden">
-                                <div className="p-2 bg-slate-50 border-b border-slate-100">
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase">Selecionar Serviço</p>
-                                </div>
-                                {app.services.map(s => (
-                                  <button
-                                    key={s}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onOpenReport(app, s);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between gap-2"
-                                  >
-                                    <span className="truncate">{s}</span>
-                                    {app.reports?.[s] ? <Check size={12} className="text-emerald-500" /> : <Plus size={12} className="text-slate-300" />}
-                                  </button>
-                                ))}
-                              </div>
+                          <button 
+                            onClick={() => onOpenReport(app)}
+                            className={cn(
+                              "p-2 rounded-lg transition-all",
+                              app.report 
+                                ? "hover:bg-green-50 text-green-500 hover:text-green-600"
+                                : "hover:bg-blue-50 text-slate-400 hover:text-blue-600"
                             )}
-                          </div>
+                            title={app.report ? "Visualizar Relatório" : "Criar Relatório de Serviço"}
+                          >
+                            {app.report ? <Eye size={18} /> : <FileText size={18} />}
+                          </button>
                           <button 
                             onClick={() => setWhatsappAppointment(app)}
                             className="p-2 hover:bg-green-50 text-green-500 hover:text-green-600 rounded-lg transition-all"

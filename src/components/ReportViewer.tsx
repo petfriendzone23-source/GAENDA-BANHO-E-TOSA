@@ -7,17 +7,16 @@ import { ptBR } from 'date-fns/locale';
 
 interface ReportViewerProps {
   appointment: Appointment;
-  serviceName: string;
   data: AppData;
   onClose: () => void;
 }
 
-export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, serviceName, data, onClose }) => {
+export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, onClose }) => {
   const reportRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = React.useState(false);
   const pet = data.pets[appointment.clientId]?.find(p => p.id === appointment.petId);
   const client = data.clients.find(c => c.id === appointment.clientId);
-  const report = appointment.reports?.[serviceName] as ServiceReport;
+  const report = appointment.report as ServiceReport;
 
   const getBlob = async () => {
     if (reportRef.current === null) return null;
@@ -147,7 +146,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, service
               <header className="flex items-center justify-between pb-4 border-b-2 border-slate-100">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-800">Relatório de Serviço</h2>
-                  <p className="text-slate-500 font-medium">{serviceName}</p>
+                  <p className="text-slate-500 font-medium">{data.companyInfo.name}</p>
                 </div>
                 <PawPrint size={32} className="text-blue-400" />
               </header>

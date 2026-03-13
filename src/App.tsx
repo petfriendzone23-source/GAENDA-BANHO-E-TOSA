@@ -52,8 +52,7 @@ export default function App() {
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | undefined>(undefined);
   const [isReportFormOpen, setIsReportFormOpen] = React.useState(false);
   const [reportingAppointment, setReportingAppointment] = React.useState<Appointment | undefined>(undefined);
-  const [reportingService, setReportingService] = React.useState<string | undefined>(undefined);
-  const [viewingReport, setViewingReport] = React.useState<{ appointment: Appointment, serviceName: string } | undefined>(undefined);
+  const [viewingReport, setViewingReport] = React.useState<Appointment | undefined>(undefined);
   const [zoomLevel, setZoomLevel] = React.useState(() => {
     const saved = localStorage.getItem('zoomLevel');
     return saved ? parseInt(saved, 10) : 100;
@@ -402,25 +401,20 @@ export default function App() {
     }
   };
 
-  const handleSaveReport = async (report: ServiceReport, serviceName: string) => {
+  const handleSaveReport = async (report: ServiceReport) => {
     if (!user || !reportingAppointment) return;
     try {
       setSyncStatus('syncing');
-      const updatedReports = { ...(reportingAppointment.reports || {}), [serviceName]: report };
-      await updateDoc(doc(db, `users/${user.uid}/appointments`, reportingAppointment.id), { reports: updatedReports });
+      await updateDoc(doc(db, `users/${user.uid}/appointments`, reportingAppointment.id), { report });
       setSyncStatus('synced');
       setIsReportFormOpen(false);
-      
       // Find the updated appointment to pass to the viewer
       const updatedAppointments = data.appointments.map(a => 
-        a.id === reportingAppointment.id ? { ...a, reports: updatedReports } : a
+        a.id === reportingAppointment.id ? { ...a, report } : a
       );
       const updatedAppointment = updatedAppointments.find(a => a.id === reportingAppointment.id);
-      if (updatedAppointment) {
-        setViewingReport({ appointment: updatedAppointment, serviceName });
-      }
+      setViewingReport(updatedAppointment);
       setReportingAppointment(undefined);
-      setReportingService(undefined);
     } catch (err) {
       console.error('Error saving report:', err);
       setSyncStatus('error');
@@ -465,12 +459,11 @@ export default function App() {
               setIsFormOpen(true);
             }}
             onUpdatePet={handleUpdatePet}
-            onOpenReport={(app, serviceName) => {
-              if (app.reports && app.reports[serviceName]) {
-                setViewingReport({ appointment: app, serviceName });
+            onOpenReport={(app) => {
+              if (app.report) {
+                setViewingReport(app);
               } else {
                 setReportingAppointment(app);
-                setReportingService(serviceName);
                 setIsReportFormOpen(true);
               }
             }}
@@ -574,24 +567,21 @@ export default function App() {
         />
       )}
 
-      {isReportFormOpen && reportingAppointment && reportingService && (
+      {isReportFormOpen && reportingAppointment && (
         <ServiceReportForm 
           appointment={reportingAppointment}
-          serviceName={reportingService}
           data={data}
-          onSave={(report) => handleSaveReport(report, reportingService)}
+          onSave={handleSaveReport}
           onClose={() => {
             setIsReportFormOpen(false);
             setReportingAppointment(undefined);
-            setReportingService(undefined);
           }}
         />
       )}
 
       {viewingReport && (
         <ReportViewer 
-          appointment={viewingReport.appointment}
-          serviceName={viewingReport.serviceName}
+          appointment={viewingReport}
           data={data}
           onClose={() => setViewingReport(undefined)}
         />

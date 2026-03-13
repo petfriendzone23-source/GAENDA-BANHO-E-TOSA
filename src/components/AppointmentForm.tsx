@@ -228,8 +228,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       const existingApp = relatedAppointments[idx];
       const isEditing = !!existingApp;
       
-      // Preserve existing reports if editing
-      const updatedReports = isEditing ? existingApp.reports : undefined;
+      // Preserve existing report if editing, and update its date to match the new appointment date
+      const updatedReport = isEditing && existingApp.report ? { ...existingApp.report, date: d } : undefined;
 
       return {
         ...(isEditing ? existingApp : {}),
@@ -244,7 +244,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
         notes,
         packageId: selectedPackageId,
         customServicePrices: sessionServicePrices,
-        ...(updatedReports ? { reports: updatedReports } : {}),
+        ...(updatedReport ? { report: updatedReport } : {}),
       };
     });
 
