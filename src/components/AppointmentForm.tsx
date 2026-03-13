@@ -184,19 +184,28 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       };
     }
 
-    const appointments: Appointment[] = sessionDates.map((d, idx) => ({
-      id: idx === 0 && appointment ? appointment.id : Math.random().toString(36).substr(2, 9),
-      clientId: finalClientId,
-      petId: finalPetId,
-      services: sessionServices[idx] || [],
-      date: d,
-      time: sessionTimes[idx],
-      status: appointment?.status || 'Agendado',
-      price: idx === 0 ? price : 0, 
-      notes,
-      packageId: selectedPackageId,
-      customServicePrices: sessionServicePrices,
-    }));
+    const appointments: Appointment[] = sessionDates.map((d, idx) => {
+      const isEditing = idx === 0 && appointment;
+      
+      // Preserve existing report if editing, and update its date to match the new appointment date
+      const updatedReport = isEditing && appointment.report ? { ...appointment.report, date: d } : undefined;
+
+      return {
+        ...(isEditing ? appointment : {}),
+        id: isEditing ? appointment.id : Math.random().toString(36).substr(2, 9),
+        clientId: finalClientId,
+        petId: finalPetId,
+        services: sessionServices[idx] || [],
+        date: d,
+        time: sessionTimes[idx],
+        status: isEditing ? appointment.status : (appointment?.status || 'Agendado'),
+        price: idx === 0 ? price : 0, 
+        notes,
+        packageId: selectedPackageId,
+        customServicePrices: sessionServicePrices,
+        ...(updatedReport ? { report: updatedReport } : {}),
+      };
+    });
 
     onSave(appointments, newClient, createdPets);
   };
