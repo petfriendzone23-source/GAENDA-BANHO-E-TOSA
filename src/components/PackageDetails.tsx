@@ -13,9 +13,10 @@ interface PackageDetailsProps {
     appointments: Appointment[];
   };
   onClose: () => void;
+  onOpenReport: (appointment: Appointment) => void;
 }
 
-export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onClose }) => {
+export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onClose, onOpenReport }) => {
   const { client, pet, package: pkg, appointments } = packageInfo;
   const sortedAppointments = [...appointments].sort((a, b) => {
     const dateA = parseISO(`${a.date}T${a.time}`);
@@ -29,21 +30,6 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onC
 
   // Find shared info
   const packagePrice = appointments.find(a => a.price > 0)?.price || 0;
-  const sharedReport = appointments.find(a => !!a.report)?.report as ServiceReport | undefined;
-
-  const renderSection = (title: string, items: string[] | undefined, icon: React.ReactNode) => (
-    items && items.length > 0 && (
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          {icon}
-          <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wide">{title}</h4>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {items.map(item => <span key={item} className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-full">{item}</span>)}
-        </div>
-      </div>
-    )
-  );
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -124,6 +110,24 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onC
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    {app.status === 'Concluído' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenReport(app);
+                        }}
+                        className={cn(
+                          "p-2 rounded-lg transition-all flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider",
+                          app.report 
+                            ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" 
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        )}
+                        title={app.report ? "Ver Relatório" : "Criar Relatório"}
+                      >
+                        {app.report ? <Sparkles size={14} /> : <ScissorsIcon size={14} />}
+                        {app.report ? "Relatório" : "Relatório"}
+                      </button>
+                    )}
                     <span className="font-bold text-slate-900 text-sm">R$ {packagePrice.toFixed(2)}</span>
                     <div className={cn(
                       "px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1",
@@ -141,57 +145,6 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onC
               ))}
             </div>
           </div>
-
-          {/* Shared Service Report */}
-          {sharedReport && (
-            <div className="bg-indigo-50/50 rounded-2xl border border-indigo-100 p-6 space-y-6">
-              <div className="flex items-center gap-3 border-b border-indigo-100 pb-4">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                  <Box size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Nota de Serviço Única</h3>
-                  <p className="text-xs text-slate-500">Informações compartilhadas entre todas as sessões</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {renderSection('Pele e Pelagem', sharedReport.skinAndCoat, <Sparkles size={14} className="text-indigo-500" />)}
-                  {renderSection('Ouvidos', sharedReport.ears, <DogIcon size={14} className="text-indigo-500" />)}
-                  {renderSection('Unhas', sharedReport.nails, <ScissorsIcon size={14} className="text-indigo-500" />)}
-                </div>
-                <div className="space-y-4">
-                  {renderSection('Ectoparasitas', sharedReport.ectoparasites, <Box size={14} className="text-indigo-500" />)}
-                  {renderSection('Produtos', sharedReport.productsUsed, <Droplets size={14} className="text-indigo-500" />)}
-                  
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <HeartPulse size={14} className="text-indigo-500" />
-                      <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wide">Comportamento</h4>
-                    </div>
-                    <div className="bg-white/50 rounded-xl p-3 border border-indigo-100/50 text-xs space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Estresse:</span>
-                        <span className="font-bold text-slate-700">{sharedReport.stressLevel}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Aceitação:</span>
-                        <span className="font-bold text-slate-700">{sharedReport.waterAndDryerAcceptance}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {sharedReport.notes && (
-                <div className="bg-white/50 rounded-xl p-4 border border-indigo-100/50">
-                  <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-2">Observações Gerais</h4>
-                  <p className="text-sm text-slate-600 leading-relaxed">{sharedReport.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
         
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">

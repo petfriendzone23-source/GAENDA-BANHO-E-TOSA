@@ -12,6 +12,7 @@ interface PackageCommandListProps {
   onClosePackageCommand: (appointments: Appointment[]) => void;
   onDeletePackageCommand: (appointments: Appointment[]) => void;
   onRenewPackage: (clientId: string, petId: string, packageId: string) => void;
+  onOpenReport: (appointment: Appointment) => void;
 }
 
 interface PackageCommand {
@@ -28,7 +29,8 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
   onDeleteAppointment, 
   onClosePackageCommand,
   onDeletePackageCommand,
-  onRenewPackage
+  onRenewPackage,
+  onOpenReport
 }) => {
   const [selectedCommand, setSelectedCommand] = useState<{
     client: Client;
@@ -245,6 +247,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
         <PackageDetails 
           packageInfo={selectedCommand} 
           onClose={() => setSelectedCommand(null)} 
+          onOpenReport={onOpenReport}
         />
       )}
     </div>

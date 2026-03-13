@@ -508,6 +508,14 @@ export default function App() {
               setInitialAppointmentData({ clientId, petId, packageId });
               setIsFormOpen(true);
             }}
+            onOpenReport={(app) => {
+              if (app.report) {
+                setViewingReport(app);
+              } else {
+                setReportingAppointment(app);
+                setIsReportFormOpen(true);
+              }
+            }}
           />
         );
       case 'settings':
