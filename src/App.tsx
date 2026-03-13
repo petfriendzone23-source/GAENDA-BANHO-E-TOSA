@@ -203,12 +203,18 @@ export default function App() {
         const { id, ...appData } = app;
         const dataToSave = cleanData({ ...appData, userId: user.uid });
         
-        if (editingAppointment && app.id === editingAppointment.id) {
+        // Check if appointment already exists in our local data
+        const exists = data.appointments.some(existing => existing.id === app.id);
+        
+        if (exists) {
           // Update existing
           await setDoc(doc(db, `users/${user.uid}/appointments`, app.id), dataToSave);
         } else {
-          // Add new - Using addDoc as requested
-          await addDoc(collection(db, `users/${user.uid}/appointments`), dataToSave);
+          // Add new
+          // If it has an ID from the form, we can use setDoc to keep it, 
+          // or use addDoc if we want Firestore to generate one.
+          // The form generates IDs, so let's use setDoc to preserve them.
+          await setDoc(doc(db, `users/${user.uid}/appointments`, app.id), dataToSave);
         }
       }
 

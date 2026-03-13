@@ -31,10 +31,46 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   );
   const [isClientDropdownOpen, setIsClientDropdownOpen] = React.useState(false);
   const [petId, setPetId] = React.useState(appointment?.petId || initialData?.petId || '');
-  const [sessions, setSessions] = React.useState(1);
-  const [sessionDates, setSessionDates] = React.useState<string[]>([appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]);
-  const [sessionTimes, setSessionTimes] = React.useState<string[]>([appointment?.time || initialData?.time || data.companyInfo.workingHours?.start || '08:00']);
-  const [sessionServices, setSessionServices] = React.useState<string[][]>([appointment?.services || []]);
+
+  // Find related appointments if editing a package
+  const relatedAppointments = React.useMemo(() => {
+    if (appointment?.packageId) {
+      return data.appointments
+        .filter(a => 
+          a.packageId === appointment.packageId && 
+          a.clientId === appointment.clientId && 
+          a.petId === appointment.petId
+        )
+        .sort((a, b) => {
+          const dateA = new Date(`${a.date}T${a.time}`).getTime();
+          const dateB = new Date(`${b.date}T${b.time}`).getTime();
+          return dateA - dateB;
+        });
+    }
+    return appointment ? [appointment] : [];
+  }, [appointment, data.appointments]);
+
+  const [sessions, setSessions] = React.useState(relatedAppointments.length || 1);
+  const [sessionIds, setSessionIds] = React.useState<string[]>(
+    relatedAppointments.length > 0 
+      ? relatedAppointments.map(a => a.id) 
+      : [appointment?.id || Math.random().toString(36).substr(2, 9)]
+  );
+  const [sessionDates, setSessionDates] = React.useState<string[]>(
+    relatedAppointments.length > 0 
+      ? relatedAppointments.map(a => a.date) 
+      : [appointment?.date || initialData?.date || new Date().toISOString().split('T')[0]]
+  );
+  const [sessionTimes, setSessionTimes] = React.useState<string[]>(
+    relatedAppointments.length > 0 
+      ? relatedAppointments.map(a => a.time) 
+      : [appointment?.time || initialData?.time || data.companyInfo.workingHours?.start || '08:00']
+  );
+  const [sessionServices, setSessionServices] = React.useState<string[][]>(
+    relatedAppointments.length > 0 
+      ? relatedAppointments.map(a => a.services) 
+      : [appointment?.services || []]
+  );
   const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>(appointment?.customServicePrices || {});
   const [price, setPrice] = React.useState(appointment?.price || 40);
   const [notes, setNotes] = React.useState(appointment?.notes || '');
@@ -77,6 +113,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     
     if (allSelected) {
       setSessions(1);
+      setSessionIds([sessionIds[0]]);
       setSessionDates([sessionDates[0]]);
       setSessionTimes([sessionTimes[0]]);
       setSessionServices([[]]);
@@ -84,11 +121,13 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     } else {
       setSessions(pkg.sessions);
       
+      const newIds = [...sessionIds];
       const newDates = [...sessionDates];
       const newTimes = [...sessionTimes];
       const newServices = [...sessionServices];
       
       while (newDates.length < pkg.sessions) {
+        newIds.push(Math.random().toString(36).substr(2, 9));
         newDates.push(new Date().toISOString().split('T')[0]);
         newTimes.push(data.companyInfo.workingHours?.start || '08:00');
         newServices.push([]);
@@ -97,6 +136,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       // Initialize all sessions with the package services (user can then prune them)
       const initializedServices = newServices.slice(0, pkg.sessions).map(() => [...pkgServiceNames]);
       
+      setSessionIds(newIds.slice(0, pkg.sessions));
       setSessionDates(newDates.slice(0, pkg.sessions));
       setSessionTimes(newTimes.slice(0, pkg.sessions));
       setSessionServices(initializedServices);
@@ -185,20 +225,21 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     }
 
     const appointments: Appointment[] = sessionDates.map((d, idx) => {
-      const isEditing = idx === 0 && appointment;
+      const existingApp = relatedAppointments[idx];
+      const isEditing = !!existingApp;
       
       // Preserve existing report if editing, and update its date to match the new appointment date
-      const updatedReport = isEditing && appointment.report ? { ...appointment.report, date: d } : undefined;
+      const updatedReport = isEditing && existingApp.report ? { ...existingApp.report, date: d } : undefined;
 
       return {
-        ...(isEditing ? appointment : {}),
-        id: isEditing ? appointment.id : Math.random().toString(36).substr(2, 9),
+        ...(isEditing ? existingApp : {}),
+        id: sessionIds[idx] || Math.random().toString(36).substr(2, 9),
         clientId: finalClientId,
         petId: finalPetId,
         services: sessionServices[idx] || [],
         date: d,
         time: sessionTimes[idx],
-        status: isEditing ? appointment.status : (appointment?.status || 'Agendado'),
+        status: isEditing ? existingApp.status : (appointment?.status || 'Agendado'),
         price: idx === 0 ? price : 0, 
         notes,
         packageId: selectedPackageId,

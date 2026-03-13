@@ -42,8 +42,8 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
   // Group appointments by package instance
   const packageCommands = data.appointments.reduce((acc, app) => {
     if (app.packageId) {
-      // A unique key for each package instance for a client's pet
-      const commandKey = `${app.clientId}-${app.petId}-${app.packageId}`;
+      // Use packageInstanceId if available, otherwise fallback to a composite key for legacy data
+      const commandKey = app.packageInstanceId || `${app.clientId}-${app.petId}-${app.packageId}`;
       if (!acc[commandKey]) {
         const pkg = data.packages.find(p => p.id === app.packageId);
         const client = data.clients.find(c => c.id === app.clientId);
