@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Appointment, ServiceReport, AppData } from '../types';
-import { X, Save, FileText, Box } from 'lucide-react';
+import { X, Save, FileText } from 'lucide-react';
 import { MultiSelect } from './MultiSelect';
 
 interface ServiceReportFormProps {
   appointment: Appointment;
+  serviceName: string;
   data: AppData;
   onSave: (report: ServiceReport) => void;
   onClose: () => void;
@@ -28,8 +29,8 @@ const reportOptions = {
   ],
 };
 
-export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointment, data, onSave, onClose }) => {
-  const [report, setReport] = useState<ServiceReport>(appointment.report || {
+export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointment, serviceName, data, onSave, onClose }) => {
+  const [report, setReport] = useState<ServiceReport>(appointment.reports?.[serviceName] || {
     skinAndCoat: [],
     ears: [],
     nails: [],
@@ -60,7 +61,7 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-lg">Relatório do {pet?.name}</h3>
-              <p className="text-sm text-slate-500">Detalhes do serviço e observações</p>
+              <p className="text-sm text-slate-500">{serviceName}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
@@ -69,14 +70,6 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
         </div>
 
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-          {appointment.packageId && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center gap-3 text-amber-800 text-sm font-medium">
-              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 shrink-0">
-                <Box size={18} />
-              </div>
-              <p>Este agendamento faz parte de um pacote. As informações desta nota serão aplicadas automaticamente a todas as sessões deste pacote.</p>
-            </div>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div>
               <h4 className="font-bold text-slate-800 mb-3">Relatório Sobre</h4>

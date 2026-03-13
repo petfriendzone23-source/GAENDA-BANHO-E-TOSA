@@ -36,9 +36,8 @@ export interface Appointment {
   price: number;
   notes?: string;
   packageId?: string;
-  packageInstanceId?: string;
   customServicePrices?: Record<string, number>;
-  report?: ServiceReport;
+  reports?: Record<string, ServiceReport>;
 }
 
 export interface Service {
