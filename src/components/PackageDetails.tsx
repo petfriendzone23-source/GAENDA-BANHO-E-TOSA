@@ -1,6 +1,6 @@
 import React from 'react';
 import { Appointment, Client, Pet, Package, ServiceReport } from '../types';
-import { X, Calendar, CheckCircle, Clock, AlertCircle, Box, Sparkles, Droplets, Scissors as ScissorsIcon, HeartPulse, Dog as DogIcon } from 'lucide-react';
+import { X, Calendar, CheckCircle, Clock, AlertCircle, Box, Sparkles, Droplets, Scissors as ScissorsIcon, HeartPulse, Dog as DogIcon, FileText } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../utils/cn';
@@ -109,8 +109,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onC
                       <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {app.status === 'Concluído' && (
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -119,16 +118,15 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ packageInfo, onC
                         className={cn(
                           "p-2 rounded-lg transition-all flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider",
                           app.report 
-                            ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" 
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" 
+                            : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                         )}
                         title={app.report ? "Ver Relatório" : "Criar Relatório"}
                       >
-                        {app.report ? <Sparkles size={14} /> : <ScissorsIcon size={14} />}
+                        {app.report ? <Sparkles size={14} /> : <FileText size={14} />}
                         {app.report ? "Relatório" : "Relatório"}
                       </button>
-                    )}
-                    <span className="font-bold text-slate-900 text-sm">R$ {packagePrice.toFixed(2)}</span>
+                      <span className="font-bold text-slate-900 text-sm">R$ {packagePrice.toFixed(2)}</span>
                     <div className={cn(
                       "px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1",
                       app.status === 'Concluído' ? "bg-emerald-100 text-emerald-700" : 

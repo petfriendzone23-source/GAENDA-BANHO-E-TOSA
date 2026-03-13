@@ -1,23 +1,23 @@
 import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { Appointment, AppData, ServiceReport } from '../types';
-import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors, Share2, Copy, CheckCircle2, MessageCircle } from 'lucide-react';
+import { X, Download, Dog, PawPrint, Sparkles, Droplets, Wind, HeartPulse, Scissors, Share2, Copy, CheckCircle2, MessageCircle, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ReportViewerProps {
   appointment: Appointment;
-  serviceName: string;
   data: AppData;
   onClose: () => void;
+  onEdit?: () => void;
 }
 
-export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, serviceName, data, onClose }) => {
+export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, onClose, onEdit }) => {
   const reportRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = React.useState(false);
   const pet = data.pets[appointment.clientId]?.find(p => p.id === appointment.petId);
   const client = data.clients.find(c => c.id === appointment.clientId);
-  const report = appointment.reports?.[serviceName] as ServiceReport;
+  const report = appointment.report as ServiceReport;
 
   const getBlob = async () => {
     if (reportRef.current === null) return null;
@@ -132,13 +132,24 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, service
   );
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[80] p-4 backdrop-blur-sm">
       <div className="bg-slate-50 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in-0 zoom-in-95">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
           <h3 className="font-bold text-slate-800">Visualizar Relatório</h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-            <X size={18} className="text-slate-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="p-2 hover:bg-blue-50 text-blue-600 rounded-full transition-colors"
+                title="Editar Relatório"
+              >
+                <Edit size={18} />
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+              <X size={18} className="text-slate-500" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto bg-white">
@@ -147,7 +158,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, service
               <header className="flex items-center justify-between pb-4 border-b-2 border-slate-100">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-800">Relatório de Serviço</h2>
-                  <p className="text-slate-500 font-medium">{serviceName}</p>
+                  <p className="text-slate-500 font-medium">{data.companyInfo.name}</p>
                 </div>
                 <PawPrint size={32} className="text-blue-400" />
               </header>

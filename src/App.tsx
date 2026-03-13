@@ -408,11 +408,9 @@ export default function App() {
       await updateDoc(doc(db, `users/${user.uid}/appointments`, reportingAppointment.id), { report });
       setSyncStatus('synced');
       setIsReportFormOpen(false);
-      // Find the updated appointment to pass to the viewer
-      const updatedAppointments = data.appointments.map(a => 
-        a.id === reportingAppointment.id ? { ...a, report } : a
-      );
-      const updatedAppointment = updatedAppointments.find(a => a.id === reportingAppointment.id);
+      
+      // Find the updated appointment in the current data
+      const updatedAppointment = { ...reportingAppointment, report };
       setViewingReport(updatedAppointment);
       setReportingAppointment(undefined);
     } catch (err) {
@@ -589,9 +587,14 @@ export default function App() {
 
       {viewingReport && (
         <ReportViewer 
-          appointment={viewingReport}
+          appointment={viewingReport} 
+          onClose={() => setViewingReport(undefined)} 
           data={data}
-          onClose={() => setViewingReport(undefined)}
+          onEdit={() => {
+            setReportingAppointment(viewingReport);
+            setViewingReport(undefined);
+            setIsReportFormOpen(true);
+          }}
         />
       )}
     </Layout>

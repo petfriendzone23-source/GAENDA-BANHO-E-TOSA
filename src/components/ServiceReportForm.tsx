@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Appointment, ServiceReport, AppData } from '../types';
-import { X, Save, FileText } from 'lucide-react';
+import { X, Save, FileText, Box } from 'lucide-react';
 import { MultiSelect } from './MultiSelect';
 
 interface ServiceReportFormProps {
   appointment: Appointment;
-  serviceName: string;
   data: AppData;
   onSave: (report: ServiceReport) => void;
   onClose: () => void;
@@ -29,8 +28,8 @@ const reportOptions = {
   ],
 };
 
-export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointment, serviceName, data, onSave, onClose }) => {
-  const [report, setReport] = useState<ServiceReport>(appointment.reports?.[serviceName] || {
+export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointment, data, onSave, onClose }) => {
+  const [report, setReport] = useState<ServiceReport>(appointment.report || {
     skinAndCoat: [],
     ears: [],
     nails: [],
@@ -52,7 +51,7 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[80] p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-3">
@@ -61,7 +60,7 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-lg">Relatório do {pet?.name}</h3>
-              <p className="text-sm text-slate-500">{serviceName}</p>
+              <p className="text-sm text-slate-500">Detalhes do serviço e observações</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
@@ -70,6 +69,14 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
         </div>
 
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {appointment.packageId && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 text-blue-800 text-sm font-medium">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                <Box size={18} />
+              </div>
+              <p>Este agendamento faz parte de um pacote. O relatório será salvo individualmente para esta sessão.</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div>
               <h4 className="font-bold text-slate-800 mb-3">Relatório Sobre</h4>
