@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2, LogOut, Clock } from 'lucide-react';
+import { Minus, Plus, Type, MessageSquare, Trash2, Edit2, Save, X, Building2, LogOut, Clock, Upload, Image as ImageIcon } from 'lucide-react';
 import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -26,6 +26,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const [newTemplate, setNewTemplate] = React.useState<Partial<WhatsAppTemplate>>({ title: '', message: '' });
   const [companyInfo, setCompanyInfo] = React.useState<CompanyInfo>(data.companyInfo);
   const [isEditingCompany, setIsEditingCompany] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleIncrease = () => {
     setZoomLevel(Math.min(zoomLevel + 6.25, 150)); // Max 150%
@@ -56,6 +57,21 @@ export const Settings: React.FC<SettingsProps> = ({
     setIsEditingCompany(false);
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for base64
+        alert('A imagem é muito grande. Por favor, escolha uma imagem menor que 1MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyInfo({ ...companyInfo, logoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDeleteTemplate = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
       onDeleteTemplate(id);
@@ -83,6 +99,66 @@ export const Settings: React.FC<SettingsProps> = ({
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-slate-900">Configurações</h2>
         <p className="text-slate-500">Personalize sua experiência no aplicativo.</p>
+      </div>
+
+      {/* Logo Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <ImageIcon size={20} className="text-indigo-600" />
+            Logotipo da Empresa
+          </h3>
+          <p className="text-slate-500 text-sm mt-1">
+            Este logo aparecerá no cabeçalho e na tela de login.
+          </p>
+        </div>
+        <div className="p-8 flex flex-col items-center gap-6">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+              {companyInfo.logoUrl || data.companyInfo.logoUrl ? (
+                <img 
+                  src={companyInfo.logoUrl || data.companyInfo.logoUrl} 
+                  alt="Logo" 
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <img 
+                  src="/logo.png" 
+                  alt="Logo Padrão" 
+                  className="w-full h-full object-contain opacity-50"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+            </div>
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-2xl"
+            >
+              <Upload size={24} />
+              <span className="text-xs font-bold mt-1">Alterar</span>
+            </button>
+          </div>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleLogoUpload} 
+            accept="image/*" 
+            className="hidden" 
+          />
+          {(companyInfo.logoUrl !== data.companyInfo.logoUrl) && (
+            <button 
+              onClick={handleSaveCompanyInfo}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <Save size={18} />
+              Salvar Novo Logo
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

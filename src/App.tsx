@@ -60,6 +60,13 @@ export default function App() {
 
   const [initialAppointmentData, setInitialAppointmentData] = React.useState<{time?: string, date?: string}>({});
 
+  // Cache logoUrl in localStorage for AuthScreen
+  React.useEffect(() => {
+    if (data.companyInfo.logoUrl) {
+      localStorage.setItem('cachedLogoUrl', data.companyInfo.logoUrl);
+    }
+  }, [data.companyInfo.logoUrl]);
+
   // Apply zoom level
   React.useEffect(() => {
     document.documentElement.style.fontSize = `${zoomLevel}%`;
@@ -545,7 +552,7 @@ export default function App() {
   }
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} syncStatus={syncStatus}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} syncStatus={syncStatus} logoUrl={data.companyInfo.logoUrl}>
       {renderContent()}
       
       {isFormOpen && (

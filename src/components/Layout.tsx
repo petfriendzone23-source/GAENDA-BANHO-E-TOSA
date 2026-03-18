@@ -8,9 +8,10 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   syncStatus: 'synced' | 'syncing' | 'error' | 'offline';
+  logoUrl?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, syncStatus }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, syncStatus, logoUrl }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const menuItems = [
@@ -29,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-10">
-          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <img src={logoUrl || "/logo.png"} alt="Logo" className="w-10 h-10 object-contain" referrerPolicy="no-referrer" />
           <h1 className="text-xl font-bold tracking-tight">Pet Friends Zone</h1>
         </div>
 
@@ -90,7 +91,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Mobile Header */}
       <header className="md:hidden bg-white border-bottom border-slate-200 p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          <img src={logoUrl || "/logo.png"} alt="Logo" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
           <span className="font-bold text-lg">Pet Friends Zone</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-600">

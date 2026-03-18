@@ -66,6 +66,7 @@ export interface CompanyInfo {
   name: string;
   address: string;
   phone: string;
+  logoUrl?: string;
   workingHours: {
     start: string; // HH:mm
     end: string;   // HH:mm
