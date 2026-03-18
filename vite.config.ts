@@ -12,27 +12,27 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        includeAssets: ['logo.png'],
         manifest: {
-          name: 'PetGroom - Gestão de Pet Shop',
-          short_name: 'PetGroom',
-          description: 'Sistema de gestão para Pet Shops e Banho e Tosa',
-          theme_color: '#4f46e5',
+          name: 'Pet Friends Zone - Agendamento',
+          short_name: 'PetFriends',
+          description: 'Sistema moderno e completo para agendamento de banho e tosa para pet shops.',
+          theme_color: '#00bcd4',
           background_color: '#ffffff',
           display: 'standalone',
           icons: [
             {
-              src: 'https://picsum.photos/192/192',
+              src: 'logo.png',
               sizes: '192x192',
               type: 'image/png'
             },
             {
-              src: 'https://picsum.photos/512/512',
+              src: 'logo.png',
               sizes: '512x512',
               type: 'image/png'
             },
             {
-              src: 'https://picsum.photos/512/512',
+              src: 'logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable'

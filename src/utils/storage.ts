@@ -34,7 +34,7 @@ const initialData: AppData = {
   ],
   whatsappTemplates: [],
   companyInfo: {
-    name: 'PetGroom Serviços',
+    name: 'Pet Friends Zone',
     address: 'Rua Fictícia, 123 - Cidade, Estado',
     phone: '(11) 98765-4321',
     workingHours: {

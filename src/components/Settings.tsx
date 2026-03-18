@@ -125,7 +125,7 @@ export const Settings: React.FC<SettingsProps> = ({
           <div className="w-full max-w-md bg-slate-50 p-4 rounded-xl border border-slate-100">
             <p className="text-center text-slate-600">
               Exemplo de texto: <br/>
-              <span className="font-bold text-indigo-600">PetGroom</span> ajuda você a gerenciar seu negócio.
+              <span className="font-bold text-indigo-600">Pet Friends Zone</span> ajuda você a gerenciar seu negócio.
             </p>
           </div>
         </div>
@@ -437,7 +437,7 @@ export const Settings: React.FC<SettingsProps> = ({
           Sair do Sistema
         </button>
         <p className="text-center text-slate-400 text-xs mt-4">
-          PetGroom v1.0.0 • Versão PWA instalável
+          Pet Friends Zone v1.0.0 • Versão PWA instalável
         </p>
       </div>
     </div>

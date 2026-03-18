@@ -46,10 +46,8 @@ const AuthScreen: React.FC = () => {
         className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden border border-slate-100"
       >
         <div className="p-8 bg-slate-900 text-white text-center">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/20">
-            <Lock size={32} />
-          </div>
-          <h1 className="text-2xl font-bold">PetGroom</h1>
+          <img src="/logo.png" alt="Logo" className="w-20 h-20 mx-auto mb-4 object-contain" />
+          <h1 className="text-2xl font-bold">Pet Friends Zone</h1>
           <p className="text-slate-400 text-sm mt-1">Gestão de Pet Shop e Banho e Tosa</p>
         </div>
 
