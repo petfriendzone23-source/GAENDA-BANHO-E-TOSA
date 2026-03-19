@@ -348,6 +348,63 @@ export default function App() {
     }
   };
 
+  const handleRestoreBackup = async (restoredData: AppData) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      
+      // 1. Restore Company Info
+      if (restoredData.companyInfo) {
+        await setDoc(doc(db, `users/${user.uid}/settings`, 'companyInfo'), restoredData.companyInfo);
+      }
+
+      // 2. Restore Collections
+      const collectionsToRestore = [
+        { key: 'appointments', path: 'appointments' },
+        { key: 'clients', path: 'clients' },
+        { key: 'services', path: 'services' },
+        { key: 'packages', path: 'packages' },
+        { key: 'whatsappTemplates', path: 'whatsappTemplates' },
+      ];
+
+      for (const coll of collectionsToRestore) {
+        const items = restoredData[coll.key as keyof AppData] as any[];
+        if (Array.isArray(items)) {
+          for (const item of items) {
+            const { id, ...itemData } = item;
+            if (id) {
+              await setDoc(doc(db, `users/${user.uid}/${coll.path}`, id), cleanData(itemData));
+            }
+          }
+        }
+      }
+
+      // 3. Restore Pets
+      if (restoredData.pets) {
+        for (const clientId in restoredData.pets) {
+          const pets = restoredData.pets[clientId];
+          if (Array.isArray(pets)) {
+            for (const pet of pets) {
+              const { id, ...petData } = pet;
+              if (id) {
+                await setDoc(doc(db, `users/${user.uid}/pets`, id), cleanData({ ...petData, clientId }));
+              }
+            }
+          }
+        }
+      }
+
+      setSyncStatus('synced');
+      // We don't strictly need to reload as onSnapshot will update, 
+      // but it helps clear any stale local state if needed.
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err) {
+      console.error('Error restoring backup:', err);
+      setSyncStatus('error');
+      throw err;
+    }
+  };
+
   const handleSaveTemplate = async (template: WhatsAppTemplate) => {
     if (!user) return;
     try {
@@ -532,6 +589,7 @@ export default function App() {
             onSaveData={handleSaveData}
             onSaveTemplate={handleSaveTemplate}
             onDeleteTemplate={handleDeleteTemplate}
+            onRestoreBackup={handleRestoreBackup}
           />
         );
       default:
