@@ -7,6 +7,7 @@ import { BestClients } from './components/BestClients';
 import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
 import { Settings } from './components/Settings';
+import { Performance } from './components/Performance';
 import { AppointmentForm } from './components/AppointmentForm';
 import { ClientForm } from './components/ClientForm';
 import { ReportViewer } from './components/ReportViewer';
@@ -545,6 +546,8 @@ export default function App() {
         );
       case 'best-clients':
         return <BestClients data={data} />;
+      case 'performance':
+        return <Performance data={data} />;
       case 'services':
         return (
           <ServiceList 

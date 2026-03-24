@@ -34,7 +34,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose, initial
       id: clientId, 
       name: clientName, 
       phones: clientPhones.filter(p => p.trim() !== ''), 
-      addresses: clientAddresses.filter(a => a.trim() !== '') 
+      addresses: clientAddresses.filter(a => a.trim() !== ''),
+      createdAt: initialData?.client.createdAt || new Date().toISOString()
     };
 
     onSave(newClient, createdPets);

@@ -12,6 +12,7 @@ export interface Client {
   phones: string[];
   addresses: string[];
   email?: string;
+  createdAt?: string; // ISO string
 }
 
 export interface ServiceReport {
