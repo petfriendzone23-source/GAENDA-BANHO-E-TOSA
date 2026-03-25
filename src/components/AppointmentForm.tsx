@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search, ChevronDown } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search, ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
@@ -270,6 +270,53 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8">
           {/* Step 1: Client & Pet */}
+          {appointment?.clientChoices && (
+            <section className="space-y-4 p-6 rounded-3xl bg-indigo-50 border border-indigo-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Sparkles size={80} className="text-indigo-600" />
+              </div>
+              
+              <div className="flex items-center gap-2 text-indigo-600 font-bold mb-4 relative z-10">
+                <Sparkles size={20} />
+                <h3>Escolhas do Cliente</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                {['bandana', 'bow', 'perfume'].map((type) => {
+                  const choiceId = appointment.clientChoices?.[type as keyof typeof appointment.clientChoices];
+                  const product = data.products.find(p => p.id === choiceId);
+                  
+                  if (!product) return null;
+
+                  return (
+                    <div key={type} className="bg-white p-3 rounded-2xl border border-indigo-100 shadow-sm flex flex-col items-center text-center gap-2">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100">
+                        {product.imageUrl ? (
+                          <img 
+                            src={product.imageUrl} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            <Box size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                          {type === 'bandana' ? 'Bandana' : type === 'bow' ? 'Laço' : 'Perfume'}
+                        </p>
+                        <p className="text-xs font-bold text-slate-700">{product.name}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-indigo-600 font-bold mb-4">
               <User size={20} />

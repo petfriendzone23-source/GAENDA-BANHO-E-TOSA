@@ -8,11 +8,13 @@ import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
 import { Settings } from './components/Settings';
 import { Performance } from './components/Performance';
+import { ProductManagement } from './components/ProductManagement';
+import { ClientChoiceView } from './components/ClientChoiceView';
 import { AppointmentForm } from './components/AppointmentForm';
 import { ClientForm } from './components/ClientForm';
 import { ReportViewer } from './components/ReportViewer';
 import { ServiceReportForm } from './components/ServiceReportForm';
-import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate, ServiceReport } from './types';
+import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate, ServiceReport, Product } from './types';
 import { loadData, saveData } from './utils/storage';
 import { auth, db } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -107,6 +109,7 @@ export default function App() {
           setupListener('services', 'services');
           setupListener('packages', 'packages');
           setupListener('whatsappTemplates', 'whatsappTemplates');
+          setupListener('products', 'products');
 
           // Special listener for Pets (Record structure)
           try {
@@ -424,6 +427,36 @@ export default function App() {
     }
   };
 
+  const handleSaveProduct = async (product: Partial<Product>) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      const { id, ...productData } = product;
+      const dataToSave = cleanData(productData);
+      if (id && !id.startsWith('temp_')) {
+        await setDoc(doc(db, `users/${user.uid}/products`, id), dataToSave);
+      } else {
+        await addDoc(collection(db, `users/${user.uid}/products`), dataToSave);
+      }
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error saving product:', err);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!user) return;
+    try {
+      setSyncStatus('syncing');
+      await deleteDoc(doc(db, `users/${user.uid}/products`, id));
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      setSyncStatus('error');
+    }
+  };
+
   const handleDeleteTemplate = async (id: string) => {
     if (!user) return;
     try {
@@ -530,6 +563,7 @@ export default function App() {
                 setIsReportFormOpen(true);
               }
             }}
+            adminUid={user?.uid}
           />
         );
       case 'clients':
@@ -548,6 +582,14 @@ export default function App() {
         return <BestClients data={data} />;
       case 'performance':
         return <Performance data={data} />;
+      case 'products':
+        return (
+          <ProductManagement 
+            data={data} 
+            onSave={handleSaveProduct} 
+            onDelete={handleDeleteProduct} 
+          />
+        );
       case 'services':
         return (
           <ServiceList 
@@ -609,6 +651,14 @@ export default function App() {
   }
 
   if (!user) {
+    const params = new URLSearchParams(window.location.search);
+    const choiceId = params.get('choice');
+    const adminUid = params.get('uid');
+
+    if (choiceId && adminUid) {
+      return <ClientChoiceView appointmentId={choiceId} adminUid={adminUid} />;
+    }
+
     return <AuthScreen />;
   }
 

@@ -1,9 +1,9 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Share2, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppData, Appointment, Client, Pet } from '../types';
+import { AppData, Appointment, Client, Pet, Product } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
 import { WhatsAppModal } from './WhatsAppModal';
@@ -16,6 +16,7 @@ interface AppointmentListProps {
   onNewAppointmentAtTime?: (time: string, date: string) => void;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
   onOpenReport: (appointment: Appointment) => void;
+  adminUid?: string;
 }
 
 export const AppointmentList: React.FC<AppointmentListProps> = ({ 
@@ -25,7 +26,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   onEditAppointment, 
   onNewAppointmentAtTime, 
   onUpdatePet, 
-  onOpenReport
+  onOpenReport,
+  adminUid
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<Appointment['status'] | 'Todos'>('Todos');
@@ -128,6 +130,19 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
     const currentSessionNumber = (index % totalSessions) + 1;
     
     return `${currentSessionNumber}/${totalSessions}`;
+  };
+
+  const handleShareChoiceLink = (appointment: Appointment) => {
+    if (!adminUid) return;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const link = `${baseUrl}?choice=${appointment.id}&uid=${adminUid}`;
+    
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Link de escolha copiado para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar link:', err);
+      alert('Erro ao copiar link. Tente novamente.');
+    });
   };
 
   return (
@@ -336,7 +351,12 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                 </div>
                               </div>
                               <div className="text-right flex flex-col items-end gap-1">
-                                <p className="text-xs font-black text-slate-900">{app.time}</p>
+                                <div className="flex items-center gap-1">
+                                  {app.clientChoices && (
+                                    <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+                                  )}
+                                  <p className="text-xs font-black text-slate-900">{app.time}</p>
+                                </div>
                                 <div className="flex items-center gap-1">
                                   {progress && (
                                     <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-md border border-purple-200">
@@ -459,6 +479,16 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               >
                                 <Edit2 size={14} />
                               </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareChoiceLink(app);
+                                }}
+                                className="p-1.5 bg-white rounded-lg shadow-sm text-indigo-500 hover:text-indigo-700 transition-colors"
+                                title="Compartilhar Link de Escolha"
+                              >
+                                <Share2 size={14} />
+                              </button>
                             </div>
                           </motion.div>
                         );
@@ -528,7 +558,12 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="font-medium text-slate-900">{format(parseISO(app.date), "dd/MM/yyyy")}</p>
-                          <p className="text-slate-500">{app.time}</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-slate-500">{app.time}</p>
+                            {app.clientChoices && (
+                              <Sparkles size={12} className="text-indigo-500 animate-pulse" />
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -611,6 +646,13 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                             )}
                           >
                             <X size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleShareChoiceLink(app)}
+                            className="p-2 hover:bg-indigo-50 text-indigo-500 hover:text-indigo-700 rounded-lg transition-all"
+                            title="Compartilhar Link de Escolha"
+                          >
+                            <Share2 size={18} />
                           </button>
                           <button 
                             onClick={() => onDeleteAppointment(app.id)}

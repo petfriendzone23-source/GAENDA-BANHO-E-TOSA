@@ -26,6 +26,12 @@ export interface ServiceReport {
   notes?: string;
 }
 
+export interface ClientChoices {
+  bandanaId?: string;
+  bowId?: string;
+  perfumeId?: string;
+}
+
 export interface Appointment {
   id: string;
   clientId: string;
@@ -39,6 +45,7 @@ export interface Appointment {
   packageId?: string;
   customServicePrices?: Record<string, number>;
   reports?: Record<string, ServiceReport>;
+  clientChoices?: ClientChoices;
 }
 
 export interface Service {
@@ -74,6 +81,14 @@ export interface CompanyInfo {
   };
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  type: 'bandana' | 'laço' | 'perfume';
+  imageUrl?: string;
+  isAvailable: boolean;
+}
+
 export interface AppData {
   appointments: Appointment[];
   clients: Client[];
@@ -82,4 +97,5 @@ export interface AppData {
   packages: Package[];
   whatsappTemplates: WhatsAppTemplate[];
   companyInfo: CompanyInfo;
+  products: Product[];
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Save, User, Dog, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Client, Pet } from '../types';
+import { ImageUpload } from './ImageUpload';
 
 interface ClientFormProps {
   onSave: (client: Client, pets: Pet[]) => void;
@@ -181,49 +182,65 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSave, onClose, initial
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Nome</label>
-                          <input 
-                            required 
-                            value={pet.name} 
-                            onChange={e => {
-                              const next = [...newClientPets];
-                              next[idx].name = e.target.value;
-                              setNewClientPets(next);
-                            }} 
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
-                            placeholder="Ex: Rex" 
-                          />
+                        <div className="space-y-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Nome</label>
+                            <input 
+                              required 
+                              value={pet.name} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].name = e.target.value;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                              placeholder="Ex: Rex" 
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Raça</label>
+                            <input 
+                              required 
+                              value={pet.breed} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].breed = e.target.value;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
+                              placeholder="Ex: Poodle" 
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Porte</label>
+                            <select 
+                              value={pet.size} 
+                              onChange={e => {
+                                const next = [...newClientPets];
+                                next[idx].size = e.target.value as any;
+                                setNewClientPets(next);
+                              }} 
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                            >
+                              <option>Pequeno</option>
+                              <option>Médio</option>
+                              <option>Grande</option>
+                            </select>
+                          </div>
                         </div>
+
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Raça</label>
-                          <input 
-                            required 
-                            value={pet.breed} 
-                            onChange={e => {
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Foto do Pet</label>
+                          <ImageUpload 
+                            onUpload={(url) => {
                               const next = [...newClientPets];
-                              next[idx].breed = e.target.value;
+                              next[idx].photoUrl = url;
                               setNewClientPets(next);
-                            }} 
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" 
-                            placeholder="Ex: Poodle" 
+                            }}
+                            currentImageUrl={pet.photoUrl}
+                            folder="pets"
+                            className="h-full"
                           />
-                        </div>
-                        <div className="space-y-1 md:col-span-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Porte</label>
-                          <select 
-                            value={pet.size} 
-                            onChange={e => {
-                              const next = [...newClientPets];
-                              next[idx].size = e.target.value as any;
-                              setNewClientPets(next);
-                            }} 
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                          >
-                            <option>Pequeno</option>
-                            <option>Médio</option>
-                            <option>Grande</option>
-                          </select>
                         </div>
                       </div>
                     </div>

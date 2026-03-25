@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors, Trophy, Cloud, CloudOff, RefreshCw, Box, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Settings, PlusCircle, Menu, X, Scissors, Trophy, Cloud, CloudOff, RefreshCw, Box, TrendingUp, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../utils/cn';
 
@@ -22,6 +22,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'clients', label: 'Clientes', icon: Users },
     { id: 'best-clients', label: 'Melhores Clientes', icon: Trophy },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
+    { id: 'products', label: 'Produtos', icon: ShoppingBag },
     { id: 'services', label: 'Serviços', icon: Scissors },
     { id: 'settings', label: 'Configurações', icon: Settings },
   ];

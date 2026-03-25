@@ -41,7 +41,8 @@ const initialData: AppData = {
       start: '08:00',
       end: '18:00'
     }
-  }
+  },
+  products: []
 };
 
 export const loadData = (): AppData => {
@@ -95,6 +96,11 @@ export const loadData = (): AppData => {
       parsed.companyInfo = initialData.companyInfo;
     } else if (!parsed.companyInfo.workingHours) {
       parsed.companyInfo.workingHours = initialData.companyInfo.workingHours;
+    }
+
+    // Migrate products
+    if (!parsed.products) {
+      parsed.products = [];
     }
 
     return parsed as AppData;
