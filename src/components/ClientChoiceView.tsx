@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { Appointment, Product, AppData, ClientChoices } from '../types';
 import { motion } from 'motion/react';
@@ -20,25 +20,17 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
 
   useEffect(() => {
     const fetchData = async () => {
+      const path = `users/${adminUid}/appointments/${appointmentId}`;
       try {
         // Fetch appointment
-        const appDoc = await getDoc(doc(db, `users/${adminUid}/appointments`, appointmentId));
+        const appDoc = await getDoc(doc(db, path));
         if (appDoc.exists()) {
           const appData = appDoc.data() as Appointment;
           setAppointment({ id: appDoc.id, ...appData });
           setChoices(appData.clientChoices || {});
         }
-
-        // Fetch products
-        const unsubProducts = onSnapshot(doc(db, `users/${adminUid}/settings`, 'companyInfo'), () => {
-          // Just to trigger if needed, but we need the products collection
-        });
-
-        // Actually we need the products collection
-        const productsRef = doc(db, `users/${adminUid}/settings`, 'products'); // Wait, products is a collection
-        // Let's use a simple getDoc for now or a proper listener if we want real-time
       } catch (err) {
-        console.error('Error fetching choice data:', err);
+        handleFirestoreError(err, OperationType.GET, path);
       } finally {
         setLoading(false);
       }
@@ -53,10 +45,15 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
     // Correct way to fetch collection in this context without full AppData sync
     // I'll just use a simpler approach: fetch them once
     const fetchProducts = async () => {
-      const { collection, getDocs } = await import('firebase/firestore');
-      const querySnapshot = await getDocs(collection(db, `users/${adminUid}/products`));
-      const prods = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Product));
-      setProducts(prods.filter(p => p.isAvailable));
+      const path = `users/${adminUid}/products`;
+      try {
+        const { collection, getDocs } = await import('firebase/firestore');
+        const querySnapshot = await getDocs(collection(db, path));
+        const prods = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+        setProducts(prods.filter(p => p.isAvailable));
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, path);
+      }
     };
 
     fetchData();
@@ -65,14 +62,14 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
 
   const handleSave = async () => {
     setSaving(true);
+    const path = `users/${adminUid}/appointments/${appointmentId}`;
     try {
-      await updateDoc(doc(db, `users/${adminUid}/appointments`, appointmentId), {
+      await updateDoc(doc(db, path), {
         clientChoices: choices
       });
       setSuccess(true);
     } catch (err) {
-      console.error('Error saving choices:', err);
-      alert('Erro ao salvar suas escolhas. Por favor, tente novamente.');
+      handleFirestoreError(err, OperationType.UPDATE, path);
     } finally {
       setSaving(false);
     }

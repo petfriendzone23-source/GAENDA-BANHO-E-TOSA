@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "petfriendzone23@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // Validation Functions
+    function isValidAppointment(data) {
+      return data.clientId is string &&
+             data.petId is string &&
+             data.services is list &&
+             data.date is string &&
+             data.time is string &&
+             data.status in ['Agendado', 'Concluído', 'Cancelado'] &&
+             data.price is number;
+    }
+
+    function isValidProduct(data) {
+      return data.name is string &&
+             data.type in ['bandana', 'laço', 'perfume'] &&
+             data.isAvailable is bool;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /appointments/{appointmentId} {
+        allow read: if isOwner(uid) || (request.query.limit == 0 || true); // Allow reading specific appointment for client choice
+        allow update: if isOwner(uid) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clientChoices']));
+        allow create, delete: if isOwner(uid);
+      }
+
+      match /products/{productId} {
+        allow read: if isOwner(uid) || true; // Allow reading products for client choice
+        allow write: if isOwner(uid);
+      }
+
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+  }
+}

@@ -27,7 +27,8 @@ import {
   query, 
   addDoc, 
   deleteDoc, 
-  updateDoc 
+  updateDoc,
+  getDocFromServer
 } from 'firebase/firestore';
 // Auth Screen Component
 import AuthScreen from './components/AuthScreen';
@@ -42,6 +43,17 @@ const cleanData = (obj: any) => {
   });
   return newObj;
 };
+
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if(error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. ");
+    }
+  }
+}
+testConnection();
 
 export default function App() {
   const [user, setUser] = React.useState<User | null>(null);

@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "Pet": {
+      "title": "Pet",
+      "description": "Pet information",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "name": { "type": "string" },
+        "breed": { "type": "string" },
+        "size": { "type": "string", "enum": ["Pequeno", "Médio", "Grande"] },
+        "photoUrl": { "type": "string" }
+      },
+      "required": ["clientId", "name", "breed", "size"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Client information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phones": { "type": "array", "items": { "type": "string" } },
+        "addresses": { "type": "array", "items": { "type": "string" } },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "phones", "addresses"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Appointment information",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "petId": { "type": "string" },
+        "services": { "type": "array", "items": { "type": "string" } },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["Agendado", "Concluído", "Cancelado"] },
+        "price": { "type": "number" },
+        "notes": { "type": "string" },
+        "packageId": { "type": "string" },
+        "customServicePrices": { "type": "object" },
+        "reports": { "type": "object" },
+        "clientChoices": { "type": "object" }
+      },
+      "required": ["clientId", "petId", "services", "date", "time", "status", "price"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Service information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "color": { "type": "string" }
+      },
+      "required": ["name", "price"]
+    },
+    "Package": {
+      "title": "Package",
+      "description": "Package information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "serviceIds": { "type": "array", "items": { "type": "string" } },
+        "price": { "type": "number" },
+        "type": { "type": "string", "enum": ["custom", "weekly", "monthly"] },
+        "sessions": { "type": "number" }
+      },
+      "required": ["name", "serviceIds", "price", "type", "sessions"]
+    },
+    "WhatsAppTemplate": {
+      "title": "WhatsAppTemplate",
+      "description": "WhatsApp template information",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["title", "message"]
+    },
+    "CompanyInfo": {
+      "title": "CompanyInfo",
+      "description": "Company information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "workingHours": { "type": "object" }
+      },
+      "required": ["name", "address", "phone", "workingHours"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["bandana", "laço", "perfume"] },
+        "imageUrl": { "type": "string" },
+        "isAvailable": { "type": "boolean" }
+      },
+      "required": ["name", "type", "isAvailable"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}/appointments": { "schema": "Appointment", "description": "User appointments" },
+    "/users/{uid}/clients": { "schema": "Client", "description": "User clients" },
+    "/users/{uid}/pets": { "schema": "Pet", "description": "User pets" },
+    "/users/{uid}/services": { "schema": "Service", "description": "User services" },
+    "/users/{uid}/packages": { "schema": "Package", "description": "User packages" },
+    "/users/{uid}/whatsappTemplates": { "schema": "WhatsAppTemplate", "description": "User WhatsApp templates" },
+    "/users/{uid}/products": { "schema": "Product", "description": "User products" },
+    "/users/{uid}/settings/companyInfo": { "schema": "CompanyInfo", "description": "User company settings" }
+  }
+}
