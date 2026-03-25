@@ -58,9 +58,17 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setProgress(p);
         }, 
-        (err) => {
+        (err: any) => {
           console.error('Erro no upload:', err);
-          setError('Erro ao enviar imagem. Verifique sua conexão ou permissões.');
+          let msg = 'Erro ao enviar imagem.';
+          if (err.code === 'storage/unauthorized') {
+            msg = 'Sem permissão para enviar. Verifique se o Storage está ativado.';
+          } else if (err.code === 'storage/retry-limit-exceeded') {
+            msg = 'Tempo de envio esgotado. Tente novamente.';
+          } else if (err.message) {
+            msg = `Erro: ${err.message}`;
+          }
+          setError(msg);
           setIsUploading(false);
         }, 
         async () => {
