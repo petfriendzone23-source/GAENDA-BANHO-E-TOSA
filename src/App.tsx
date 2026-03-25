@@ -642,6 +642,14 @@ export default function App() {
     }
   };
 
+  const params = new URLSearchParams(window.location.search);
+  const choiceId = params.get('choice');
+  const adminUid = params.get('uid');
+
+  if (choiceId && adminUid) {
+    return <ClientChoiceView appointmentId={choiceId} adminUid={adminUid} />;
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -651,14 +659,6 @@ export default function App() {
   }
 
   if (!user) {
-    const params = new URLSearchParams(window.location.search);
-    const choiceId = params.get('choice');
-    const adminUid = params.get('uid');
-
-    if (choiceId && adminUid) {
-      return <ClientChoiceView appointmentId={choiceId} adminUid={adminUid} />;
-    }
-
     return <AuthScreen />;
   }
 

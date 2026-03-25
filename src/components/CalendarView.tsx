@@ -14,7 +14,7 @@ import {
   parseISO
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2, Share2 } from 'lucide-react';
 import { AppData, Appointment } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
@@ -22,9 +22,10 @@ import { ClientDetails } from './ClientDetails';
 interface CalendarViewProps {
   data: AppData;
   onEditAppointment: (appointment: Appointment) => void;
+  adminUid?: string;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointment }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointment, adminUid }) => {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
@@ -45,6 +46,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
   const appointmentsForSelectedDate = data.appointments.filter(app => 
     isSameDay(parseISO(app.date), selectedDate)
   ).sort((a, b) => a.time.localeCompare(b.time));
+
+  const handleShareChoiceLink = (appointment: Appointment) => {
+    if (!adminUid) return;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const link = `${baseUrl}?choice=${appointment.id}&uid=${adminUid}`;
+    
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Link de escolha copiado para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar link:', err);
+      alert('Erro ao copiar link. Tente novamente.');
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -169,12 +183,28 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                         <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
                       </div>
-                      <button 
-                        onClick={() => onEditAppointment(app)}
-                        className="absolute top-2 right-2 p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 opacity-0 group-hover/item:opacity-100 transition-all"
-                      >
-                        <Edit2 size={14} />
-                      </button>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/item:opacity-100 transition-all">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareChoiceLink(app);
+                          }}
+                          className="p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-indigo-500 hover:text-indigo-700 transition-colors"
+                          title="Compartilhar Link de Escolha"
+                        >
+                          <Share2 size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditAppointment(app);
+                          }}
+                          className="p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Editar"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

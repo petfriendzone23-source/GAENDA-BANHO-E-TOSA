@@ -250,7 +250,7 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
         </section>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-20">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={handleSave}
@@ -263,9 +263,12 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
                 Salvando...
               </>
             ) : (
-              'Salvar Escolhas'
+              'Confirmar Escolhas'
             )}
           </button>
+          <p className="text-center text-[10px] text-slate-400 mt-4 uppercase tracking-widest font-bold">
+            Powered by Pet Friends Zone
+          </p>
         </div>
       </div>
     </div>
