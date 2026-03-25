@@ -1,8 +1,9 @@
 import React from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 import { cn } from '../utils/cn';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadProps {
   onUpload: (url: string) => void;
@@ -18,6 +19,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   className 
 }) => {
   const [isUploading, setIsUploading] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -31,28 +33,46 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('A imagem deve ter no máximo 5MB.');
-      return;
-    }
-
     setIsUploading(true);
     setError(null);
+    setProgress(0);
 
     try {
+      // Compress image
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const fileName = `${timestamp}_${compressedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const storageRef = ref(storage, `${folder}/${fileName}`);
       
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      onUpload(downloadURL);
+      const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setProgress(p);
+        }, 
+        (err) => {
+          console.error('Erro no upload:', err);
+          setError('Erro ao enviar imagem. Verifique sua conexão ou permissões.');
+          setIsUploading(false);
+        }, 
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          onUpload(downloadURL);
+          setIsUploading(false);
+          setProgress(0);
+        }
+      );
     } catch (err) {
-      console.error('Erro no upload:', err);
-      setError('Erro ao enviar imagem. Tente novamente.');
-    } finally {
+      console.error('Erro na compressão ou início do upload:', err);
+      setError('Erro ao processar imagem. Tente novamente.');
       setIsUploading(false);
     }
   };
@@ -99,16 +119,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             </button>
           </>
         ) : (
-          <div className="text-center p-6">
+          <div className="text-center p-6 w-full">
             {isUploading ? (
-              <Loader2 size={32} className="mx-auto text-indigo-500 animate-spin mb-2" />
+              <div className="space-y-3">
+                <div className="relative w-16 h-16 mx-auto">
+                  <Loader2 size={64} className="text-indigo-500 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-indigo-600">{Math.round(progress)}%</span>
+                  </div>
+                </div>
+                <div className="w-full max-w-[120px] mx-auto h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-indigo-500 transition-all duration-300" 
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
             ) : (
               <ImageIcon size={32} className="mx-auto text-slate-300 mb-2 group-hover:text-indigo-400 transition-colors" />
             )}
-            <p className="text-xs font-bold text-slate-500 group-hover:text-indigo-600">
+            <p className="text-xs font-bold text-slate-500 group-hover:text-indigo-600 mt-2">
               {isUploading ? 'Enviando...' : 'Clique para enviar foto'}
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">JPG, PNG ou WebP (Máx. 5MB)</p>
+            {!isUploading && <p className="text-[10px] text-slate-400 mt-1">JPG, PNG ou WebP</p>}
           </div>
         )}
       </div>
