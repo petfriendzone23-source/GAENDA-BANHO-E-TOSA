@@ -11,17 +11,17 @@ import { getStorage } from "firebase/storage";
 const clean = (val: string | undefined) => val ? val.replace(/['"]/g, '').trim() : undefined;
 
 const firebaseConfig = {
-  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY),
-  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID),
-  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
-  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID),
-  firestoreDatabaseId: clean(import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID),
+  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY) || "missing-api-key",
+  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || "missing-auth-domain",
+  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID) || "missing-project-id",
+  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || "missing-storage-bucket",
+  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "missing-sender-id",
+  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID) || "missing-app-id",
+  firestoreDatabaseId: clean(import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID) || undefined,
 };
 
 // Validate that critical config is present
-if (!firebaseConfig.apiKey) {
+if (firebaseConfig.apiKey === "missing-api-key") {
   console.error("Firebase API Key is missing. Please check your AI Studio Secrets.");
 }
 
