@@ -9,15 +9,16 @@ import { getStorage } from "firebase/storage";
 
 // Configuração HARDCODED (Valores fixos direto no código) conforme solicitado
 const firebaseConfig = {
-  apiKey: "AIzaSyACQ3qBpM-Krky6uYEhhzK5xRMFW0iaKYs",
-  authDomain: "project-60432d0d-fba5-4ea8-aaf.firebaseapp.com", // Corrigido o link do Google Search
-  projectId: "project-60432d0d-fba5-4ea8-aaf",
-  storageBucket: "project-60432d0d-fba5-4ea8-aaf.firebasestorage.app",
-  messagingSenderId: "COLOQUE_O_SENDER_ID_AQUI", 
-  appId: "COLOQUE_O_APP_ID_AQUI", 
+  apiKey: "AIzaSyCb8lIwlIZliEbraTicgNQn3JVFfqNoSok",
+  authDomain: "dados-agenda-d02f6.firebaseapp.com",
+  projectId: "dados-agenda-d02f6",
+  storageBucket: "dados-agenda-d02f6.firebasestorage.app",
+  messagingSenderId: "271597869424",
+  appId: "1:271597869424:web:48dbe80e88f107c65597b5",
+  measurementId: "G-TSYHKLQLP2"
 };
 
-console.log("🔥 Firebase Status: Usando configuração HARDCODED do Projeto Oficial (60432)");
+console.log("🔥 Firebase Status: Usando configuração HARDCODED do Projeto 'dados agenda' (dados-agenda-d02f6)");
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
