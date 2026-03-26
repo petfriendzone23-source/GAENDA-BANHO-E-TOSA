@@ -47,10 +47,14 @@ const AuthScreen: React.FC = () => {
         setError('A senha deve ter pelo menos 6 caracteres.');
       } else if (err.code === 'auth/invalid-email') {
         setError('E-mail inválido.');
+      } else if (err.code === 'auth/invalid-credential') {
+        setError('E-mail ou senha incorretos.');
+      } else if (err.code === 'auth/invalid-api-key') {
+        setError('Chave de API inválida. Verifique os Secrets no AI Studio.');
       } else if (err.code === 'auth/operation-not-allowed') {
         setError('O login por e-mail/senha não está habilitado no Firebase Console. Por favor, habilite-o.');
       } else {
-        setError('Ocorreu um erro. Verifique sua conexão e tente novamente.');
+        setError(`Erro: ${err.message || 'Verifique sua conexão e tente novamente.'}`);
       }
     } finally {
       setLoading(false);
