@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product, AppData } from '../types';
-import { Plus, Trash2, Image as ImageIcon, Check, X, Tag, Package, Wind, Flower, Sparkles, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Check, X, Tag, Package, Wind, Flower, Sparkles, Edit2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageUpload } from './ImageUpload';
 
@@ -13,6 +13,7 @@ interface ProductManagementProps {
 export const ProductManagement: React.FC<ProductManagementProps> = ({ data, onSave, onDelete }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     type: 'bandana',
@@ -20,12 +21,17 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ data, onSa
     isAvailable: true
   });
 
-  const handleSave = () => {
-    if (!formData.name) return;
-    onSave(formData);
-    setFormData({ name: '', type: 'bandana', imageUrl: '', isAvailable: true });
-    setIsAdding(false);
-    setEditingId(null);
+  const handleSave = async () => {
+    if (!formData.name || isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+      setFormData({ name: '', type: 'bandana', imageUrl: '', isAvailable: true });
+      setIsAdding(false);
+      setEditingId(null);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const startEdit = (product: Product) => {
@@ -118,10 +124,15 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ data, onSa
               <div className="flex flex-col justify-end gap-3">
                 <button
                   onClick={handleSave}
-                  className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                  disabled={isSaving}
+                  className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Check size={20} />
-                  {editingId ? 'Salvar Alterações' : 'Adicionar Produto'}
+                  {isSaving ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Check size={20} />
+                  )}
+                  {isSaving ? 'Salvando...' : (editingId ? 'Salvar Alterações' : 'Adicionar Produto')}
                 </button>
                 <button
                   onClick={() => setIsAdding(false)}

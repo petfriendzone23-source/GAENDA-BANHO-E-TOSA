@@ -1,7 +1,7 @@
 import React from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { storage, auth } from '../lib/firebase';
 import { cn } from '../utils/cn';
 import imageCompression from 'browser-image-compression';
 
@@ -21,7 +21,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [isUploading, setIsUploading] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
+  const [status, setStatus] = React.useState<string>('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Clipboard paste support
+  React.useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            processAndUpload(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
 
   const [showUrlInput, setShowUrlInput] = React.useState(false);
   const [urlInput, setUrlInput] = React.useState('');
@@ -35,66 +57,116 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Por favor, selecione um arquivo de imagem (JPG, PNG, etc).');
-      return;
-    }
-
+  const processAndUpload = async (file: File) => {
     setIsUploading(true);
     setError(null);
     setProgress(0);
+    setStatus('Iniciando...');
+    console.log('📸 Processando:', file.name, file.type);
 
     try {
-      // Compress image
+      // 1. Compress image (Targeting ~400KB)
+      setStatus('Comprimindo...');
       const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1200,
-        useWebWorker: true
+        maxSizeMB: 0.4,
+        maxWidthOrHeight: 1000,
+        useWebWorker: false
       };
       
-      const compressedFile = await imageCompression(file, options);
+      let fileToUpload: File | Blob = file;
+      try {
+        fileToUpload = await imageCompression(file, options);
+        console.log('✅ Comprimido:', fileToUpload.size);
+      } catch (compErr) {
+        console.warn('⚠️ Erro compressão:', compErr);
+      }
+
+      const convertToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
       
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${compressedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const storageRef = ref(storage, `${folder}/${fileName}`);
+      const safeName = (file.name || 'image.jpg').replace(/[^a-zA-Z0-9.]/g, '_');
+      const fileName = `${timestamp}_${safeName}`;
+      const storagePath = `${folder}/${fileName}`;
       
-      const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+      setStatus('Enviando para nuvem...');
+      const storageRef = ref(storage, storagePath);
+      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
+
+      const timeoutId = setTimeout(async () => {
+        if (isUploading) {
+          console.warn('⏰ Timeout Storage. Usando Base64...');
+          uploadTask.cancel();
+          try {
+            setStatus('Salvando localmente...');
+            const base64 = await convertToBase64(fileToUpload);
+            onUpload(base64);
+            setStatus('');
+          } catch (err) {
+            setError('Erro no processamento local.');
+          } finally {
+            setIsUploading(false);
+          }
+        }
+      }, 15000); // Reduzi para 15s para ser mais rápido o fallback
 
       uploadTask.on('state_changed', 
         (snapshot) => {
           const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setProgress(p);
+          if (p > 0) setStatus(`Enviando: ${Math.round(p)}%`);
         }, 
-        (err: any) => {
-          console.error('Erro no upload:', err);
-          let msg = 'Erro ao enviar imagem.';
-          if (err.code === 'storage/unauthorized') {
-            msg = 'Sem permissão para enviar. Verifique se o Storage está ativado.';
-          } else if (err.code === 'storage/retry-limit-exceeded') {
-            msg = 'Tempo de envio esgotado. Tente novamente.';
-          } else if (err.message) {
-            msg = `Erro: ${err.message}`;
+        async (err: any) => {
+          clearTimeout(timeoutId);
+          console.error('❌ Erro Storage:', err.code);
+          setStatus('Salvando localmente...');
+          try {
+            const base64 = await convertToBase64(fileToUpload);
+            onUpload(base64);
+            setStatus('');
+          } catch (fallbackErr) {
+            setError('Erro ao salvar imagem.');
+          } finally {
+            setIsUploading(false);
           }
-          setError(msg);
-          setIsUploading(false);
         }, 
         async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          onUpload(downloadURL);
-          setIsUploading(false);
-          setProgress(0);
+          clearTimeout(timeoutId);
+          setStatus('Finalizando...');
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            onUpload(downloadURL);
+          } catch (urlErr) {
+            const base64 = await convertToBase64(fileToUpload);
+            onUpload(base64);
+          } finally {
+            setIsUploading(false);
+            setProgress(0);
+            setStatus('');
+          }
         }
       );
-    } catch (err) {
-      console.error('Erro na compressão ou início do upload:', err);
-      setError('Erro ao processar imagem. Tente novamente.');
+    } catch (err: any) {
+      console.error('❌ Erro crítico:', err);
+      setError(`Erro: ${err.message || 'Tente novamente'}`);
       setIsUploading(false);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Selecione uma imagem válida.');
+      return;
+    }
+    processAndUpload(file);
   };
 
   const removeImage = () => {
@@ -159,12 +231,43 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               <ImageIcon size={32} className="mx-auto text-slate-300 mb-2 group-hover:text-indigo-400 transition-colors" />
             )}
             <p className="text-xs font-bold text-slate-500 group-hover:text-indigo-600 mt-2">
-              {isUploading ? 'Enviando...' : 'Clique para enviar foto'}
+              {isUploading ? (status || 'Enviando...') : 'Clique ou Cole (Ctrl+V) foto'}
             </p>
             {!isUploading && <p className="text-[10px] text-slate-400 mt-1">JPG, PNG ou WebP</p>}
           </div>
         )}
       </div>
+
+      {isUploading && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={async () => {
+              // Manual bypass to Base64
+              if (fileInputRef.current?.files?.[0]) {
+                const file = fileInputRef.current.files[0];
+                const options = { maxSizeMB: 0.3, maxWidthOrHeight: 800, useWebWorker: false };
+                try {
+                  setStatus('Processando local...');
+                  const compressed = await imageCompression(file, options);
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    onUpload(reader.result as string);
+                    setIsUploading(false);
+                    setStatus('');
+                  };
+                  reader.readAsDataURL(compressed);
+                } catch (e) {
+                  setError('Erro no bypass local.');
+                }
+              }
+            }}
+            className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 animate-pulse"
+          >
+            ⚠️ Demorando? Clique para salvar localmente
+          </button>
+        </div>
+      )}
 
       {showUrlInput ? (
         <form onSubmit={handleUrlSubmit} className="flex gap-2">
@@ -203,9 +306,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       )}
 
       {error && (
-        <p className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-md border border-rose-100">
-          {error}
-        </p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-md border border-rose-100">
+            {error}
+          </p>
+          <p className="text-[8px] text-slate-400 px-1 italic">
+            Debug: {storage.app.options.storageBucket} | UID: {auth.currentUser?.uid?.substring(0, 8) || 'Off'}
+          </p>
+        </div>
       )}
 
       <input
