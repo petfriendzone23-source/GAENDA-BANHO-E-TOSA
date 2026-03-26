@@ -8,6 +8,7 @@ import {
 import { getStorage } from "firebase/storage";
 
 // Configuração HARDCODED (Valores fixos direto no código) conforme solicitado
+// O usuário mencionou 'myfirst project', mas forneceu os dados abaixo para o projeto 'dados agenda'
 const firebaseConfig = {
   apiKey: "AIzaSyCb8lIwlIZliEbraTicgNQn3JVFfqNoSok",
   authDomain: "dados-agenda-d02f6.firebaseapp.com",
@@ -25,6 +26,8 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 
 // Inicialização moderna do Firestore com cache persistente
+// Se o usuário quiser usar um banco de dados específico (ex: 'myfirst-project'), 
+// ele deve ser passado como segundo argumento em getFirestore ou na inicialização.
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()

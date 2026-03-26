@@ -23,6 +23,7 @@ import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ImageUpload } from './ImageUpload';
 
 interface SettingsProps {
   zoomLevel: number;
@@ -85,19 +86,8 @@ export const Settings: React.FC<SettingsProps> = ({
     setIsEditingCompany(false);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit for base64
-        alert('A imagem é muito grande. Por favor, escolha uma imagem menor que 1MB.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCompanyInfo({ ...companyInfo, logoUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleLogoUpload = (url: string) => {
+    setCompanyInfo({ ...companyInfo, logoUrl: url });
   };
 
   const handleCreateBackup = () => {
@@ -203,36 +193,11 @@ export const Settings: React.FC<SettingsProps> = ({
               className="overflow-hidden"
             >
               <div className="p-8 border-t border-slate-100 flex flex-col items-center gap-6">
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
-                    {companyInfo.logoUrl || data.companyInfo.logoUrl ? (
-                      <img 
-                        src={companyInfo.logoUrl || data.companyInfo.logoUrl} 
-                        alt="Logo" 
-                        className="w-full h-full object-contain"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center text-slate-400">
-                        <ImageIcon size={32} />
-                        <span className="text-[10px] font-bold mt-1 uppercase tracking-wider">Sem Logo</span>
-                      </div>
-                    )}
-                  </div>
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-2xl"
-                  >
-                    <Upload size={24} />
-                    <span className="text-xs font-bold mt-1">Alterar</span>
-                  </button>
-                </div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleLogoUpload} 
-                  accept="image/*" 
-                  className="hidden" 
+                <ImageUpload 
+                  onUpload={handleLogoUpload}
+                  currentImageUrl={companyInfo.logoUrl || data.companyInfo.logoUrl}
+                  folder="logos"
+                  className="w-full"
                 />
                 {(companyInfo.logoUrl !== data.companyInfo.logoUrl) && (
                   <button 
