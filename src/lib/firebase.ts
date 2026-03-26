@@ -7,33 +7,17 @@ import {
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Projeto confirmado pelo usuário
-const PROJECT_ID = "project-60432d0d-fba5-4ea8-aaf";
-
-// Configuração limpa e direta
-const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.FIREBASE_API_KEY;
-const rawAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || import.meta.env.FIREBASE_AUTH_DOMAIN;
-const rawStorageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || import.meta.env.FIREBASE_STORAGE_BUCKET;
-const rawMessagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || import.meta.env.FIREBASE_MESSAGING_SENDER_ID;
-const rawAppId = import.meta.env.VITE_FIREBASE_APP_ID || import.meta.env.FIREBASE_APP_ID;
-const rawDatabaseId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || import.meta.env.FIREBASE_FIRESTORE_DATABASE_ID;
-
+// Configuração HARDCODED (Valores fixos direto no código) conforme solicitado
 const firebaseConfig = {
-  apiKey: rawApiKey?.replace(/['"]/g, '').trim() || "AIzaSyDummyKeyForInitializationOnly12345",
-  authDomain: rawAuthDomain?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.firebaseapp.com`,
-  projectId: PROJECT_ID,
-  storageBucket: rawStorageBucket?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.appspot.com`,
-  messagingSenderId: rawMessagingSenderId?.replace(/['"]/g, '').trim() || "123456789012",
-  appId: rawAppId?.replace(/['"]/g, '').trim() || "1:123456789012:web:1234567890abcdef123456",
-  firestoreDatabaseId: rawDatabaseId?.replace(/['"]/g, '').trim() || undefined,
+  apiKey: "AIzaSyACQ3qBpM-Krky6uYEhhzK5xRMFW0iaKYs",
+  authDomain: "project-60432d0d-fba5-4ea8-aaf.firebaseapp.com",
+  projectId: "project-60432d0d-fba5-4ea8-aaf",
+  storageBucket: "project-60432d0d-fba5-4ea8-aaf.appspot.com",
+  messagingSenderId: "COLOQUE_O_SENDER_ID_AQUI", // Substitua pelo número real se necessário
+  appId: "COLOQUE_O_APP_ID_AQUI", // Substitua pelo appId real se necessário
 };
 
-// Log de depuração para ajudar a identificar se a chave está chegando vazia
-console.log(
-  "🔥 Firebase Status:", 
-  rawApiKey ? `Chave carregada (Inicia com: ${rawApiKey.substring(0, 5)}...)` : "❌ NENHUMA CHAVE DE API ENCONTRADA",
-  "| Projeto:", firebaseConfig.projectId
-);
+console.log("🔥 Firebase Status: Usando configuração HARDCODED (Sem variáveis de ambiente)");
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -44,7 +28,7 @@ export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   })
-}, firebaseConfig.firestoreDatabaseId);
+});
 
 export enum OperationType {
   CREATE = 'create',
