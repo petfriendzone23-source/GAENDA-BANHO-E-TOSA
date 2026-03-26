@@ -103,14 +103,17 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ data, onSa
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
-                <ImageUpload 
-                  onUpload={(url) => setFormData({ ...formData, imageUrl: url })}
-                  currentImageUrl={formData.imageUrl}
-                  folder="products"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
+                  <ImageUpload 
+                    onUpload={(url) => setFormData({ ...formData, imageUrl: url })}
+                    currentImageUrl={formData.imageUrl}
+                    folder="products"
+                  />
+                  <p className="text-[10px] text-slate-400 italic ml-1">
+                    Dica: Se o upload falhar, você pode colar o link direto da imagem.
+                  </p>
+                </div>
 
               <div className="flex flex-col justify-end gap-3">
                 <button

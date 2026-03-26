@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ServiceNote } from './ServiceNote';
 import { PackageServiceNote } from './PackageServiceNote';
+import { ImageUpload } from './ImageUpload';
 
 
 interface ClientDetailsProps {
@@ -20,36 +21,12 @@ interface ClientDetailsProps {
 }
 
 export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet, onEdit }) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [selectedPetId, setSelectedPetId] = React.useState<string | null>(null);
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
   const [targetPhone, setTargetPhone] = React.useState<string>('');
   const [showServiceNote, setShowServiceNote] = React.useState(false);
   const [expandedPhoto, setExpandedPhoto] = React.useState<string | null>(null);
   const [historyPage, setHistoryPage] = React.useState(1);
   const HISTORY_PER_PAGE = 5;
-
-
-  const handlePhotoClick = (petId: string) => {
-    setSelectedPetId(petId);
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && selectedPetId && onUpdatePet) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onUpdatePet(client.id, selectedPetId, { photoUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-    // Reset the input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    setSelectedPetId(null);
-  };
 
   const handleWhatsAppClick = (e: React.MouseEvent, phone: string) => {
     e.preventDefault();
@@ -314,55 +291,39 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
 
                 <section className="space-y-4">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pets</h3>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    accept="image/*" 
-                    className="hidden" 
-                  />
                   <div className="space-y-3">
                     {clientPets.map(pet => (
-                      <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-3">
-                        <div className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden group shrink-0">
-                          {pet.photoUrl ? (
-                            <>
+                      <div key={pet.id} className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex flex-col gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-12 h-12 rounded-xl bg-white text-indigo-600 shadow-sm flex items-center justify-center overflow-hidden group shrink-0">
+                            {pet.photoUrl ? (
                               <img 
                                 src={pet.photoUrl} 
                                 alt={pet.name} 
                                 className="w-full h-full object-cover cursor-zoom-in"
                                 onClick={() => setExpandedPhoto(pet.photoUrl!)}
+                                referrerPolicy="no-referrer"
                               />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePhotoClick(pet.id);
-                                  }}
-                                  className="p-1.5 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors pointer-events-auto"
-                                  title="Alterar foto"
-                                >
-                                  <Camera size={16} />
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <div 
-                              className="w-full h-full flex items-center justify-center cursor-pointer"
-                              onClick={() => handlePhotoClick(pet.id)}
-                              title="Adicionar foto"
-                            >
+                            ) : (
                               <Dog size={24} />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Camera size={16} className="text-white" />
-                              </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
+                            <p className="text-[10px] text-indigo-600 font-medium truncate">{pet.breed} • {pet.size}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-slate-900 text-sm truncate">{pet.name}</p>
-                          <p className="text-[10px] text-indigo-600 font-medium truncate">{pet.breed} • {pet.size}</p>
-                        </div>
+
+                        {onUpdatePet && (
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Pet</label>
+                            <ImageUpload 
+                              onUpload={(url) => onUpdatePet(client.id, pet.id, { photoUrl: url })}
+                              currentImageUrl={pet.photoUrl}
+                              folder="pets"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -23,6 +23,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [error, setError] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [showUrlInput, setShowUrlInput] = React.useState(false);
+  const [urlInput, setUrlInput] = React.useState('');
+
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (urlInput.trim()) {
+      onUpload(urlInput.trim());
+      setShowUrlInput(false);
+      setUrlInput('');
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -153,6 +165,42 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
         )}
       </div>
+
+      {showUrlInput ? (
+        <form onSubmit={handleUrlSubmit} className="flex gap-2">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="Cole o link da imagem aqui..."
+            className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+            autoFocus
+          />
+          <button
+            type="submit"
+            className="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-colors"
+          >
+            OK
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUrlInput(false)}
+            className="px-3 py-2 bg-slate-100 text-slate-500 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors"
+          >
+            <X size={14} />
+          </button>
+        </form>
+      ) : (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowUrlInput(true)}
+            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+          >
+            Ou cole um link de imagem
+          </button>
+        </div>
+      )}
 
       {error && (
         <p className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-md border border-rose-100">
