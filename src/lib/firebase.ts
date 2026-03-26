@@ -11,20 +11,27 @@ import { getStorage } from "firebase/storage";
 const PROJECT_ID = "project-60432d0d-fba5-4ea8-aaf";
 
 // Configuração limpa e direta
+const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.FIREBASE_API_KEY;
+const rawAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || import.meta.env.FIREBASE_AUTH_DOMAIN;
+const rawStorageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || import.meta.env.FIREBASE_STORAGE_BUCKET;
+const rawMessagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || import.meta.env.FIREBASE_MESSAGING_SENDER_ID;
+const rawAppId = import.meta.env.VITE_FIREBASE_APP_ID || import.meta.env.FIREBASE_APP_ID;
+const rawDatabaseId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || import.meta.env.FIREBASE_FIRESTORE_DATABASE_ID;
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.replace(/['"]/g, '').trim(),
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.firebaseapp.com`,
+  apiKey: rawApiKey?.replace(/['"]/g, '').trim() || "AIzaSyDummyKeyForInitializationOnly12345",
+  authDomain: rawAuthDomain?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.firebaseapp.com`,
   projectId: PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.appspot.com`,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID?.replace(/['"]/g, '').trim(),
-  appId: import.meta.env.VITE_FIREBASE_APP_ID?.replace(/['"]/g, '').trim(),
-  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID?.replace(/['"]/g, '').trim() || undefined,
+  storageBucket: rawStorageBucket?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.appspot.com`,
+  messagingSenderId: rawMessagingSenderId?.replace(/['"]/g, '').trim() || "123456789012",
+  appId: rawAppId?.replace(/['"]/g, '').trim() || "1:123456789012:web:1234567890abcdef123456",
+  firestoreDatabaseId: rawDatabaseId?.replace(/['"]/g, '').trim() || undefined,
 };
 
 // Log de depuração para ajudar a identificar se a chave está chegando vazia
 console.log(
   "🔥 Firebase Status:", 
-  firebaseConfig.apiKey ? `Chave carregada (Inicia com: ${firebaseConfig.apiKey.substring(0, 5)}...)` : "❌ NENHUMA CHAVE DE API ENCONTRADA",
+  rawApiKey ? `Chave carregada (Inicia com: ${rawApiKey.substring(0, 5)}...)` : "❌ NENHUMA CHAVE DE API ENCONTRADA",
   "| Projeto:", firebaseConfig.projectId
 );
 

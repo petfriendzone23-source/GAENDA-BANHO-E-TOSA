@@ -7,6 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    envPrefix: ['VITE_', 'FIREBASE_'],
     plugins: [
       react(), 
       tailwindcss(),
