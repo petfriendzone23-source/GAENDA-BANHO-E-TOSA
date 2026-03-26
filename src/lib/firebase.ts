@@ -7,23 +7,26 @@ import {
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Use environment variables for security
-const clean = (val: string | undefined) => val ? val.replace(/['"]/g, '').trim() : undefined;
+// Projeto confirmado pelo usuário
+const PROJECT_ID = "project-60432d0d-fba5-4ea8-aaf";
 
+// Configuração limpa e direta
 const firebaseConfig = {
-  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY) || "missing-api-key",
-  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || "missing-auth-domain",
-  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID) || "missing-project-id",
-  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || "missing-storage-bucket",
-  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "missing-sender-id",
-  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID) || "missing-app-id",
-  firestoreDatabaseId: clean(import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID) || undefined,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.replace(/['"]/g, '').trim(),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.firebaseapp.com`,
+  projectId: PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET?.replace(/['"]/g, '').trim() || `${PROJECT_ID}.appspot.com`,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID?.replace(/['"]/g, '').trim(),
+  appId: import.meta.env.VITE_FIREBASE_APP_ID?.replace(/['"]/g, '').trim(),
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID?.replace(/['"]/g, '').trim() || undefined,
 };
 
-// Validate that critical config is present
-if (firebaseConfig.apiKey === "missing-api-key") {
-  console.error("Firebase API Key is missing. Please check your AI Studio Secrets.");
-}
+// Log de depuração para ajudar a identificar se a chave está chegando vazia
+console.log(
+  "🔥 Firebase Status:", 
+  firebaseConfig.apiKey ? `Chave carregada (Inicia com: ${firebaseConfig.apiKey.substring(0, 5)}...)` : "❌ NENHUMA CHAVE DE API ENCONTRADA",
+  "| Projeto:", firebaseConfig.projectId
+);
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
