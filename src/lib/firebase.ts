@@ -10,14 +10,14 @@ import { getStorage } from "firebase/storage";
 // Configuração HARDCODED (Valores fixos direto no código) conforme solicitado
 const firebaseConfig = {
   apiKey: "AIzaSyACQ3qBpM-Krky6uYEhhzK5xRMFW0iaKYs",
-  authDomain: "project-60432d0d-fba5-4ea8-aaf.firebaseapp.com",
+  authDomain: "project-60432d0d-fba5-4ea8-aaf.firebaseapp.com", // Corrigido o link do Google Search
   projectId: "project-60432d0d-fba5-4ea8-aaf",
-  storageBucket: "project-60432d0d-fba5-4ea8-aaf.appspot.com",
-  messagingSenderId: "COLOQUE_O_SENDER_ID_AQUI", // Substitua pelo número real se necessário
-  appId: "COLOQUE_O_APP_ID_AQUI", // Substitua pelo appId real se necessário
+  storageBucket: "project-60432d0d-fba5-4ea8-aaf.firebasestorage.app",
+  messagingSenderId: "COLOQUE_O_SENDER_ID_AQUI", 
+  appId: "COLOQUE_O_APP_ID_AQUI", 
 };
 
-console.log("🔥 Firebase Status: Usando configuração HARDCODED (Sem variáveis de ambiente)");
+console.log("🔥 Firebase Status: Usando configuração HARDCODED do Projeto Oficial (60432)");
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
