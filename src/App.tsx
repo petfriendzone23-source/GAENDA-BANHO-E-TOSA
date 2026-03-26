@@ -116,12 +116,12 @@ export default function App() {
             }
           };
 
-          setupListener('appointments', 'appointments');
-          setupListener('clients', 'clients');
-          setupListener('services', 'services');
-          setupListener('packages', 'packages');
+          setupListener('agendamentos', 'appointments');
+          setupListener('clientes', 'clients');
+          setupListener('servicos', 'services');
+          setupListener('pacotes', 'packages');
           setupListener('whatsappTemplates', 'whatsappTemplates');
-          setupListener('products', 'products');
+          setupListener('produtos', 'products');
 
           // Special listener for Pets (Record structure)
           try {
@@ -176,7 +176,7 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       const { id: cid, ...clientData } = client;
-      await setDoc(doc(db, `users/${user.uid}/clients`, cid), cleanData(clientData));
+      await setDoc(doc(db, `users/${user.uid}/clientes`, cid), cleanData(clientData));
 
       // Handle pet deletions
       const existingPets = data.pets[cid] || [];
@@ -210,7 +210,7 @@ export default function App() {
       // 1. Save Client if new
       if (client) {
         const { id: cid, ...clientData } = client;
-        await setDoc(doc(db, `users/${user.uid}/clients`, cid), clientData);
+        await setDoc(doc(db, `users/${user.uid}/clientes`, cid), clientData);
 
         // 2. Save Pets for this new client
         if (pets) {
@@ -231,13 +231,13 @@ export default function App() {
         
         if (exists) {
           // Update existing
-          await setDoc(doc(db, `users/${user.uid}/appointments`, app.id), dataToSave);
+          await setDoc(doc(db, `users/${user.uid}/agendamentos`, app.id), dataToSave);
         } else {
           // Add new
           // If it has an ID from the form, we can use setDoc to keep it, 
           // or use addDoc if we want Firestore to generate one.
           // The form generates IDs, so let's use setDoc to preserve them.
-          await setDoc(doc(db, `users/${user.uid}/appointments`, app.id), dataToSave);
+          await setDoc(doc(db, `users/${user.uid}/agendamentos`, app.id), dataToSave);
         }
       }
 
@@ -254,7 +254,7 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      await updateDoc(doc(db, `users/${user.uid}/appointments`, id), { status });
+      await updateDoc(doc(db, `users/${user.uid}/agendamentos`, id), { status });
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error updating status:', err);
@@ -267,7 +267,7 @@ export default function App() {
     if (!window.confirm('Tem certeza que deseja excluir este agendamento?')) return;
     try {
       setSyncStatus('syncing');
-      await deleteDoc(doc(db, `users/${user.uid}/appointments`, id));
+      await deleteDoc(doc(db, `users/${user.uid}/agendamentos`, id));
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error deleting appointment:', err);
@@ -282,9 +282,9 @@ export default function App() {
       const { id, ...serviceData } = service;
       const dataToSave = cleanData(serviceData);
       if (id && !id.startsWith('temp_')) { // Assuming temp_ for new ones or just check if exists
-        await setDoc(doc(db, `users/${user.uid}/services`, id), dataToSave);
+        await setDoc(doc(db, `users/${user.uid}/servicos`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/services`), dataToSave);
+        await addDoc(collection(db, `users/${user.uid}/servicos`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -297,7 +297,7 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      await deleteDoc(doc(db, `users/${user.uid}/services`, id));
+      await deleteDoc(doc(db, `users/${user.uid}/servicos`, id));
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error deleting service:', err);
@@ -312,9 +312,9 @@ export default function App() {
       const { id, ...packageData } = pkg;
       const dataToSave = cleanData(packageData);
       if (id && !id.startsWith('temp_')) {
-        await setDoc(doc(db, `users/${user.uid}/packages`, id), dataToSave);
+        await setDoc(doc(db, `users/${user.uid}/pacotes`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/packages`), dataToSave);
+        await addDoc(collection(db, `users/${user.uid}/pacotes`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -327,7 +327,7 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      await deleteDoc(doc(db, `users/${user.uid}/packages`, id));
+      await deleteDoc(doc(db, `users/${user.uid}/pacotes`, id));
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error deleting package:', err);
@@ -376,10 +376,10 @@ export default function App() {
 
       // 2. Restore Collections
       const collectionsToRestore = [
-        { key: 'appointments', path: 'appointments' },
-        { key: 'clients', path: 'clients' },
-        { key: 'services', path: 'services' },
-        { key: 'packages', path: 'packages' },
+        { key: 'appointments', path: 'agendamentos' },
+        { key: 'clients', path: 'clientes' },
+        { key: 'services', path: 'servicos' },
+        { key: 'packages', path: 'pacotes' },
         { key: 'whatsappTemplates', path: 'whatsappTemplates' },
       ];
 
@@ -446,9 +446,9 @@ export default function App() {
       const { id, ...productData } = product;
       const dataToSave = cleanData(productData);
       if (id && !id.startsWith('temp_')) {
-        await setDoc(doc(db, `users/${user.uid}/products`, id), dataToSave);
+        await setDoc(doc(db, `users/${user.uid}/produtos`, id), dataToSave);
       } else {
-        await addDoc(collection(db, `users/${user.uid}/products`), dataToSave);
+        await addDoc(collection(db, `users/${user.uid}/produtos`), dataToSave);
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -461,7 +461,7 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      await deleteDoc(doc(db, `users/${user.uid}/products`, id));
+      await deleteDoc(doc(db, `users/${user.uid}/produtos`, id));
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error deleting product:', err);
@@ -487,7 +487,7 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       for (const app of appointments) {
-        await updateDoc(doc(db, `users/${user.uid}/appointments`, app.id), { packageId: '' });
+        await updateDoc(doc(db, `users/${user.uid}/agendamentos`, app.id), { packageId: '' });
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -502,7 +502,7 @@ export default function App() {
     try {
       setSyncStatus('syncing');
       for (const app of appointments) {
-        await deleteDoc(doc(db, `users/${user.uid}/appointments`, app.id));
+        await deleteDoc(doc(db, `users/${user.uid}/agendamentos`, app.id));
       }
       setSyncStatus('synced');
     } catch (err) {
@@ -515,7 +515,7 @@ export default function App() {
     if (!user || !reportingAppointment) return;
     try {
       setSyncStatus('syncing');
-      await updateDoc(doc(db, `users/${user.uid}/appointments`, reportingAppointment.id), { report });
+      await updateDoc(doc(db, `users/${user.uid}/agendamentos`, reportingAppointment.id), { report });
       setSyncStatus('synced');
       setIsReportFormOpen(false);
       

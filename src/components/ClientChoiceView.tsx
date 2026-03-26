@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { Appointment, Product, AppData, ClientChoices } from '../types';
 import { motion } from 'motion/react';
 import { Check, Loader2, ShoppingBag, Sparkles, Wind, Flower } from 'lucide-react';
@@ -20,7 +20,7 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
 
   useEffect(() => {
     const fetchData = async () => {
-      const path = `users/${adminUid}/appointments/${appointmentId}`;
+      const path = `users/${adminUid}/agendamentos/${appointmentId}`;
       try {
         // Fetch appointment
         const appDoc = await getDoc(doc(db, path));
@@ -38,14 +38,14 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
 
     // Real-time listener for products
     const productsUnsub = onSnapshot(
-      doc(db, `users/${adminUid}/settings`, 'products'), // This is wrong, it's a collection
+      collection(db, `users/${adminUid}/produtos`),
       () => {}
     );
     
     // Correct way to fetch collection in this context without full AppData sync
     // I'll just use a simpler approach: fetch them once
     const fetchProducts = async () => {
-      const path = `users/${adminUid}/products`;
+      const path = `users/${adminUid}/produtos`;
       try {
         const { collection, getDocs } = await import('firebase/firestore');
         const querySnapshot = await getDocs(collection(db, path));
@@ -62,7 +62,7 @@ export const ClientChoiceView: React.FC<ClientChoiceViewProps> = ({ appointmentI
 
   const handleSave = async () => {
     setSaving(true);
-    const path = `users/${adminUid}/appointments/${appointmentId}`;
+    const path = `users/${adminUid}/agendamentos/${appointmentId}`;
     try {
       await updateDoc(doc(db, path), {
         clientChoices: choices

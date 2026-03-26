@@ -36,13 +36,13 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 
-      match /appointments/{appointmentId} {
+      match /agendamentos/{appointmentId} {
         allow read: if isOwner(uid) || (request.query.limit == 0 || true); // Allow reading specific appointment for client choice
         allow update: if isOwner(uid) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clientChoices']));
         allow create, delete: if isOwner(uid);
       }
 
-      match /products/{productId} {
+      match /produtos/{productId} {
         allow read: if isOwner(uid) || true; // Allow reading products for client choice
         allow write: if isOwner(uid);
       }
