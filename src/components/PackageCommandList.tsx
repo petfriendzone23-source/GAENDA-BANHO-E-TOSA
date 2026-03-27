@@ -11,7 +11,7 @@ interface PackageCommandListProps {
   onDeleteAppointment: (id: string) => void;
   onClosePackageCommand: (appointments: Appointment[]) => void;
   onDeletePackageCommand: (appointments: Appointment[]) => void;
-  onRenewPackage: (clientId: string, petId: string, packageId: string) => void;
+  onRenewPackage: (clientId: string, petId: string, packageId: string, appointments: Appointment[]) => void;
   onOpenReport: (appointment: Appointment) => void;
 }
 
@@ -202,7 +202,7 @@ export const PackageCommandList: React.FC<PackageCommandListProps> = ({
                       <div className="flex items-center justify-end gap-2">
                         {isPackageCompleted && command.client && command.pet && command.package && (
                           <button
-                            onClick={() => onRenewPackage(command.client.id, command.pet.id, command.package.id)}
+                            onClick={() => onRenewPackage(command.client.id, command.pet.id, command.package.id, command.appointments)}
                             className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-1"
                             title="Renovar Pacote"
                           >

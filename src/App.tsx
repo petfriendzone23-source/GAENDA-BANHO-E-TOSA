@@ -623,9 +623,21 @@ export default function App() {
             onDeleteAppointment={handleDeleteAppointment}
             onClosePackageCommand={handleClosePackageCommand}
             onDeletePackageCommand={handleDeletePackageCommand}
-            onRenewPackage={(clientId, petId, packageId) => {
-              setInitialAppointmentData({ clientId, petId, packageId });
-              setIsFormOpen(true);
+            onRenewPackage={async (clientId, petId, packageId, appointments) => {
+              if (window.confirm('Deseja renovar este pacote? A contagem antiga será apagada e uma nova será iniciada.')) {
+                try {
+                  setSyncStatus('syncing');
+                  for (const app of appointments) {
+                    await deleteDoc(doc(db, `users/${user.uid}/agendamentos`, app.id));
+                  }
+                  setSyncStatus('synced');
+                  setInitialAppointmentData({ clientId, petId, packageId });
+                  setIsFormOpen(true);
+                } catch (err) {
+                  console.error('Error renewing package:', err);
+                  setSyncStatus('error');
+                }
+              }
             }}
             onOpenReport={(app) => {
               if (app.report) {
