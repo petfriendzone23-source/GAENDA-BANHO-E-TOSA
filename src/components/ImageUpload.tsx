@@ -93,7 +93,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const timestamp = Date.now();
       const safeName = (file.name || 'image.jpg').replace(/[^a-zA-Z0-9.]/g, '_');
       const fileName = `${timestamp}_${safeName}`;
-      const storagePath = `${folder}/${fileName}`;
+      const uid = auth.currentUser?.uid || 'anonymous';
+      const storagePath = `users/${uid}/${folder}/${fileName}`;
       
       setStatus('Enviando para nuvem...');
       const storageRef = ref(storage, storagePath);

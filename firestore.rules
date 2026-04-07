@@ -18,33 +18,38 @@ service cloud.firestore {
 
     // Validation Functions
     function isValidAppointment(data) {
-      return data.clientId is string &&
-             data.petId is string &&
-             data.services is list &&
-             data.date is string &&
-             data.time is string &&
+      return data.clientId is string && data.clientId.size() < 100 &&
+             data.petId is string && data.petId.size() < 100 &&
+             data.services is list && data.services.size() < 20 &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.time is string && data.time.matches("^\\d{2}:\\d{2}$") &&
              data.status in ['Agendado', 'Concluído', 'Cancelado'] &&
-             data.price is number;
+             data.price is number && data.price >= 0;
     }
 
     function isValidProduct(data) {
-      return data.name is string &&
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.type in ['bandana', 'laço', 'perfume'] &&
-             data.isAvailable is bool;
+             data.isAvailable is bool &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 2000));
     }
 
     match /users/{uid} {
       allow read, write: if isOwner(uid);
 
       match /agendamentos/{appointmentId} {
-        allow read: if isOwner(uid) || (request.query.limit == 0 || true); // Allow reading specific appointment for client choice
+        allow get: if true; // Allow reading specific appointment for client choice
+        allow list: if isOwner(uid);
         allow update: if isOwner(uid) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clientChoices']));
-        allow create, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidAppointment(request.resource.data);
+        allow delete: if isOwner(uid);
       }
 
       match /produtos/{productId} {
-        allow read: if isOwner(uid) || true; // Allow reading products for client choice
-        allow write: if isOwner(uid);
+        allow get: if true; // Allow reading products for client choice
+        allow list: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidProduct(request.resource.data);
+        allow delete: if isOwner(uid);
       }
 
       match /{allSubcollections=**} {

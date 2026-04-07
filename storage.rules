@@ -1,6 +1,12 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    match /users/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+    
+    // Legacy support (optional, can be removed if all new uploads use the UID path)
     match /logos/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null;
