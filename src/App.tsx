@@ -624,11 +624,16 @@ export default function App() {
             onClosePackageCommand={handleClosePackageCommand}
             onDeletePackageCommand={handleDeletePackageCommand}
             onRenewPackage={async (clientId, petId, packageId, appointments) => {
-              if (window.confirm('Deseja renovar este pacote? A contagem antiga será apagada e uma nova será iniciada.')) {
+              if (window.confirm('Deseja renovar este pacote? Uma nova contagem será iniciada e o histórico atual será preservado.')) {
                 try {
                   setSyncStatus('syncing');
+                  // Instead of deleting, we "archive" the appointments by removing the package link
+                  // This keeps them in the history and performance reports
                   for (const app of appointments) {
-                    await deleteDoc(doc(db, `users/${user.uid}/agendamentos`, app.id));
+                    await updateDoc(doc(db, `users/${user.uid}/agendamentos`, app.id), { 
+                      packageId: '',
+                      packageInstanceId: '' 
+                    });
                   }
                   setSyncStatus('synced');
                   setInitialAppointmentData({ clientId, petId, packageId });
