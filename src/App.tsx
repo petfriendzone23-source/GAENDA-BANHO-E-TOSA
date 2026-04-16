@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { AppointmentList } from './components/AppointmentList';
 import { ClientList } from './components/ClientList';
+import { ClientPresence } from './components/ClientPresence';
 import { BestClients } from './components/BestClients';
 import { CalendarView } from './components/CalendarView';
 import { ServiceList } from './components/ServiceList';
@@ -590,6 +591,8 @@ export default function App() {
             }}
           />
         );
+      case 'presence':
+        return <ClientPresence data={data} />;
       case 'best-clients':
         return <BestClients data={data} />;
       case 'performance':
