@@ -4,7 +4,7 @@ import { Users, Calendar, Box, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, subMonths, addMonths, eachMonthOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'motion/react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface PerformanceProps {
   data: AppData;
@@ -12,6 +12,74 @@ interface PerformanceProps {
 
 export const Performance: React.FC<PerformanceProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Group packages by their first appointment date
+  const packageInstances = new Map<string, Date>();
+  
+  data.appointments.forEach(app => {
+    if (app.packageId) {
+      const commandKey = app.packageInstanceId || `${app.clientId}-${app.petId}-${app.packageId}`;
+      const appDate = parseISO(app.date);
+      
+      if (!packageInstances.has(commandKey)) {
+        packageInstances.set(commandKey, appDate);
+      } else {
+        const existingDate = packageInstances.get(commandKey)!;
+        if (appDate.getTime() < existingDate.getTime()) {
+          packageInstances.set(commandKey, appDate);
+        }
+      }
+    }
+  });
+
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+
+  // 1. Packages started in the selected month
+  let packagesStartedInMonth = 0;
+  packageInstances.forEach(startDate => {
+    if (isWithinInterval(startDate, { start: monthStart, end: monthEnd })) {
+      packagesStartedInMonth++;
+    }
+  });
+
+  // 2. Single services (avulsos) in the selected month
+  const singleServicesThisMonth = data.appointments.filter(app => {
+    if (app.packageId) return false;
+    const appDate = parseISO(app.date);
+    return isWithinInterval(appDate, { start: monthStart, end: monthEnd });
+  }).length;
+
+  // 3. New clients registered in the selected month
+  const newClients = data.clients.filter(client => {
+    if (!client.createdAt) return false;
+    const createdAt = parseISO(client.createdAt);
+    return isWithinInterval(createdAt, { start: monthStart, end: monthEnd });
+  }).length;
+
+  const stats = [
+    {
+      label: 'Pacotes Agendados',
+      value: packagesStartedInMonth,
+      icon: Box,
+      color: 'bg-purple-500',
+      description: 'Pacotes que iniciaram este mês'
+    },
+    {
+      label: 'Serviços Avulsos',
+      value: singleServicesThisMonth,
+      icon: Calendar,
+      color: 'bg-emerald-500',
+      description: 'Atendimentos fora de pacotes no mês'
+    },
+    {
+      label: 'Novos Clientes',
+      value: newClients,
+      icon: Users,
+      color: 'bg-blue-500',
+      description: 'Clientes cadastrados este mês'
+    }
+  ];
 
   // Calculate chart data for the last 6 months
   const chartInterval = {
@@ -22,67 +90,36 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
   const monthsInInterval = eachMonthOfInterval(chartInterval);
 
   const chartData = monthsInInterval.map(month => {
-    const monthStart = startOfMonth(month);
-    const monthEnd = endOfMonth(month);
+    const mStart = startOfMonth(month);
+    const mEnd = endOfMonth(month);
     
-    const count = data.appointments.filter(app => {
+    let pkgsStarted = 0;
+    packageInstances.forEach(startDate => {
+      if (isWithinInterval(startDate, { start: mStart, end: mEnd })) {
+        pkgsStarted++;
+      }
+    });
+
+    const sngServices = data.appointments.filter(app => {
+      if (app.packageId) return false;
       const appDate = parseISO(app.date);
-      return isWithinInterval(appDate, { start: monthStart, end: monthEnd });
+      return isWithinInterval(appDate, { start: mStart, end: mEnd });
+    }).length;
+
+    const nClients = data.clients.filter(client => {
+      if (!client.createdAt) return false;
+      const createdAt = parseISO(client.createdAt);
+      return isWithinInterval(createdAt, { start: mStart, end: mEnd });
     }).length;
 
     return {
       name: format(month, 'MMM', { locale: ptBR }),
       fullDate: format(month, 'MMMM yyyy', { locale: ptBR }),
-      count
+      pacotes: pkgsStarted,
+      avulsos: sngServices,
+      clientes: nClients
     };
   });
-
-  const monthStart = startOfMonth(selectedDate);
-  const monthEnd = endOfMonth(selectedDate);
-
-  const newClients = data.clients.filter(client => {
-    if (!client.createdAt) return false;
-    const createdAt = parseISO(client.createdAt);
-    return isWithinInterval(createdAt, { start: monthStart, end: monthEnd });
-  });
-
-  const monthAppointments = data.appointments.filter(app => {
-    const appDate = parseISO(app.date);
-    return isWithinInterval(appDate, { start: monthStart, end: monthEnd });
-  });
-
-  // Count unique package instances in the month
-  const monthPackages = monthAppointments.reduce((acc, app) => {
-    if (app.packageId) {
-      const commandKey = app.packageInstanceId || `${app.clientId}-${app.petId}-${app.packageId}`;
-      acc.add(commandKey);
-    }
-    return acc;
-  }, new Set<string>());
-
-  const stats = [
-    {
-      label: 'Novos Clientes',
-      value: newClients.length,
-      icon: Users,
-      color: 'bg-blue-500',
-      description: 'Clientes cadastrados este mês'
-    },
-    {
-      label: 'Atendimentos',
-      value: monthAppointments.length,
-      icon: Calendar,
-      color: 'bg-emerald-500',
-      description: 'Total de agendamentos no mês'
-    },
-    {
-      label: 'Pacotes Ativos',
-      value: monthPackages.size,
-      icon: Box,
-      color: 'bg-purple-500',
-      description: 'Pacotes com agendamentos este mês'
-    }
-  ];
 
   const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
   const handleNextMonth = () => setSelectedDate(addMonths(selectedDate, 1));
@@ -92,7 +129,7 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Performance</h2>
-          <p className="text-slate-500 mt-1">Acompanhe o crescimento do seu negócio.</p>
+          <p className="text-slate-500 mt-1">Acompanhe as métricas e o crescimento do seu negócio.</p>
         </div>
 
         <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
@@ -142,12 +179,12 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
       <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">Atendimentos por Mês</h3>
-            <p className="text-sm text-slate-500">Volume de agendamentos nos últimos 6 meses</p>
+            <h3 className="text-xl font-bold text-slate-900">Métricas por Mês</h3>
+            <p className="text-sm text-slate-500">Histórico de pacotes, serviços e clientes nos últimos 6 meses</p>
           </div>
         </div>
 
-        <div className="h-[300px] w-full">
+        <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -169,28 +206,27 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-xl">
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">{payload[0].payload.fullDate}</p>
-                        <p className="text-lg font-black text-slate-900">{payload[0].value} Atendimentos</p>
+                      <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl space-y-2">
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-2">{payload[0].payload.fullDate}</p>
+                        <p className="text-sm font-bold text-purple-600">
+                          Pacotes Iniciados: {payload.find(p => p.dataKey === 'pacotes')?.value}
+                        </p>
+                        <p className="text-sm font-bold text-emerald-600">
+                          Serviços Avulsos: {payload.find(p => p.dataKey === 'avulsos')?.value}
+                        </p>
+                        <p className="text-sm font-bold text-blue-600">
+                          Novos Clientes: {payload.find(p => p.dataKey === 'clientes')?.value}
+                        </p>
                       </div>
                     );
                   }
                   return null;
                 }}
               />
-              <Bar 
-                dataKey="count" 
-                radius={[6, 6, 0, 0]} 
-                barSize={40}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={index === chartData.length - 1 ? '#4f46e5' : '#e2e8f0'} 
-                    className="transition-all duration-300"
-                  />
-                ))}
-              </Bar>
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              <Bar dataKey="pacotes" name="Pacotes Iniciados" fill="#a855f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="avulsos" name="Serviços Avulsos" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="clientes" name="Novos Clientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
