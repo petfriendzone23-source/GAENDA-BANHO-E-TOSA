@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search, ChevronDown, Sparkles } from 'lucide-react';
+import { X, Save, User, Dog, Scissors, Calendar, Clock, DollarSign, Plus, Box, Search, ChevronDown, Sparkles, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Package } from '../types';
 import { cn } from '../utils/cn';
@@ -21,6 +21,11 @@ interface AppointmentFormProps {
 export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, onClose, appointment, initialData }) => {
   const [step, setStep] = React.useState(1);
   const [isNewClient, setIsNewClient] = React.useState(false);
+  
+  // Conflict warning state
+  const [showConflictDialog, setShowConflictDialog] = React.useState(false);
+  const [pendingSaveData, setPendingSaveData] = React.useState<{ appointments: Appointment[], newClient?: Client, createdPets?: Pet[] } | null>(null);
+  const [conflictDetails, setConflictDetails] = React.useState<{ date: string, time: string }[]>([]);
   
   // Form State
   const [clientId, setClientId] = React.useState(appointment?.clientId || initialData?.clientId || '');
@@ -247,6 +252,27 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
         ...(updatedReports ? { reports: updatedReports } : {}),
       };
     });
+
+    // Check for conflicts
+    const conflicts = appointments.map(newApp => {
+      const isConflict = data.appointments.some(existingApp => 
+        existingApp.date === newApp.date && 
+        existingApp.time === newApp.time && 
+        existingApp.id !== newApp.id &&
+        existingApp.status !== 'Cancelado'
+      );
+      if (isConflict) {
+        return { date: newApp.date, time: newApp.time };
+      }
+      return null;
+    }).filter(Boolean) as { date: string, time: string }[];
+
+    if (conflicts.length > 0) {
+      setConflictDetails(conflicts);
+      setPendingSaveData({ appointments, newClient, createdPets });
+      setShowConflictDialog(true);
+      return;
+    }
 
     onSave(appointments, newClient, createdPets);
   };
@@ -777,6 +803,61 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
           </button>
         </footer>
       </motion.div>
+
+      {/* Conflict Dialog */}
+      {showConflictDialog && pendingSaveData && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+          >
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                <AlertTriangle size={32} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Conflito de Horário</h3>
+                <p className="text-sm text-slate-500">
+                  Já existe um agendamento para este mesmo horário.
+                  {conflictDetails.map((c, i) => {
+                    const [year, month, day] = c.date.split('-');
+                    return (
+                      <span key={i} className="block mt-2 font-bold text-slate-700">
+                        Dia {day}/{month}/{year} às {c.time}
+                      </span>
+                    );
+                  })}
+                </p>
+                <p className="text-sm text-slate-600 mt-4">
+                  Deseja prosseguir e agendar no mesmo horário, ou escolher outra data?
+                </p>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  onSave(pendingSaveData.appointments, pendingSaveData.newClient, pendingSaveData.createdPets);
+                  setShowConflictDialog(false);
+                  setPendingSaveData(null);
+                }}
+                className="w-full py-3 rounded-xl font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-lg shadow-amber-200"
+              >
+                Prosseguir Mesmo Assim
+              </button>
+              <button 
+                onClick={() => {
+                  setShowConflictDialog(false);
+                  setPendingSaveData(null);
+                }}
+                className="w-full py-3 rounded-xl font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors"
+              >
+                Escolher Outro Horário
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
