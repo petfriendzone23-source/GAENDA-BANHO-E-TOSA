@@ -41,11 +41,15 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const relatedAppointments = React.useMemo(() => {
     if (appointment?.packageId) {
       return data.appointments
-        .filter(a => 
-          a.packageId === appointment.packageId && 
-          a.clientId === appointment.clientId && 
-          a.petId === appointment.petId
-        )
+        .filter(a => {
+          if (appointment.packageInstanceId && a.packageInstanceId) {
+            return a.packageInstanceId === appointment.packageInstanceId;
+          }
+          return a.packageId === appointment.packageId && 
+                 a.clientId === appointment.clientId && 
+                 a.petId === appointment.petId &&
+                 (!a.packageInstanceId || !appointment.packageInstanceId);
+        })
         .sort((a, b) => {
           const dateA = new Date(`${a.date}T${a.time}`).getTime();
           const dateB = new Date(`${b.date}T${b.time}`).getTime();
@@ -77,7 +81,15 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       : [appointment?.services || []]
   );
   const [sessionServicePrices, setSessionServicePrices] = React.useState<Record<string, number>>(appointment?.customServicePrices || {});
-  const [price, setPrice] = React.useState(appointment?.price || 40);
+  
+  const getInitialPrice = () => {
+    if (appointment?.packageId && relatedAppointments.length > 0) {
+      return relatedAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
+    }
+    return appointment?.price || 40;
+  };
+  const [price, setPrice] = React.useState(getInitialPrice());
+  
   const [notes, setNotes] = React.useState(appointment?.notes || '');
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId || initialData?.packageId);
 
@@ -229,6 +241,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
       };
     }
 
+    const newPackageInstanceId = Math.random().toString(36).substr(2, 9);
+    
     const appointments: Appointment[] = sessionDates.map((d, idx) => {
       const existingApp = relatedAppointments[idx];
       const isEditing = !!existingApp;
@@ -248,6 +262,9 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
         price: idx === 0 ? price : 0, 
         notes,
         packageId: selectedPackageId,
+        packageInstanceId: selectedPackageId 
+          ? (existingApp?.packageInstanceId || appointment?.packageInstanceId || newPackageInstanceId)
+          : undefined,
         customServicePrices: sessionServicePrices,
         ...(updatedReports ? { reports: updatedReports } : {}),
       };
