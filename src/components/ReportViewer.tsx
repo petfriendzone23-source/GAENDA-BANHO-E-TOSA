@@ -167,9 +167,13 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({ appointment, data, o
                   <p className="text-sm font-bold text-slate-800">{pet.name}</p>
                   <p className="text-xs text-slate-500">Tutor: {client.name}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800">Data do Serviço</p>
-                  <p className="text-xs text-slate-500 text-right">{format(parseISO(appointment.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</p>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-slate-800">
+                    {format(parseISO(appointment.date), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                  {report.finishedTime && (
+                    <p className="text-xs text-slate-500 mt-1">Finalizado às: {report.finishedTime}</p>
+                  )}
                 </div>
               </div>
 

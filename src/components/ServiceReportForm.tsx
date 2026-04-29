@@ -38,6 +38,7 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
     stressLevel: 'Calmo',
     waterAndDryerAcceptance: 'Boa',
     notes: '',
+    finishedTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
   });
 
   const pet = data.pets[appointment.clientId]?.find(p => p.id === appointment.petId);
@@ -102,6 +103,15 @@ export const ServiceReportForm: React.FC<ServiceReportFormProps> = ({ appointmen
                   onChange={(e) => handleChange('waterAndDryerAcceptance', e.target.value)}
                   options={['Boa', 'Resistiu ao secador', 'Medo de água']}
                 />
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">Hora de Finalização</label>
+                  <input
+                    type="time"
+                    value={report.finishedTime || ''}
+                    onChange={(e) => handleChange('finishedTime', e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                </div>
               </div>
             </div>
             <div className="md:col-span-2">

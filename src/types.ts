@@ -24,6 +24,7 @@ export interface ServiceReport {
   stressLevel: 'Calmo' | 'Agitado' | 'Medroso' | 'Reativo/Agressivo';
   waterAndDryerAcceptance: 'Boa' | 'Resistiu ao secador' | 'Medo de água';
   notes?: string;
+  finishedTime?: string;
 }
 
 export interface ClientChoices {
