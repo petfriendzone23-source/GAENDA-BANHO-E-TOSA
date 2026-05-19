@@ -6,11 +6,23 @@
     <meta name="theme-color" content="#00bcd4" />
     <meta name="description" content="Sistema de gestão para Pet Shops e Banho e Tosa" />
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Pet Friends Zone - Agendamento</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
 

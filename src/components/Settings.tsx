@@ -17,7 +17,8 @@ import {
   Download,
   FileJson,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Smartphone
 } from 'lucide-react';
 import { AppData, WhatsAppTemplate, CompanyInfo } from '../types';
 import { auth } from '../lib/firebase';
@@ -25,6 +26,7 @@ import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ImageUpload } from './ImageUpload';
 import { cn } from '../utils/cn';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 interface SettingsProps {
   zoomLevel: number;
@@ -53,6 +55,8 @@ export const Settings: React.FC<SettingsProps> = ({
   const [openSection, setOpenSection] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const backupInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const { deferredPrompt, promptInstall } = useInstallPrompt();
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -593,7 +597,63 @@ export const Settings: React.FC<SettingsProps> = ({
         </AnimatePresence>
       </section>
 
-      {/* 6. Backup do Sistema */}
+      {/* 6. Instalação do Aplicativo */}
+      <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <button 
+          onClick={() => toggleSection('install')}
+          className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <Smartphone size={20} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-900">Instalar Aplicativo</h3>
+              <p className="text-slate-500 text-xs">Instale no seu dispositivo para acesso rápido</p>
+            </div>
+          </div>
+          {openSection === 'install' ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+        </button>
+
+        <AnimatePresence>
+          {openSection === 'install' && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="p-6 border-t border-slate-100">
+                <div className="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div className="flex-1 text-center md:text-left space-y-2">
+                    <h4 className="font-bold text-slate-900">Pet Friends Zone</h4>
+                    <p className="text-sm text-slate-600">
+                      Instale nosso aplicativo no seu celular ou computador para uma experiência mais rápida, acesso offline aos dados em cache e um ícone direto na sua tela inicial.
+                    </p>
+                  </div>
+                  <div>
+                    {deferredPrompt ? (
+                      <button 
+                        onClick={promptInstall}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <Smartphone size={20} /> Instalar Agora
+                      </button>
+                    ) : (
+                      <div className="px-4 py-3 bg-emerald-50 text-emerald-700 rounded-xl font-medium border border-emerald-100 text-sm text-center">
+                        <p>App já instalado<br/>ou navegador incompatível</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+
+      {/* 7. Backup do Sistema */}
       <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <button 
           onClick={() => toggleSection('backup')}

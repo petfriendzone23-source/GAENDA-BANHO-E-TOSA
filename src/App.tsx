@@ -15,7 +15,7 @@ import { AppointmentForm } from './components/AppointmentForm';
 import { ClientForm } from './components/ClientForm';
 import { ReportViewer } from './components/ReportViewer';
 import { ServiceReportForm } from './components/ServiceReportForm';
-import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate, ServiceReport, Product } from './types';
+import { AppData, Appointment, Client, Pet, Service, Package, CompanyInfo, WhatsAppTemplate, ServiceReport, Product, AppSettings } from './types';
 import { loadData, saveData } from './utils/storage';
 import { auth, db } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
