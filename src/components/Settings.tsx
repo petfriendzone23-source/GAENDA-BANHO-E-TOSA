@@ -24,6 +24,7 @@ import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ImageUpload } from './ImageUpload';
+import { cn } from '../utils/cn';
 
 interface SettingsProps {
   zoomLevel: number;
@@ -401,8 +402,8 @@ export const Settings: React.FC<SettingsProps> = ({
               <Type size={20} />
             </div>
             <div className="text-left">
-              <h3 className="text-lg font-bold text-slate-900">Tamanho da Fonte</h3>
-              <p className="text-slate-500 text-xs">Ajuste a visualização do sistema</p>
+              <h3 className="text-lg font-bold text-slate-900">Aparência</h3>
+              <p className="text-slate-500 text-xs">Ajuste o tamanho da fonte e tema do sistema</p>
             </div>
           </div>
           {openSection === 'font' ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
@@ -418,32 +419,61 @@ export const Settings: React.FC<SettingsProps> = ({
               className="overflow-hidden"
             >
               <div className="p-6 border-t border-slate-100 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <button 
-                      onClick={handleDecrease}
-                      className="p-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-                      title="Diminuir"
-                    >
-                      <Minus size={20} />
-                    </button>
-                    <div className="text-center min-w-[80px]">
-                      <span className="text-2xl font-bold text-indigo-600">{Math.round(zoomLevel)}%</span>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-700 mb-3 block">Escala da Interface</h4>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <button 
+                        onClick={handleDecrease}
+                        className="p-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                        title="Diminuir"
+                      >
+                        <Minus size={20} />
+                      </button>
+                      <div className="text-center min-w-[80px]">
+                        <span className="text-2xl font-bold text-indigo-600">{Math.round(zoomLevel)}%</span>
+                      </div>
+                      <button 
+                        onClick={handleIncrease}
+                        className="p-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                        title="Aumentar"
+                      >
+                        <Plus size={20} />
+                      </button>
                     </div>
                     <button 
-                      onClick={handleIncrease}
-                      className="p-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-                      title="Aumentar"
+                      onClick={() => setZoomLevel(100)}
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
                     >
-                      <Plus size={20} />
+                      Resetar
                     </button>
                   </div>
-                  <button 
-                    onClick={() => setZoomLevel(100)}
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-                  >
-                    Resetar para 100%
-                  </button>
+                </div>
+
+                <div className="border-t border-slate-100 pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 block">Modo Noturno</h4>
+                      <p className="text-xs text-slate-500 mt-1">Ativar tema escuro no sistema</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newSettings = { ...data.settings, darkMode: !data.settings?.darkMode };
+                        onSaveData({ ...data, settings: newSettings });
+                      }}
+                      className={cn(
+                        "relative inline-flex h-7 w-12 items-center rounded-full transition-colors",
+                        data.settings?.darkMode ? "bg-indigo-600" : "bg-slate-200"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-block h-5 w-5 transform rounded-full bg-white transition-transform",
+                          data.settings?.darkMode ? "translate-x-6" : "translate-x-1"
+                        )}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">

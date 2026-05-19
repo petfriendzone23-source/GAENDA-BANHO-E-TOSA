@@ -29,31 +29,33 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-900 transition-colors duration-200">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6">
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 transition-colors duration-200">
         <div className="flex items-center gap-3 mb-10">
           <img src={logoUrl || "/logo.png"} alt="Logo" className="w-10 h-10 object-contain" referrerPolicy="no-referrer" />
           <h1 className="text-xl font-bold tracking-tight">Pet Friends Zone</h1>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-2 mt-4">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+                "w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-left",
                 activeTab === item.id 
                   ? "bg-indigo-50 text-indigo-600 font-medium" 
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
               )}
             >
-              <item.icon size={20} className={cn(
-                "transition-colors",
-                activeTab === item.id ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
-              )} />
-              {item.label}
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                <item.icon size={20} className={cn(
+                  "transition-colors",
+                  activeTab === item.id ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                )} />
+              </div>
+              <span className="flex-1 truncate font-medium text-sm">{item.label}</span>
             </button>
           ))}
         </nav>
@@ -109,7 +111,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden fixed inset-0 top-[65px] bg-white z-40 p-6 flex flex-col gap-4"
+            className="md:hidden fixed inset-0 top-[65px] bg-white z-40 p-6 flex flex-col gap-3 shadow-xl transition-colors duration-200"
           >
             {menuItems.map((item) => (
               <button
@@ -119,12 +121,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   setIsMobileMenuOpen(false);
                 }}
                 className={cn(
-                  "flex items-center gap-4 p-4 rounded-2xl text-lg font-medium",
-                  activeTab === item.id ? "bg-indigo-50 text-indigo-600" : "text-slate-600"
+                  "w-full flex items-center justify-start gap-4 p-4 rounded-2xl text-lg font-medium text-left transition-colors",
+                  activeTab === item.id ? "bg-indigo-50 text-indigo-600" : "text-slate-600 hover:bg-slate-50"
                 )}
               >
-                <item.icon size={24} />
-                {item.label}
+                <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                  <item.icon size={24} />
+                </div>
+                <span className="flex-1 truncate">{item.label}</span>
               </button>
             ))}
           </motion.div>

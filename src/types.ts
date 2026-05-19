@@ -90,13 +90,18 @@ export interface Product {
   isAvailable: boolean;
 }
 
+export interface AppSettings {
+  darkMode: boolean;
+}
+
 export interface AppData {
   appointments: Appointment[];
   clients: Client[];
-  pets: Record<string, Pet[]>; // clientId -> Pet[]
+  pets: Record<string, Pet[]>;
   services: Service[];
   packages: Package[];
   whatsappTemplates: WhatsAppTemplate[];
   companyInfo: CompanyInfo;
   products: Product[];
+  settings?: AppSettings;
 }

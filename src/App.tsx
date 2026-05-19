@@ -89,6 +89,15 @@ export default function App() {
     localStorage.setItem('zoomLevel', zoomLevel.toString());
   }, [zoomLevel]);
 
+  // Apply dark mode
+  React.useEffect(() => {
+    if (data.settings?.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [data.settings?.darkMode]);
+
   // Firebase Auth Listener & Firestore Real-time Sync
   React.useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {

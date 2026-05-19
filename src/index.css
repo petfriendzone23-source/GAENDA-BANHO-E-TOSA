@@ -1,13 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   body {
-    @apply bg-[#F8F9FA] text-slate-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-200;
+  }
+  
+  html.dark {
+    /* Mapping light colors to dark equivalents */
+    --color-white: #1e293b;
+    --color-slate-50: #0f172a;
+    --color-slate-100: #1e293b;
+    --color-slate-200: #334155;
+    --color-slate-300: #475569;
+    --color-slate-400: #64748b;
+    --color-slate-500: #94a3b8;
+    --color-slate-600: #cbd5e1;
+    --color-slate-700: #e2e8f0;
+    --color-slate-800: #f1f5f9;
+    --color-slate-900: #f8fafc;
+    
+    --color-indigo-50: #312e81;
+    --color-indigo-100: #3730a3;
+    --color-indigo-200: #4338ca;
+    
+    --color-purple-50: #6b21a8;
+    --color-emerald-50: #065f46;
+    --color-blue-50: #1e3a8a;
+    --color-rose-50: #881337;
+    --color-amber-50: #78350f;
   }
 }
 
