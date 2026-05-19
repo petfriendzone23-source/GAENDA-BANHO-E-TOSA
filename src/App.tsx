@@ -167,6 +167,20 @@ export default function App() {
             console.error('Failed to setup company listener', e);
           }
 
+          // Listener for App Settings (e.g. Dark Mode)
+          try {
+            const unsubSettings = onSnapshot(doc(db, `users/${currentUser.uid}/settings`, 'appSettings'), (docSnap) => {
+              if (docSnap.exists()) {
+                setData(prev => ({ ...prev, settings: docSnap.data() as AppSettings }));
+              }
+            }, (err) => {
+              console.error('Error syncing app settings:', err);
+            });
+            unsubscribers.push(unsubSettings);
+          } catch (e) {
+            console.error('Failed to setup app settings listener', e);
+          }
+
           return () => unsubscribers.forEach(unsub => unsub());
         } else {
           setSyncStatus('offline');
@@ -361,12 +375,16 @@ export default function App() {
     if (!user) return;
     try {
       setSyncStatus('syncing');
-      // For companyInfo specifically as it's the main thing edited via onSaveData in Settings
-      await setDoc(doc(db, `users/${user.uid}/settings`, 'companyInfo'), newData.companyInfo);
       
-      // Also handle templates if they were changed
-      // (This is a bit broad, but Settings uses onSaveData for templates too)
-      // Ideally we'd have specific handlers for templates
+      // Update local state immediately for fast visual feedback (e.g. for Dark Mode)
+      setData(prev => ({ ...prev, settings: newData.settings, companyInfo: newData.companyInfo }));
+      
+      // Save to Firestore
+      await setDoc(doc(db, `users/${user.uid}/settings`, 'companyInfo'), newData.companyInfo);
+      if (newData.settings) {
+        await setDoc(doc(db, `users/${user.uid}/settings`, 'appSettings'), newData.settings);
+      }
+      
       setSyncStatus('synced');
     } catch (err) {
       console.error('Error saving data:', err);
