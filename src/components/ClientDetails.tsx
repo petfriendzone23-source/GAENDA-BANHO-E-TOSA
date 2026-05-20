@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Phone, MapPin, Dog, Calendar, Clock, DollarSign, CheckCircle2, AlertCircle, Trash2, Scissors, Camera, MessageSquare, FileText, Edit2, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Client, Pet, Appointment } from '../types';
 import { cn } from '../utils/cn';
@@ -21,6 +21,7 @@ interface ClientDetailsProps {
 }
 
 export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet, onEdit }) => {
+  const [internalShowHistory, setInternalShowHistory] = React.useState(showHistory);
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
   const [targetPhone, setTargetPhone] = React.useState<string>('');
   const [showServiceNote, setShowServiceNote] = React.useState(false);
@@ -56,7 +57,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
     historyPage * HISTORY_PER_PAGE
   );
 
-  const isAppointmentView = !!appointment && !showHistory;
+  const isAppointmentView = !!appointment && !internalShowHistory;
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -238,6 +239,14 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                         )}
                      </div>
                   </div>
+                  
+                  <button
+                    onClick={() => setInternalShowHistory(true)}
+                    className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors w-full text-white shadow-lg mt-2"
+                  >
+                    <User size={16} />
+                    <span className="font-bold text-sm">Ver Cadastro Completo</span>
+                  </button>
                </div>
              </>
           ) : (
@@ -376,7 +385,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                   </section>
                 )}
 
-                {showHistory && (
+                {internalShowHistory && (
                   <>
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold text-slate-900">Histórico de Serviços</h3>

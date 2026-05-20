@@ -245,38 +245,57 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
         </div>
       </div>
 
-      <div className="flex overflow-x-auto pb-2 sm:pb-0 gap-2 no-scrollbar">
-        {weekDays.map((day) => {
-          const isSelected = dateFilter === 'Data Específica' 
-            ? isSameDay(day, parseISO(customDate))
-            : isToday(day) && dateFilter === 'Hoje';
-          
-          return (
-            <button
-              key={day.toISOString()}
-              onClick={() => handleDayClick(day)}
-              className={cn(
-                "flex-1 min-w-[80px] flex flex-col items-center p-3 rounded-2xl border transition-all",
-                isSelected 
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-105 z-10" 
-                  : "bg-white border-slate-100 text-slate-500 hover:border-indigo-200 hover:bg-slate-50"
-              )}
-            >
-              <span className={cn(
-                "text-[10px] uppercase font-black tracking-widest mb-1",
-                isSelected ? "text-indigo-100" : "text-slate-400"
-              )}>
-                {format(day, 'eee', { locale: ptBR })}
-              </span>
-              <span className="text-lg font-bold">
-                {format(day, 'dd')}
-              </span>
-              {isToday(day) && !isSelected && (
-                <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1" />
-              )}
-            </button>
-          );
-        })}
+      <div className="overflow-hidden no-scrollbar pb-2 sm:pb-0">
+        <motion.div 
+          className="flex gap-2"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(e, info) => {
+            const threshold = 50;
+            if (info.offset.x < -threshold) {
+              const nextWeek = addDays(weekDays[0], 7);
+              setCustomDate(format(nextWeek, 'yyyy-MM-dd'));
+              setDateFilter('Data Específica');
+            } else if (info.offset.x > threshold) {
+              const prevWeek = subDays(weekDays[0], 7);
+              setCustomDate(format(prevWeek, 'yyyy-MM-dd'));
+              setDateFilter('Data Específica');
+            }
+          }}
+        >
+          {weekDays.map((day) => {
+            const isSelected = dateFilter === 'Data Específica' 
+              ? isSameDay(day, parseISO(customDate))
+              : isToday(day) && dateFilter === 'Hoje';
+            
+            return (
+              <button
+                key={day.toISOString()}
+                onClick={() => handleDayClick(day)}
+                className={cn(
+                  "flex-1 min-w-[80px] flex flex-col items-center p-3 rounded-2xl border transition-all",
+                  isSelected 
+                    ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-105 z-10" 
+                    : "bg-white border-slate-100 text-slate-500 hover:border-indigo-200 hover:bg-slate-50"
+                )}
+              >
+                <span className={cn(
+                  "text-[10px] uppercase font-black tracking-widest mb-1",
+                  isSelected ? "text-indigo-100" : "text-slate-400"
+                )}>
+                  {format(day, 'eee', { locale: ptBR })}
+                </span>
+                <span className="text-lg font-bold">
+                  {format(day, 'dd')}
+                </span>
+                {isToday(day) && !isSelected && (
+                  <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1" />
+                )}
+              </button>
+            );
+          })}
+        </motion.div>
       </div>
 
       {viewType === 'Grade' ? (
