@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Share2, Sparkles } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Share2, Sparkles, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Product } from '../types';
 import { cn } from '../utils/cn';
@@ -360,6 +360,11 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                     app.status === 'Cancelado' ? "bg-rose-500" :
                                     "bg-amber-500"
                                   )} />
+                                  {app.notes && app.status !== 'Concluído' && (
+                                    <div className="absolute -top-1.5 -left-1.5 bg-amber-400 text-amber-900 rounded-full p-0.5 shadow-md animate-pulse border-2 border-white z-10" title="Possui observações">
+                                      <AlertTriangle size={12} strokeWidth={3} />
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <p className="font-bold text-slate-900 leading-tight">{pet?.name}</p>
@@ -557,6 +562,11 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover rounded-full" />
                             ) : (
                               pet?.name[0]
+                            )}
+                            {app.notes && app.status !== 'Concluído' && (
+                              <div className="absolute -top-1 -left-1 bg-amber-400 text-amber-900 rounded-full p-0.5 shadow-md animate-pulse border-2 border-white" title="Possui observações">
+                                <AlertTriangle size={10} strokeWidth={3} />
+                              </div>
                             )}
                           </div>
                           <div>
