@@ -37,6 +37,9 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
   const [whatsappAppointment, setWhatsappAppointment] = React.useState<Appointment | null>(null);
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const selectedDayRef = React.useRef<HTMLButtonElement>(null);
+
   const handlePrevDay = () => {
     const currentDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
     const prevDay = subDays(currentDate, 1);
@@ -95,10 +98,20 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   }, [data.companyInfo.workingHours]);
 
   const weekDays = React.useMemo(() => {
-    const baseDate = dateFilter === 'Data Específica' ? parseISO(customDate) : new Date();
-    const start = startOfWeek(baseDate, { weekStartsOn: 1 }); // Monday
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [customDate, dateFilter]);
+    const today = startOfDay(new Date());
+    // Start 30 days before today, up to 90 days after (120 days total)
+    const start = subDays(today, 30);
+    return Array.from({ length: 120 }, (_, i) => addDays(start, i));
+  }, []);
+
+  React.useEffect(() => {
+    if (scrollContainerRef.current && selectedDayRef.current) {
+      const container = scrollContainerRef.current;
+      const element = selectedDayRef.current;
+      const scrollPosition = element.offsetLeft - container.offsetWidth / 2 + element.offsetWidth / 2;
+      container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, [customDate, dateFilter, weekDays]);
 
   const handleDayClick = (date: Date) => {
     setCustomDate(format(date, 'yyyy-MM-dd'));
@@ -245,25 +258,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
         </div>
       </div>
 
-      <div className="overflow-hidden no-scrollbar pb-2 sm:pb-0">
-        <motion.div 
-          className="flex gap-2"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
-          onDragEnd={(e, info) => {
-            const threshold = 50;
-            if (info.offset.x < -threshold) {
-              const nextWeek = addDays(weekDays[0], 7);
-              setCustomDate(format(nextWeek, 'yyyy-MM-dd'));
-              setDateFilter('Data Específica');
-            } else if (info.offset.x > threshold) {
-              const prevWeek = subDays(weekDays[0], 7);
-              setCustomDate(format(prevWeek, 'yyyy-MM-dd'));
-              setDateFilter('Data Específica');
-            }
-          }}
-        >
+      <div className="overflow-x-auto no-scrollbar pb-2 sm:pb-0 scroll-smooth" ref={scrollContainerRef}>
+        <div className="flex gap-2 w-max">
           {weekDays.map((day) => {
             const isSelected = dateFilter === 'Data Específica' 
               ? isSameDay(day, parseISO(customDate))
@@ -272,9 +268,10 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
             return (
               <button
                 key={day.toISOString()}
+                ref={isSelected ? selectedDayRef : null}
                 onClick={() => handleDayClick(day)}
                 className={cn(
-                  "flex-1 min-w-[80px] flex flex-col items-center p-3 rounded-2xl border transition-all",
+                  "min-w-[80px] flex flex-col items-center p-3 rounded-2xl border transition-all",
                   isSelected 
                     ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-105 z-10" 
                     : "bg-white border-slate-100 text-slate-500 hover:border-indigo-200 hover:bg-slate-50"
@@ -295,7 +292,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
               </button>
             );
           })}
-        </motion.div>
+        </div>
       </div>
 
       {viewType === 'Grade' ? (
