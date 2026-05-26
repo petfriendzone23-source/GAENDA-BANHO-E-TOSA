@@ -9,11 +9,12 @@ interface ClientListProps {
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
   onAddClient?: () => void;
   onEditClient?: (client: Client, pets: Pet[]) => void;
+  onDeleteClient?: (clientId: string) => void;
 }
 
 const ITEMS_PER_PAGE = 12;
 
-export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient, onEditClient }) => {
+export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAddClient, onEditClient, onDeleteClient }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -177,6 +178,12 @@ export const ClientList: React.FC<ClientListProps> = ({ data, onUpdatePet, onAdd
           onClose={() => setSelectedClient(null)} 
           onUpdatePet={onUpdatePet}
           onEdit={() => onEditClient?.(selectedClient, data.pets[selectedClient.id] || [])}
+          onDeleteClient={() => {
+            if (onDeleteClient) {
+              onDeleteClient(selectedClient.id);
+              setSelectedClient(null);
+            }
+          }}
         />
       )}
     </div>

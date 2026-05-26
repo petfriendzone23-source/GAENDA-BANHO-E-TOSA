@@ -18,9 +18,10 @@ interface ClientDetailsProps {
   showHistory?: boolean;
   onUpdatePet?: (clientId: string, petId: string, updatedPet: Partial<Pet>) => void;
   onEdit?: () => void;
+  onDeleteClient?: () => void;
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet, onEdit }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onClose, appointment, showHistory = true, onUpdatePet, onEdit, onDeleteClient }) => {
   const [internalShowHistory, setInternalShowHistory] = React.useState(showHistory);
   const [showWhatsAppTemplates, setShowWhatsAppTemplates] = React.useState(false);
   const [targetPhone, setTargetPhone] = React.useState<string>('');
@@ -126,6 +127,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {onDeleteClient && !isAppointmentView && (
+              <button onClick={onDeleteClient} className="p-2 hover:bg-rose-500/20 text-rose-300 hover:text-rose-400 rounded-full transition-colors" title="Excluir Cliente">
+                <Trash2 size={20} />
+              </button>
+            )}
             {onEdit && (
               <button onClick={onEdit} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Editar Cliente">
                 <Edit2 size={20} />

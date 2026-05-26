@@ -225,6 +225,26 @@ export default function App() {
     }
   };
 
+  const handleDeleteClient = async (clientId: string) => {
+    if (!user) return;
+    if (!window.confirm('Tem certeza que deseja excluir este cliente e todos os seus pets?')) return;
+    try {
+      setSyncStatus('syncing');
+      
+      const clientPets = data.pets[clientId] || [];
+      for (const pet of clientPets) {
+        await deleteDoc(doc(db, `users/${user.uid}/pets`, pet.id));
+      }
+      
+      await deleteDoc(doc(db, `users/${user.uid}/clientes`, clientId));
+      
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      setSyncStatus('error');
+    }
+  };
+
   const handleSaveAppointments = async (appointments: Appointment[], client?: Client, pets?: Pet[]) => {
     if (!user) return;
     
@@ -616,6 +636,7 @@ export default function App() {
               setEditingClient({ client, pets });
               setIsClientFormOpen(true);
             }}
+            onDeleteClient={handleDeleteClient}
           />
         );
       case 'presence':
