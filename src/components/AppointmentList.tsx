@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO, isToday, isAfter, startOfDay, isSameDay, addDays, subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Share2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Search, Filter, MoreVertical, Check, X, Clock, Edit2, Calendar, Trash2, ChevronLeft, ChevronRight, MessageCircle, FileText, Eye, Share2, Sparkles, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppData, Appointment, Client, Pet, Product } from '../types';
 import { cn } from '../utils/cn';
@@ -144,6 +144,55 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
     
     return `${currentSessionNumber}/${totalSessions}`;
   };
+
+  const getClientFrequency = (clientId: string) => {
+    const todayEnd = new Date();
+    const history = data.appointments
+      .filter(a => a.clientId === clientId && parseISO(a.date) <= todayEnd)
+      .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+
+    if (history.length <= 1) return { level: 'red' as const, trend: 'none' as const };
+
+    let totalGap = 0;
+    for (let i = 1; i < history.length; i++) {
+        totalGap += (parseISO(history[i].date).getTime() - parseISO(history[i-1].date).getTime()) / (1000 * 60 * 60 * 24);
+    }
+    const avgGap = totalGap / (history.length - 1);
+
+    let level: 'red' | 'yellow' | 'green' = 'red';
+    if (avgGap <= 15) level = 'green';
+    else if (avgGap <= 31) level = 'yellow';
+    
+    let trend: 'up' | 'down' | 'none' = 'none';
+    if (history.length >= 3) {
+      const recentGap = (parseISO(history[history.length-1].date).getTime() - parseISO(history[history.length-2].date).getTime()) / (1000 * 60 * 60 * 24);
+      if (recentGap > avgGap * 1.5) trend = 'down'; // gap is longer -> frequency dropped
+      else if (recentGap < avgGap * 0.6) trend = 'up'; // gap is shorter -> frequency rose
+    }
+
+    return { level, trend };
+  };
+
+  const FrequencyIndicator = ({ frequency }: { frequency: ReturnType<typeof getClientFrequency> }) => {
+    if (!frequency) return null;
+    
+    return (
+      <div className="flex flex-col items-center gap-0.5 ml-2" title={
+        frequency.level === 'green' ? 'Cliente frequente' :
+        frequency.level === 'yellow' ? 'Frequência média' :
+        'Baixa frequência'
+      }>
+        <div className="flex flex-col gap-[2px] bg-slate-200/50 p-[3px] rounded-full border border-slate-200/50">
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'red' ? 'bg-rose-500 shadow-[0_0_2px_rgba(244,63,94,0.8)]' : 'bg-slate-300/50')} />
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'yellow' ? 'bg-amber-400 shadow-[0_0_2px_rgba(251,191,36,0.8)]' : 'bg-slate-300/50')} />
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'green' ? 'bg-emerald-500 shadow-[0_0_2px_rgba(16,185,129,0.8)]' : 'bg-slate-300/50')} />
+        </div>
+        {frequency.trend === 'up' && <ArrowUp size={10} className="text-emerald-500 shrink-0" strokeWidth={4} />}
+        {frequency.trend === 'down' && <ArrowDown size={10} className="text-rose-500 shrink-0" strokeWidth={4} />}
+      </div>
+    );
+  };
+
 
   const handleShareChoiceLink = (appointment: Appointment) => {
     if (!adminUid) return;
@@ -370,6 +419,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                                   <p className="font-bold text-slate-900 leading-tight">{pet?.name}</p>
                                   <p className="text-[10px] text-slate-500 font-medium">{client?.name}</p>
                                 </div>
+                                {client && <FrequencyIndicator frequency={getClientFrequency(client.id)} />}
                               </div>
                               <div className="text-right flex flex-col items-end gap-1">
                                 <div className="flex items-center gap-1">
@@ -576,6 +626,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                             )}>{pet?.name}</p>
                             <p className="text-xs text-slate-500">{client?.name}</p>
                           </div>
+                          {client && <FrequencyIndicator frequency={getClientFrequency(client.id)} />}
                         </div>
                       </td>
                       <td className="px-6 py-4">

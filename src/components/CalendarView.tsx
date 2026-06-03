@@ -14,7 +14,7 @@ import {
   parseISO
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2, Share2, ArrowUp, ArrowDown } from 'lucide-react';
 import { AppData, Appointment } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
@@ -29,6 +29,54 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
+
+  const getClientFrequency = (clientId: string) => {
+    const todayEnd = new Date();
+    const history = data.appointments
+      .filter(a => a.clientId === clientId && parseISO(a.date) <= todayEnd)
+      .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+
+    if (history.length <= 1) return { level: 'red' as const, trend: 'none' as const };
+
+    let totalGap = 0;
+    for (let i = 1; i < history.length; i++) {
+        totalGap += (parseISO(history[i].date).getTime() - parseISO(history[i-1].date).getTime()) / (1000 * 60 * 60 * 24);
+    }
+    const avgGap = totalGap / (history.length - 1);
+
+    let level: 'red' | 'yellow' | 'green' = 'red';
+    if (avgGap <= 15) level = 'green';
+    else if (avgGap <= 31) level = 'yellow';
+    
+    let trend: 'up' | 'down' | 'none' = 'none';
+    if (history.length >= 3) {
+      const recentGap = (parseISO(history[history.length-1].date).getTime() - parseISO(history[history.length-2].date).getTime()) / (1000 * 60 * 60 * 24);
+      if (recentGap > avgGap * 1.5) trend = 'down';
+      else if (recentGap < avgGap * 0.6) trend = 'up';
+    }
+
+    return { level, trend };
+  };
+
+  const FrequencyIndicator = ({ frequency }: { frequency: ReturnType<typeof getClientFrequency> }) => {
+    if (!frequency) return null;
+    
+    return (
+      <div className="flex flex-col items-center gap-0.5 ml-2" title={
+        frequency.level === 'green' ? 'Cliente frequente' :
+        frequency.level === 'yellow' ? 'Frequência média' :
+        'Baixa frequência'
+      }>
+        <div className="flex flex-col gap-[2px] bg-slate-200/50 p-[3px] rounded-full border border-slate-200/50">
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'red' ? 'bg-rose-500 shadow-[0_0_2px_rgba(244,63,94,0.8)]' : 'bg-slate-300/50')} />
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'yellow' ? 'bg-amber-400 shadow-[0_0_2px_rgba(251,191,36,0.8)]' : 'bg-slate-300/50')} />
+          <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", frequency.level === 'green' ? 'bg-emerald-500 shadow-[0_0_2px_rgba(16,185,129,0.8)]' : 'bg-slate-300/50')} />
+        </div>
+        {frequency.trend === 'up' && <ArrowUp size={10} className="text-emerald-500 shrink-0" strokeWidth={4} />}
+        {frequency.trend === 'down' && <ArrowDown size={10} className="text-rose-500 shrink-0" strokeWidth={4} />}
+      </div>
+    );
+  };
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -178,10 +226,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                         <span className="text-sm font-bold text-slate-900">{app.time}</span>
                         <Clock size={14} className="text-slate-400 mt-1" />
                       </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-900 text-sm">{pet?.name}</p>
-                        <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
+                      <div className="flex-1 flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{pet?.name}</p>
+                          <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
+                        </div>
+                        {client && <FrequencyIndicator frequency={getClientFrequency(client.id)} />}
                       </div>
                       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/item:opacity-100 transition-all">
                         <button 
