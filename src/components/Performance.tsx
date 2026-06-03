@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppData } from '../types';
-import { Users, Calendar, Box, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Calendar, Box, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, subMonths, addMonths, eachMonthOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'motion/react';
@@ -34,33 +34,63 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
 
   const monthStart = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(selectedDate);
+  const prevMonthStart = startOfMonth(subMonths(selectedDate, 1));
+  const prevMonthEnd = endOfMonth(subMonths(selectedDate, 1));
 
-  // 1. Packages started in the selected month
+  // 1. Packages started
   let packagesStartedInMonth = 0;
+  let prevPackagesStarted = 0;
   packageInstances.forEach(startDate => {
     if (isWithinInterval(startDate, { start: monthStart, end: monthEnd })) {
       packagesStartedInMonth++;
+    } else if (isWithinInterval(startDate, { start: prevMonthStart, end: prevMonthEnd })) {
+      prevPackagesStarted++;
     }
   });
 
-  // 2. Single services (avulsos) in the selected month
+  // 2. Single services (avulsos)
   const singleServicesThisMonth = data.appointments.filter(app => {
     if (app.packageId) return false;
     const appDate = parseISO(app.date);
     return isWithinInterval(appDate, { start: monthStart, end: monthEnd });
   }).length;
 
-  // 3. New clients registered in the selected month
-  const newClients = data.clients.filter(client => {
+  const singleServicesPrevMonth = data.appointments.filter(app => {
+    if (app.packageId) return false;
+    const appDate = parseISO(app.date);
+    return isWithinInterval(appDate, { start: prevMonthStart, end: prevMonthEnd });
+  }).length;
+
+  // 3. New clients
+  const newClientsThisMonth = data.clients.filter(client => {
     if (!client.createdAt) return false;
     const createdAt = parseISO(client.createdAt);
     return isWithinInterval(createdAt, { start: monthStart, end: monthEnd });
   }).length;
 
+  const newClientsPrevMonth = data.clients.filter(client => {
+    if (!client.createdAt) return false;
+    const createdAt = parseISO(client.createdAt);
+    return isWithinInterval(createdAt, { start: prevMonthStart, end: prevMonthEnd });
+  }).length;
+
+  const calculateTrend = (current: number, previous: number) => {
+    const diff = current - previous;
+    if (previous === 0) {
+      if (current === 0) return { type: 'neutral', value: '0%', text: 'Sem mudanças' };
+      return { type: 'positive', value: '+100%', text: `+${diff} vs mês anterior` };
+    }
+    const percentage = Math.round((Math.abs(diff) / previous) * 100);
+    if (diff > 0) return { type: 'positive', value: `+${percentage}%`, text: `+${diff} vs mês anterior` };
+    if (diff < 0) return { type: 'negative', value: `-${percentage}%`, text: `${diff} vs mês anterior` };
+    return { type: 'neutral', value: '0%', text: 'Igual ao mês anterior' };
+  };
+
   const stats = [
     {
       label: 'Pacotes Agendados',
       value: packagesStartedInMonth,
+      trend: calculateTrend(packagesStartedInMonth, prevPackagesStarted),
       icon: Box,
       color: 'bg-purple-500',
       description: 'Pacotes que iniciaram este mês'
@@ -68,13 +98,15 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
     {
       label: 'Serviços Avulsos',
       value: singleServicesThisMonth,
+      trend: calculateTrend(singleServicesThisMonth, singleServicesPrevMonth),
       icon: Calendar,
       color: 'bg-emerald-500',
       description: 'Atendimentos fora de pacotes no mês'
     },
     {
       label: 'Novos Clientes',
-      value: newClients,
+      value: newClientsThisMonth,
+      trend: calculateTrend(newClientsThisMonth, newClientsPrevMonth),
       icon: Users,
       color: 'bg-blue-500',
       description: 'Clientes cadastrados este mês'
@@ -168,10 +200,31 @@ export const Performance: React.FC<PerformanceProps> = ({ data }) => {
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                  <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${
+                    stat.trend.type === 'positive' ? 'bg-emerald-100 text-emerald-700' :
+                    stat.trend.type === 'negative' ? 'bg-rose-100 text-rose-700' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {stat.trend.type === 'positive' && <TrendingUp size={12} />}
+                    {stat.trend.type === 'negative' && <TrendingDown size={12} />}
+                    {stat.trend.type === 'neutral' && <Minus size={12} />}
+                    <span>{stat.trend.value}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="text-sm text-slate-500">{stat.description}</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm text-slate-500">{stat.description}</p>
+              <p className={`text-xs font-medium ${
+                stat.trend.type === 'positive' ? 'text-emerald-600' :
+                stat.trend.type === 'negative' ? 'text-rose-600' :
+                'text-slate-400'
+              }`}>
+                {stat.trend.text}
+              </p>
+            </div>
           </motion.div>
         ))}
       </div>
