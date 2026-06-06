@@ -1,9 +1,21 @@
 import React from 'react';
-import { Plus, Scissors, Edit2, Trash2, Save, X, DollarSign, Box } from 'lucide-react';
+import { Plus, Scissors, Edit2, Trash2, Save, X, DollarSign, Box, ShowerHead, Car, Sparkles, Wind, Smile, Heart, Bone, Stethoscope, ScissorsSquare, PawPrint, Ear, Vibrate } from 'lucide-react';
 import { AppData, Service, Package } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../utils/cn';
 import { PackageList } from './PackageList';
+
+export const AVAILABLE_ICONS = [
+  { id: 'ShowerHead', icon: ShowerHead, label: 'Banho' },
+  { id: 'Scissors', icon: Scissors, label: 'Tosa (Tesoura)' },
+  { id: 'ScissorsSquare', icon: ScissorsSquare, label: 'Corte de Unha' },
+  { id: 'Car', icon: Car, label: 'Táxi Dog' },
+  { id: 'Sparkles', icon: Sparkles, label: 'Hidratação' },
+  { id: 'Smile', icon: Smile, label: 'Escovação' },
+  { id: 'PawPrint', icon: PawPrint, label: 'Patinha' },
+  { id: 'Ear', icon: Ear, label: 'Limpeza de Orelha' },
+  { id: 'Vibrate', icon: Vibrate, label: 'Tosa (Máquina)' }
+];
 
 interface ServiceListProps {
   data: AppData;
@@ -28,12 +40,14 @@ export const ServiceList: React.FC<ServiceListProps> = ({
   const [name, setName] = React.useState('');
   const [price, setPrice] = React.useState<number>(0);
   const [color, setColor] = React.useState('#6366f1'); // Default to indigo
+  const [icon, setIcon] = React.useState('Scissors');
 
   const handleEdit = (service: Service) => {
     setEditingId(service.id);
     setName(service.name);
     setPrice(service.price);
     setColor(service.color || '#6366f1');
+    setIcon(service.icon || 'Scissors');
     setIsAdding(false);
   };
 
@@ -43,6 +57,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     setName('');
     setPrice(0);
     setColor('#6366f1');
+    setIcon('Scissors');
   };
 
   const handleSave = () => {
@@ -52,7 +67,8 @@ export const ServiceList: React.FC<ServiceListProps> = ({
       id: editingId || Math.random().toString(36).substr(2, 9),
       name: name.trim(),
       price: price,
-      color: color
+      color: color,
+      icon: icon
     });
     
     handleCancel();
@@ -164,6 +180,29 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                           />
                         </div>
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Ícone do Serviço</label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {AVAILABLE_ICONS.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() => setIcon(item.id)}
+                                title={item.label}
+                                className={cn(
+                                  "p-2 rounded-lg flex items-center justify-center transition-all border",
+                                  icon === item.id 
+                                    ? "bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm"
+                                    : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
+                                )}
+                              >
+                                <Icon size={18} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                     <div className="flex gap-2 pt-1">
                       <button 
@@ -195,7 +234,11 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="p-2 rounded-lg" style={{ backgroundColor: service.color ? `${service.color}1A` : '#eef2ff', color: service.color || '#4f46e5' }}>
-                        <Scissors size={18} />
+                        {(() => {
+                          const matchedIcon = AVAILABLE_ICONS.find(i => i.id === service.icon);
+                          const IconComp = matchedIcon ? matchedIcon.icon : Scissors;
+                          return <IconComp size={18} />;
+                        })()}
                       </div>
                       <div className="flex gap-1">
                         <button 

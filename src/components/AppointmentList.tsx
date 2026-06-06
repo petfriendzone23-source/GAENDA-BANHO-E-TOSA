@@ -7,6 +7,7 @@ import { AppData, Appointment, Client, Pet, Product } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
 import { WhatsAppModal } from './WhatsAppModal';
+import { AVAILABLE_ICONS } from './ServiceList';
 
 interface AppointmentListProps {
   data: AppData;
@@ -446,19 +447,27 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {(app.services || []).map(s => {
-                                const service = data.services.find(ds => ds.name === s);
+                              {AVAILABLE_ICONS.map(availableIcon => {
+                                const selectedServicesForThisIcon = (app.services || []).filter(s => {
+                                  const ds = data.services.find(d => d.name === s);
+                                  return (ds?.icon || 'Scissors') === availableIcon.id;
+                                });
+                                const isSelected = selectedServicesForThisIcon.length > 0;
+                                const ds = isSelected ? data.services.find(d => d.name === selectedServicesForThisIcon[0]) : null;
+                                const IconComp = availableIcon.icon;
                                 return (
-                                  <span 
-                                    key={s} 
-                                    className="text-[9px] text-white px-2 py-0.5 rounded-md border font-bold"
+                                  <div
+                                    key={availableIcon.id}
+                                    title={isSelected ? selectedServicesForThisIcon.join(', ') : availableIcon.label}
+                                    className="flex items-center justify-center rounded border p-[4px] transition-all"
                                     style={{
-                                      backgroundColor: service?.color || '#64748b',
-                                      borderColor: service?.color ? `${service.color}B3` : '#cbd5e1'
+                                      borderColor: isSelected ? (ds?.color || '#cbd5e1') : 'rgba(148, 163, 184, 0.2)',
+                                      backgroundColor: isSelected ? `${ds?.color || '#cbd5e1'}20` : 'transparent',
+                                      color: isSelected ? (ds?.color || '#cbd5e1') : '#cbd5e1'
                                     }}
                                   >
-                                    {s}
-                                  </span>
+                                    <IconComp size={14} strokeWidth={isSelected ? 2.5 : 1.5} />
+                                  </div>
                                 );
                               })}
                             </div>
@@ -630,7 +639,31 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-700">{(app.services || []).join(', ')}</span>
+                        <div className="flex flex-wrap gap-1">
+                          {AVAILABLE_ICONS.map(availableIcon => {
+                            const selectedServicesForThisIcon = (app.services || []).filter(s => {
+                              const ds = data.services.find(d => d.name === s);
+                              return (ds?.icon || 'Scissors') === availableIcon.id;
+                            });
+                            const isSelected = selectedServicesForThisIcon.length > 0;
+                            const ds = isSelected ? data.services.find(d => d.name === selectedServicesForThisIcon[0]) : null;
+                            const IconComp = availableIcon.icon;
+                            return (
+                              <div
+                                key={availableIcon.id}
+                                title={isSelected ? selectedServicesForThisIcon.join(', ') : availableIcon.label}
+                                className="flex items-center justify-center rounded border p-[4px] transition-all"
+                                style={{
+                                  borderColor: isSelected ? (ds?.color || '#cbd5e1') : 'rgba(148, 163, 184, 0.2)',
+                                  backgroundColor: isSelected ? `${ds?.color || '#cbd5e1'}20` : 'transparent',
+                                  color: isSelected ? (ds?.color || '#cbd5e1') : '#cbd5e1'
+                                }}
+                              >
+                                <IconComp size={14} strokeWidth={isSelected ? 2.5 : 1.5} />
+                              </div>
+                            );
+                          })}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">

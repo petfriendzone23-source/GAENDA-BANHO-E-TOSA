@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Edit2, Shar
 import { AppData, Appointment } from '../types';
 import { cn } from '../utils/cn';
 import { ClientDetails } from './ClientDetails';
+import { AVAILABLE_ICONS } from './ServiceList';
 
 interface CalendarViewProps {
   data: AppData;
@@ -229,8 +230,32 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onEditAppointm
                       <div className="flex-1 flex justify-between items-start">
                         <div>
                           <p className="font-bold text-slate-900 text-sm">{pet?.name}</p>
-                          <p className="text-xs text-slate-500">{(app.services || []).join(', ')}</p>
-                          <p className="text-[10px] text-slate-400 mt-1">{client?.name}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {AVAILABLE_ICONS.map(availableIcon => {
+                              const selectedServicesForThisIcon = (app.services || []).filter(s => {
+                                const ds = data.services.find(d => d.name === s);
+                                return (ds?.icon || 'Scissors') === availableIcon.id;
+                              });
+                              const isSelected = selectedServicesForThisIcon.length > 0;
+                              const ds = isSelected ? data.services.find(d => d.name === selectedServicesForThisIcon[0]) : null;
+                              const IconComp = availableIcon.icon;
+                              return (
+                                <div
+                                  key={availableIcon.id}
+                                  title={isSelected ? selectedServicesForThisIcon.join(', ') : availableIcon.label}
+                                  className="flex items-center justify-center rounded border p-[4px] transition-all"
+                                  style={{
+                                    borderColor: isSelected ? (ds?.color || '#cbd5e1') : 'rgba(148, 163, 184, 0.2)',
+                                    backgroundColor: isSelected ? `${ds?.color || '#cbd5e1'}20` : 'transparent',
+                                    color: isSelected ? (ds?.color || '#cbd5e1') : '#cbd5e1'
+                                  }}
+                                >
+                                  <IconComp size={14} strokeWidth={isSelected ? 2.5 : 1.5} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-1.5">{client?.name}</p>
                         </div>
                         {client && <FrequencyIndicator frequency={getClientFrequency(client.id)} />}
                       </div>

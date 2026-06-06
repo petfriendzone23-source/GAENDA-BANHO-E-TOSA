@@ -54,6 +54,7 @@ export interface Service {
   name: string;
   price: number;
   color?: string;
+  icon?: string;
 }
 
 export interface Package {
