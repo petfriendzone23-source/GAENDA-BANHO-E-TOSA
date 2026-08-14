@@ -89,6 +89,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
     return appointment?.price || 40;
   };
   const [price, setPrice] = React.useState(getInitialPrice());
+  const [discount, setDiscount] = React.useState(appointment?.discount || 0);
   
   const [notes, setNotes] = React.useState(appointment?.notes || '');
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId || initialData?.packageId);
@@ -260,6 +261,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
         time: sessionTimes[idx],
         status: isEditing ? existingApp.status : (appointment?.status || 'Agendado'),
         price: idx === 0 ? price : 0, 
+        discount: idx === 0 ? discount : undefined,
         notes,
         packageId: selectedPackageId,
         packageInstanceId: selectedPackageId 
@@ -794,11 +796,20 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                 ))}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-slate-700">Preço Total (R$)</label>
-                <div className="relative">
-                  <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" step="0.01" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-700">Subtotal (R$)</label>
+                  <div className="relative">
+                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="number" step="0.01" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-600" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-700">Desconto (Pix/Dinheiro) (R$)</label>
+                  <div className="relative">
+                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="number" step="0.01" value={discount} onChange={e => setDiscount(Number(e.target.value))} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-600" />
+                  </div>
                 </div>
               </div>
             </div>

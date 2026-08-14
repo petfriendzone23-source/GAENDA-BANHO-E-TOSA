@@ -184,7 +184,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
 
                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 text-white">
                         <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total</span>
-                        <span className="text-base font-bold">R$ {appointment.price.toFixed(2)}</span>
+                        <span className="text-base font-bold">R$ {(appointment.price - (appointment.discount || 0)).toFixed(2)}</span>
                      </div>
 
                      {appointment.notes && (
@@ -365,7 +365,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-indigo-600">R$ {appointment.price.toFixed(2)}</p>
+                          <p className="text-2xl font-bold text-indigo-600">R$ {(appointment.price - (appointment.discount || 0)).toFixed(2)}</p>
                           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{appointment.status}</p>
                         </div>
                       </div>
@@ -421,7 +421,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, data, onCl
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0 ml-2">
-                                  <p className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</p>
+                                  <p className="text-sm font-bold text-slate-900">R$ {(app.price - (app.discount || 0)).toFixed(2)}</p>
                                   <p className={cn(
                                     "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-block mt-0.5",
                                     app.status === 'Concluído' ? "bg-emerald-50 text-emerald-600" :

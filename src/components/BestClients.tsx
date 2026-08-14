@@ -37,7 +37,7 @@ export const BestClients: React.FC<BestClientsProps> = ({ data }) => {
           const appDate = parseISO(app.date);
           return isWithinInterval(appDate, dateRange);
         })
-        .reduce((acc, curr) => acc + curr.price, 0);
+        .reduce((acc, curr) => acc + curr.price - (curr.discount || 0), 0);
       
       const pets = data.pets[client.id] || [];
       const petNames = pets.map(p => p.name).join(', ');

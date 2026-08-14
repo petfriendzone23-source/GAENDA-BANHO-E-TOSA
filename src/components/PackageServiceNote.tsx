@@ -33,12 +33,16 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
   const relevantPet = pets.find(p => p.id === appointment.petId);
   const relevantPackage = allPackages.find(p => p.id === appointment.packageId);
 
-  const relatedAppointments = allAppointments
-    .filter(a => a.clientId === appointment.clientId && a.petId === appointment.petId && a.packageId === appointment.packageId)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
   let packageInstanceAppointments: Appointment[] = [];
-  if (relevantPackage) {
+  if (appointment.packageInstanceId) {
+    packageInstanceAppointments = allAppointments
+      .filter(a => a.packageInstanceId === appointment.packageInstanceId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  } else if (relevantPackage) {
+    const relatedAppointments = allAppointments
+      .filter(a => a.clientId === appointment.clientId && a.petId === appointment.petId && a.packageId === appointment.packageId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     let startIndex = -1;
     for (let i = 0; i < relatedAppointments.length; i++) {
       if (relatedAppointments[i].id === appointment.id) {
@@ -65,26 +69,50 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
     packageInstanceAppointments = [appointment];
   }
 
-  const packageDays = packageInstanceAppointments.map(app => {
-    const dayServices = (app.services || []).map(serviceName => {
-      const service = allServices.find(s => s.name === serviceName);
+  const targetSessions = relevantPackage?.sessions || packageInstanceAppointments.length;
+  
+  const packageDays = Array.from({ length: Math.max(targetSessions, packageInstanceAppointments.length) }).map((_, i) => {
+    const app = packageInstanceAppointments[i];
+    if (app) {
+      const dayServices = (app.services || []).map(serviceName => {
+        const service = allServices.find(s => s.name === serviceName);
+        return {
+          name: serviceName,
+          price: app.customServicePrices?.[serviceName] ?? service?.price ?? 0
+        };
+      });
+      const dayTotal = dayServices.reduce((sum, s) => sum + s.price, 0);
       return {
-        name: serviceName,
-        price: app.customServicePrices?.[serviceName] ?? service?.price ?? 0
+        isScheduled: true,
+        date: app.date,
+        time: app.time,
+        services: dayServices,
+        dayTotal
       };
-    });
-    const dayTotal = dayServices.reduce((sum, s) => sum + s.price, 0);
-    return {
-      date: app.date,
-      time: app.time,
-      services: dayServices,
-      dayTotal
-    };
+    } else {
+      const defaultServices = (relevantPackage?.serviceIds || []).map(id => {
+        const service = allServices.find(s => s.id === id);
+        return {
+          name: service?.name || 'Serviço',
+          price: service?.price || 0
+        };
+      });
+      const dayTotal = defaultServices.reduce((sum, s) => sum + s.price, 0);
+      return {
+        isScheduled: false,
+        date: '',
+        time: '',
+        services: defaultServices,
+        dayTotal
+      };
+    }
   });
 
   const totalFullPrice = packageDays.reduce((sum, day) => sum + day.dayTotal, 0);
-  const packagePrice = packageInstanceAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
-  const discountAmount = Math.max(0, totalFullPrice - packagePrice);
+  const basePackagePrice = packageInstanceAppointments.reduce((sum, app) => sum + (app.price || 0), 0);
+  const paymentDiscount = packageInstanceAppointments.reduce((sum, app) => sum + (app.discount || 0), 0);
+  const packageDiscount = Math.max(0, totalFullPrice - basePackagePrice);
+  const finalPrice = basePackagePrice - paymentDiscount;
 
   const handleGenerateImage = async (share = false) => {
     if (!serviceNoteRef.current) return;
@@ -218,7 +246,7 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
                   <div key={i} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200">
                       <span className="font-bold text-slate-700 text-sm">
-                        Sessão {i + 1} - {format(parseISO(day.date), 'dd/MM/yyyy')} às {day.time}
+                        Sessão {i + 1} - {day.isScheduled ? `${format(parseISO(day.date), 'dd/MM/yyyy')} às ${day.time}` : 'A agendar'}
                       </span>
                       <span className="font-bold text-slate-900 text-sm">R$ {day.dayTotal.toFixed(2)}</span>
                     </div>
@@ -239,13 +267,21 @@ export const PackageServiceNote: React.FC<PackageServiceNoteProps> = ({
               <p className="text-sm font-bold text-slate-500">Total dos Serviços (sem desconto)</p>
               <p className="text-base font-bold text-slate-500">R$ {totalFullPrice.toFixed(2)}</p>
             </div>
-            <div className="flex justify-between items-center mt-2">
-              <p className="text-sm font-bold text-emerald-600">Desconto do Pacote</p>
-              <p className="text-base font-bold text-emerald-600">- R$ {discountAmount.toFixed(2)}</p>
-            </div>
+            {packageDiscount > 0 && (
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm font-bold text-emerald-600">Desconto do Pacote</p>
+                <p className="text-base font-bold text-emerald-600">- R$ {packageDiscount.toFixed(2)}</p>
+              </div>
+            )}
+            {paymentDiscount > 0 && (
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm font-bold text-emerald-600">Desconto (Pix/Dinheiro)</p>
+                <p className="text-base font-bold text-emerald-600">- R$ {paymentDiscount.toFixed(2)}</p>
+              </div>
+            )}
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200">
               <p className="text-xl font-bold text-slate-900">Valor Final do Pacote</p>
-              <p className="text-2xl font-bold text-indigo-600">R$ {packagePrice.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-indigo-600">R$ {finalPrice.toFixed(2)}</p>
             </div>
 
             {appointment.notes && (

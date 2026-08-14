@@ -42,8 +42,10 @@ export interface Appointment {
   time: string; // HH:mm
   status: 'Agendado' | 'Concluído' | 'Cancelado';
   price: number;
+  discount?: number; // Discount value (amount, not percentage)
   notes?: string;
   packageId?: string;
+  packageInstanceId?: string;
   customServicePrices?: Record<string, number>;
   reports?: Record<string, ServiceReport>;
   clientChoices?: ClientChoices;

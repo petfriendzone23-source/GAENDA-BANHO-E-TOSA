@@ -677,7 +677,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-bold text-slate-900">R$ {app.price.toFixed(2)}</span>
+                        <span className="text-sm font-bold text-slate-900">R$ {(app.price - (app.discount || 0)).toFixed(2)}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col items-start gap-1">

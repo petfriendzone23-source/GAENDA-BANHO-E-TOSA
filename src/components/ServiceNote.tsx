@@ -21,7 +21,9 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
 
   const relevantPet = pets.find(p => p.id === appointment.petId);
 
-  const totalServicesPrice = appointment.price;
+  const subtotal = appointment.price;
+  const discount = appointment.discount || 0;
+  const totalServicesPrice = subtotal - discount;
 
   const handleGenerateImage = async (share = false) => {
     if (!serviceNoteRef.current) return;
@@ -172,7 +174,7 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
                   if (Math.abs(adjustment) > 0.01) {
                     return (
                       <li className="flex justify-between items-center text-slate-500 italic border-t border-dashed border-slate-200 pt-2 mt-2">
-                        <span className="font-medium">Ajuste / Desconto</span>
+                        <span className="font-medium">Ajuste de Valor</span>
                         <span className="font-bold">R$ {adjustment.toFixed(2)}</span>
                       </li>
                     );
@@ -182,9 +184,23 @@ export const ServiceNote: React.FC<ServiceNoteProps> = ({ appointment, client, p
               </ul>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-              <p className="text-lg font-bold text-slate-900">Total</p>
-              <p className="text-xl font-bold text-indigo-600">R$ {totalServicesPrice.toFixed(2)}</p>
+            <div className="pt-4 border-t border-slate-100 space-y-2">
+              {discount > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <p className="font-bold">Subtotal</p>
+                    <p className="font-bold">R$ {subtotal.toFixed(2)}</p>
+                  </div>
+                  <div className="flex justify-between items-center text-emerald-600">
+                    <p className="font-bold">Desconto (Pix/Dinheiro)</p>
+                    <p className="font-bold">- R$ {discount.toFixed(2)}</p>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between items-center pt-2">
+                <p className="text-lg font-bold text-slate-900">Total</p>
+                <p className="text-xl font-bold text-indigo-600">R$ {totalServicesPrice.toFixed(2)}</p>
+              </div>
             </div>
 
             {appointment.notes && (
