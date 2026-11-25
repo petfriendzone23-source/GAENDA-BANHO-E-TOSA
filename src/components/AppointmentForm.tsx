@@ -92,7 +92,63 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
   const [discount, setDiscount] = React.useState(appointment?.discount || 0);
   
   const [notes, setNotes] = React.useState(appointment?.notes || '');
-  const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(appointment?.packageId || initialData?.packageId);
+  const initialPkgId = appointment?.packageId || initialData?.packageId;
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string | undefined>(initialPkgId);
+  const [packageSearchTerm, setPackageSearchTerm] = React.useState(
+    initialPkgId ? data.packages.find(p => p.id === initialPkgId)?.name || '' : ''
+  );
+  const [isPackageDropdownOpen, setIsPackageDropdownOpen] = React.useState(false);
+  const [isPackageFiltering, setIsPackageFiltering] = React.useState(false);
+
+  const [serviceSearchTerms, setServiceSearchTerms] = React.useState<Record<number, string>>({});
+  const [openServiceDropdownIdx, setOpenServiceDropdownIdx] = React.useState<number | null>(null);
+
+  const clientDropdownRef = React.useRef<HTMLDivElement>(null);
+  const packageDropdownRef = React.useRef<HTMLDivElement>(null);
+  const serviceDropdownRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
+
+  const normalizeText = React.useCallback((text: string) => {
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }, []);
+
+  const filterAndSortByQuery = React.useCallback(
+    <T,>(items: T[], getName: (item: T) => string, query: string): T[] => {
+      const q = normalizeText(query.trim());
+      if (!q) return items;
+      return items
+        .filter(item => normalizeText(getName(item)).includes(q))
+        .sort((a, b) => {
+          const aStarts = normalizeText(getName(a)).startsWith(q) ? 0 : 1;
+          const bStarts = normalizeText(getName(b)).startsWith(q) ? 0 : 1;
+          if (aStarts !== bStarts) return aStarts - bStarts;
+          return getName(a).localeCompare(getName(b));
+        });
+    },
+    [normalizeText]
+  );
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(target)) {
+        setIsClientDropdownOpen(false);
+      }
+      if (packageDropdownRef.current && !packageDropdownRef.current.contains(target)) {
+        setIsPackageDropdownOpen(false);
+        setIsPackageFiltering(false);
+        const currentPkg = selectedPackageId ? data.packages.find(p => p.id === selectedPackageId) : undefined;
+        setPackageSearchTerm(currentPkg ? currentPkg.name : '');
+      }
+      if (openServiceDropdownIdx !== null) {
+        const activeRef = serviceDropdownRefs.current[openServiceDropdownIdx];
+        if (!activeRef || !activeRef.contains(target)) {
+          setOpenServiceDropdownIdx(null);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openServiceDropdownIdx, selectedPackageId, data.packages]);
 
   // Handle initial package selection if provided in initialData
   React.useEffect(() => {
@@ -119,48 +175,53 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
         setSessionTimes(newTimes);
         setSessionServices(newServices);
         setPrice(pkg.price);
+        setPackageSearchTerm(pkg.name);
       }
     }
   }, [initialData?.packageId, appointment, data.packages, data.services]);
 
-  const togglePackage = (pkg: Package) => {
+  const selectPackage = (pkg: Package) => {
     const pkgServiceNames = pkg.serviceIds.map(sid => data.services.find(s => s.id === sid)?.name).filter(Boolean) as string[];
-    
-    // Check if all services of the package are already selected in the first session (simplified check)
-    const allSelected = pkgServiceNames.every(name => sessionServices[0]?.includes(name));
-    
-    if (allSelected) {
-      setSessions(1);
-      setSessionIds([sessionIds[0]]);
-      setSessionDates([sessionDates[0]]);
-      setSessionTimes([sessionTimes[0]]);
-      setSessionServices([[]]);
-      setSelectedPackageId(undefined);
-    } else {
-      setSessions(pkg.sessions);
-      
-      const newIds = [...sessionIds];
-      const newDates = [...sessionDates];
-      const newTimes = [...sessionTimes];
-      const newServices = [...sessionServices];
-      
-      while (newDates.length < pkg.sessions) {
-        newIds.push(Math.random().toString(36).substr(2, 9));
-        newDates.push(new Date().toISOString().split('T')[0]);
-        newTimes.push(data.companyInfo.workingHours?.start || '08:00');
-        newServices.push([]);
-      }
-      
-      // Initialize all sessions with the package services (user can then prune them)
-      const initializedServices = newServices.slice(0, pkg.sessions).map(() => [...pkgServiceNames]);
-      
-      setSessionIds(newIds.slice(0, pkg.sessions));
-      setSessionDates(newDates.slice(0, pkg.sessions));
-      setSessionTimes(newTimes.slice(0, pkg.sessions));
-      setSessionServices(initializedServices);
-      setPrice(pkg.price);
-      setSelectedPackageId(pkg.id);
+    setSessions(pkg.sessions);
+
+    const newIds = [...sessionIds];
+    const newDates = [...sessionDates];
+    const newTimes = [...sessionTimes];
+    const newServices = [...sessionServices];
+
+    while (newDates.length < pkg.sessions) {
+      newIds.push(Math.random().toString(36).substr(2, 9));
+      newDates.push(new Date().toISOString().split('T')[0]);
+      newTimes.push(data.companyInfo.workingHours?.start || '08:00');
+      newServices.push([]);
     }
+
+    // Initialize all sessions with the package services (user can then prune them)
+    const initializedServices = newServices.slice(0, pkg.sessions).map(() => [...pkgServiceNames]);
+
+    setSessionIds(newIds.slice(0, pkg.sessions));
+    setSessionDates(newDates.slice(0, pkg.sessions));
+    setSessionTimes(newTimes.slice(0, pkg.sessions));
+    setSessionServices(initializedServices);
+    setPrice(pkg.price);
+    setSelectedPackageId(pkg.id);
+    setPackageSearchTerm(pkg.name);
+    setIsPackageFiltering(false);
+    setIsPackageDropdownOpen(false);
+  };
+
+  const clearPackage = () => {
+    setSessions(1);
+    setSessionIds([sessionIds[0]]);
+    setSessionDates([sessionDates[0]]);
+    setSessionTimes([sessionTimes[0]]);
+    setSessionServices([[]]);
+    setSessionServicePrices({});
+    setPrice(0);
+    setSelectedPackageId(undefined);
+    setPackageSearchTerm('');
+    setIsPackageFiltering(false);
+    setIsPackageDropdownOpen(false);
   };
 
   const toggleServiceInSession = (sessionIdx: number, serviceName: string) => {
@@ -568,7 +629,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1 relative">
+                <div ref={clientDropdownRef} className="space-y-1 relative">
                   <label className="text-sm font-semibold text-slate-700">Selecionar Cliente</label>
                   <div className="relative">
                     <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -584,6 +645,11 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                         }
                       }}
                       onFocus={() => setIsClientDropdownOpen(true)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder="Digite o nome do cliente..."
                       className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
@@ -591,8 +657,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
 
                   {isClientDropdownOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                      {data.clients
-                        .filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase()))
+                      {filterAndSortByQuery(data.clients, c => c.name, clientSearchTerm)
                         .map(c => (
                           <button
                             key={c.id}
@@ -615,19 +680,12 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                             )}
                           </button>
                         ))}
-                      {data.clients.filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase())).length === 0 && (
+                      {filterAndSortByQuery(data.clients, c => c.name, clientSearchTerm).length === 0 && (
                         <div className="px-4 py-3 text-sm text-slate-500 italic">
                           Nenhum cliente encontrado.
                         </div>
                       )}
                     </div>
-                  )}
-                  {/* Backdrop to close dropdown */}
-                  {isClientDropdownOpen && (
-                    <div 
-                      className="fixed inset-0 z-[-1]" 
-                      onClick={() => setIsClientDropdownOpen(false)}
-                    />
                   )}
                 </div>
                 <div className="space-y-1">
@@ -656,36 +714,111 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
               <h3>Serviços e Horário</h3>
             </div>
 
-            <div className="space-y-3">
+            <div ref={packageDropdownRef} className="space-y-3 relative">
               <label className="text-sm font-semibold text-slate-700">Pacote de Serviços</label>
               <div className="relative">
-                <Box size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <select
-                  className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer"
-                  value={selectedPackageId || ""}
-                  onChange={(e) => {
-                    const pkgId = e.target.value;
-                    if (!pkgId) {
-                      setSessions(1);
-                      setSessionDates([sessionDates[0]]);
-                      setSessionTimes([sessionTimes[0]]);
-                      setSessionServices([[]]);
-                      setSelectedPackageId(undefined);
-                    } else {
-                      const pkg = data.packages.find(p => p.id === pkgId);
-                      if (pkg) togglePackage(pkg);
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={packageSearchTerm}
+                  onChange={e => {
+                    setPackageSearchTerm(e.target.value);
+                    setIsPackageFiltering(true);
+                    setIsPackageDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    setIsPackageFiltering(false);
+                    setIsPackageDropdownOpen(true);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const filteredPackages = isPackageFiltering
+                        ? filterAndSortByQuery(data.packages, p => p.name, packageSearchTerm)
+                        : data.packages;
+                      if (filteredPackages.length > 0) {
+                        selectPackage(filteredPackages[0]);
+                      }
                     }
                   }}
-                >
-                  <option value="">Nenhum pacote (Serviço Avulso)</option>
-                  {data.packages.map(pkg => (
-                    <option key={pkg.id} value={pkg.id}>
-                      {pkg.name} ({pkg.sessions} sessões - R$ {pkg.price.toFixed(2)})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  placeholder="Digite o nome do pacote ou deixe vazio para avulso..."
+                  className="w-full pl-11 pr-16 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-slate-700"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {(packageSearchTerm || selectedPackageId) && (
+                    <button
+                      type="button"
+                      onClick={clearPackage}
+                      className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Remover pacote"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPackageFiltering(false);
+                      setIsPackageDropdownOpen(prev => !prev);
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+                  >
+                    <ChevronDown size={18} />
+                  </button>
+                </div>
               </div>
+
+              {isPackageDropdownOpen && (() => {
+                const filteredPackages = isPackageFiltering
+                  ? filterAndSortByQuery(data.packages, p => p.name, packageSearchTerm)
+                  : data.packages;
+                const showNoPackageOption =
+                  !isPackageFiltering ||
+                  !packageSearchTerm.trim() ||
+                  normalizeText('Nenhum pacote (Serviço Avulso)').includes(normalizeText(packageSearchTerm.trim()));
+
+                return (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                    {showNoPackageOption && (
+                      <button
+                        type="button"
+                        onClick={clearPackage}
+                        className={cn(
+                          "w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-100 flex items-center justify-between",
+                          !selectedPackageId && "bg-indigo-50/60"
+                        )}
+                      >
+                        <span className="font-semibold text-slate-700 text-sm">Nenhum pacote (Serviço Avulso)</span>
+                      </button>
+                    )}
+                    {filteredPackages.map(pkg => (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() => selectPackage(pkg)}
+                        className={cn(
+                          "w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0 flex items-center justify-between gap-2",
+                          selectedPackageId === pkg.id && "bg-indigo-50"
+                        )}
+                      >
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{pkg.name}</p>
+                          <p className="text-xs text-slate-500">{pkg.sessions} sessões</p>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-600 shrink-0">
+                          R$ {pkg.price.toFixed(2)}
+                        </span>
+                      </button>
+                    ))}
+                    {filteredPackages.length === 0 && !showNoPackageOption && (
+                      <div className="px-4 py-3 text-sm text-slate-500 italic">
+                        Nenhum pacote encontrado.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {selectedPackageId && (
                 <p className="text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg inline-block border border-amber-100">
                   Pacote selecionado: {data.packages.find(p => p.id === selectedPackageId)?.name}
@@ -742,22 +875,109 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({ data, onSave, 
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div
+                      ref={el => {
+                        serviceDropdownRefs.current[idx] = el;
+                      }}
+                      className="space-y-2 relative"
+                    >
                       <label className="text-[10px] font-bold text-slate-400 uppercase">Serviços desta Sessão</label>
-                      <select 
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
-                        value=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            toggleServiceInSession(idx, e.target.value);
-                          }
-                        }}
-                      >
-                        <option value="">Adicionar serviço...</option>
-                        {data.services.filter(s => !sessionServices[idx]?.includes(s.name)).map(s => (
-                          <option key={s.id} value={s.name}>{s.name} (R$ {s.price.toFixed(2)})</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={serviceSearchTerms[idx] || ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setServiceSearchTerms(prev => ({ ...prev, [idx]: val }));
+                            setOpenServiceDropdownIdx(idx);
+                          }}
+                          onFocus={() => setOpenServiceDropdownIdx(idx)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const availableServices = data.services.filter(
+                                s => !sessionServices[idx]?.includes(s.name)
+                              );
+                              const filtered = filterAndSortByQuery(
+                                availableServices,
+                                s => s.name,
+                                serviceSearchTerms[idx] || ''
+                              );
+                              if (filtered.length > 0) {
+                                toggleServiceInSession(idx, filtered[0].name);
+                                setServiceSearchTerms(prev => ({ ...prev, [idx]: '' }));
+                                setOpenServiceDropdownIdx(null);
+                              }
+                            }
+                          }}
+                          placeholder="Digite o nome do serviço para adicionar..."
+                          className="w-full pl-9 pr-14 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                          {serviceSearchTerms[idx] && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setServiceSearchTerms(prev => ({ ...prev, [idx]: '' }));
+                                setOpenServiceDropdownIdx(idx);
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-500 rounded-md transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenServiceDropdownIdx(prev => (prev === idx ? null : idx))
+                            }
+                            className="p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
+                          >
+                            <ChevronDown size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {openServiceDropdownIdx === idx && (() => {
+                        const availableServices = data.services.filter(
+                          s => !sessionServices[idx]?.includes(s.name)
+                        );
+                        const filteredServices = filterAndSortByQuery(
+                          availableServices,
+                          s => s.name,
+                          serviceSearchTerms[idx] || ''
+                        );
+
+                        return (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                            {filteredServices.map(s => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => {
+                                  toggleServiceInSession(idx, s.name);
+                                  setServiceSearchTerms(prev => ({ ...prev, [idx]: '' }));
+                                  setOpenServiceDropdownIdx(null);
+                                }}
+                                className="w-full text-left px-3.5 py-2.5 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0 flex items-center justify-between gap-2"
+                              >
+                                <span className="font-semibold text-slate-800 text-sm">{s.name}</span>
+                                <span className="text-xs font-bold text-indigo-600 shrink-0">
+                                  R$ {s.price.toFixed(2)}
+                                </span>
+                              </button>
+                            ))}
+                            {filteredServices.length === 0 && (
+                              <div className="px-3.5 py-2.5 text-sm text-slate-500 italic">
+                                {availableServices.length === 0
+                                  ? 'Todos os serviços já foram adicionados.'
+                                  : 'Nenhum serviço encontrado.'}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                       
                       {sessionServices[idx]?.length > 0 && (
                         <div className="flex flex-col gap-2 mt-2">
